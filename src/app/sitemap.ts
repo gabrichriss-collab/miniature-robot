@@ -7,7 +7,8 @@ const routes = [
   "/om-oss",
   "/baerekraft",
   "/karriere",
-  "/kontakt"
+  "/kontakt",
+  "/personvern"
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

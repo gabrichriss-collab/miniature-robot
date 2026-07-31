@@ -86,6 +86,15 @@ export default function ContactForm({ prefillRole }: { prefillRole?: string }) {
         aria-hidden="true"
       />
 
+      <p className="mt-2 text-sm text-ink/60">
+        Ved å sende inn samtykker du til at vi kan kontakte deg vedrørende
+        henvendelsen. Vi behandler personopplysninger etter{" "}
+        <a className="uline" href="/personvern">
+          personvernerklæringen
+        </a>{" "}
+        og deler dem ikke med tredjeparter.
+      </p>
+
       <div className="mt-4 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
         <p
           id="form-status"

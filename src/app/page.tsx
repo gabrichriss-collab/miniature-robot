@@ -132,8 +132,34 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Trust markers */}
+      <section className="border-y border-ink/10">
+        <div className="mx-auto grid max-w-[var(--page-max)] gap-10 px-6 py-14 md:grid-cols-4 md:px-10">
+          {[
+            { k: "Tømrermester", v: "Mesterbrev og fagbrev i tømrerfaget" },
+            {
+              k: "Sentral godkjenning",
+              v: "Utførelse av tømrerarbeid — klasse 2"
+            },
+            {
+              k: "Byggmesterforbundet",
+              v: "Medlem — bransjeetikk og seriøsitet"
+            },
+            {
+              k: "Ansvarlig virksomhet",
+              v: "MVA-registrert · yrkesskadeforsikring · HMS"
+            }
+          ].map((t) => (
+            <div key={t.k}>
+              <p className="eyebrow text-ink/60">{t.k}</p>
+              <p className="mt-3 text-sm text-ink/80">{t.v}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
-      <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">
+      <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 pt-28 md:px-10 md:pb-40 md:pt-40">
         <div className="rule mb-16" />
         <div className="flex flex-col items-start justify-between gap-10 md:flex-row md:items-end">
           <h2 className="headline text-[clamp(2.25rem,7vw,6rem)]">
