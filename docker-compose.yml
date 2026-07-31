@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    image: tomrer-kawiche:latest
+    container_name: tomrer-kawiche
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      # Optional: forward every contact submission to a webhook (Slack, Zapier, Resend, CRM).
+      # - CONTACT_WEBHOOK_URL=${CONTACT_WEBHOOK_URL}
+    volumes:
+      - contact-data:/app/.data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/contact"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  contact-data:

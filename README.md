@@ -62,6 +62,19 @@ npm run typecheck   # strict typecheck
 
 ## Deployment
 
-Deploys as-is to Vercel or any Node host that supports Next.js 14.
-Point your domain at the deployment and set `CONTACT_WEBHOOK_URL` if you
-want new leads pushed into email / Slack / a CRM.
+The site ships as a Docker container (Next.js `standalone` output).
+See [`DEPLOY.md`](./DEPLOY.md) for the recommended path — **Hetzner
+Cloud + Coolify** in an EU/Germany data center (~€5/mo, GDPR-friendly).
+The same image also runs on Fly.io, Railway, Render, any VPS with
+Docker, or plain Vercel/Netlify.
+
+Quick local test:
+
+```bash
+docker compose up --build
+# → http://localhost:3000
+```
+
+Set `CONTACT_WEBHOOK_URL` if you want new leads pushed into email /
+Slack / a CRM. Submissions are also appended to
+`.data/contact.jsonl` on the persistent volume.

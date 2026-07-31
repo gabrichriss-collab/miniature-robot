@@ -1,0 +1,17 @@
+.git
+.gitignore
+.github
+node_modules
+.next
+out
+.data
+.env
+.env.local
+*.log
+README.md
+DEPLOY.md
+scripts
+tsconfig.tsbuildinfo
+.vscode
+.idea
+.DS_Store
