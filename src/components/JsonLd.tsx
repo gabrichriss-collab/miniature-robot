@@ -17,16 +17,17 @@ export default function JsonLd() {
       streetAddress: site.address.street,
       postalCode: site.address.postal,
       addressLocality: site.address.city,
+      addressRegion: site.address.region,
       addressCountry: site.address.country
     },
-    areaServed: [
-      { "@type": "AdministrativeArea", name: "Oslo" },
-      { "@type": "AdministrativeArea", name: "Viken" },
-      { "@type": "Country", name: "Norge" }
-    ],
+    areaServed: site.areasServed.map((name) => ({
+      "@type": "AdministrativeArea",
+      name
+    })),
     inLanguage: "nb-NO",
     knowsLanguage: ["nb-NO", "nn-NO", "en"],
     vatID: `NO${site.orgNumber.replace(/\s/g, "")}MVA`,
+    taxID: site.orgNumber.replace(/\s/g, ""),
     foundingDate: "2011",
     slogan: "Håndverk med presisjon.",
     openingHoursSpecification: [

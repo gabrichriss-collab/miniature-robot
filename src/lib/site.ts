@@ -3,13 +3,14 @@ export const site = {
   legalName: "Tømrer Kawiche AS",
   url: "https://tomrerkawiche.no",
   email: "post@tomrerkawiche.no",
-  phone: "+47 900 00 000",
-  phoneHref: "tel:+4790000000",
-  orgNumber: "000 000 000",
+  phone: "+47 92 12 82 53",
+  phoneHref: "tel:+4792128253",
+  orgNumber: "933 526 399",
   address: {
-    street: "Tømrerveien 12",
-    postal: "0000",
-    city: "Oslo",
+    street: "Uglåsvegen 26",
+    postal: "5957",
+    city: "Myking",
+    region: "Vestland",
     country: "NO",
     countryName: "Norge"
   },
@@ -20,5 +21,17 @@ export const site = {
   social: {
     instagram: "https://instagram.com",
     linkedin: "https://linkedin.com"
-  }
+  },
+  // Norsk kontekst brukt i copy og strukturerte data
+  areasServed: [
+    "Nordhordland",
+    "Alver",
+    "Osterøy",
+    "Modalen",
+    "Masfjorden",
+    "Austrheim",
+    "Fedje",
+    "Bergen",
+    "Vestland"
+  ]
 } as const;

@@ -12,21 +12,21 @@ const positions = [
     slug: "tomrer",
     title: "Tømrer",
     type: "Fast · 100%",
-    place: "Oslo · Verksted og plass",
+    place: "Myking · Verksted og plass",
     body: "Vi søker en erfaren tømrer med fagbrev, som liker å jobbe presist og selvstendig. Både verksted og montasje."
   },
   {
     slug: "snekker",
     title: "Møbelsnekker",
     type: "Fast · 100%",
-    place: "Oslo · Verksted",
+    place: "Myking · Verksted",
     body: "Til fastmøbler og spesialsnekring. Erfaring fra finér, massivtre og oljede overflater."
   },
   {
     slug: "laerling",
     title: "Lærling",
     type: "2 år · Lærekontrakt",
-    place: "Oslo",
+    place: "Myking",
     body: "Vi tar inn én lærling pr. år. Rolig opplæring, mesterlig oppfølging."
   }
 ];

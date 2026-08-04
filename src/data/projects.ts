@@ -14,7 +14,7 @@ export const projects: Project[] = [
   {
     slug: "villa-furuli",
     title: "Villa Furuli",
-    place: "Nordstrand, Oslo",
+    place: "Alversund, Alver",
     year: "2024",
     category: "Bolig",
     size: "340 m²",
@@ -26,7 +26,7 @@ export const projects: Project[] = [
   {
     slug: "hus-ved-fjorden",
     title: "Hus ved fjorden",
-    place: "Bygdøy, Oslo",
+    place: "Meland, Alver",
     year: "2024",
     category: "Tilbygg",
     size: "72 m²",
@@ -36,9 +36,9 @@ export const projects: Project[] = [
     gradient: "linear-gradient(120deg,#1c2320,#3a4a3f 55%,#7a8a75)"
   },
   {
-    slug: "loftsleilighet-grunerlokka",
+    slug: "loftsleilighet-sandviken",
     title: "Loftsleilighet",
-    place: "Grünerløkka, Oslo",
+    place: "Sandviken, Bergen",
     year: "2023",
     category: "Interiør",
     size: "118 m²",
@@ -50,7 +50,7 @@ export const projects: Project[] = [
   {
     slug: "kaffebrenneriet",
     title: "Kaffebrenneriet",
-    place: "Sentrum, Oslo",
+    place: "Bergen sentrum",
     year: "2023",
     category: "Næring",
     size: "210 m²",
@@ -62,7 +62,7 @@ export const projects: Project[] = [
   {
     slug: "sveitservillaen",
     title: "Sveitservillaen",
-    place: "Frogner, Oslo",
+    place: "Nordnes, Bergen",
     year: "2022",
     category: "Rehabilitering",
     size: "410 m²",
@@ -74,7 +74,7 @@ export const projects: Project[] = [
   {
     slug: "atelier-i-hagen",
     title: "Atelier i hagen",
-    place: "Ekeberg, Oslo",
+    place: "Osterøy",
     year: "2022",
     category: "Bolig",
     size: "48 m²",
