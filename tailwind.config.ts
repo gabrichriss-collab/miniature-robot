@@ -10,7 +10,8 @@ const config: Config = {
         stone: "#c9c4bc",
         char: "#1a1a1a",
         moss: "#3a3e35",
-        rust: "#8a4a2f"
+        rust: "#8a4a2f",
+        fog: "#7a7876"
       },
       fontFamily: {
         display: ["var(--font-display)", "Sorts Mill Goudy", "Cormorant Garamond", "Georgia", "serif"],
