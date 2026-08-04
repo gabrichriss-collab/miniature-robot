@@ -4,6 +4,7 @@ const routes = [
   "",
   "/tjenester",
   "/prosjekter",
+  "/prisestimat",
   "/om-oss",
   "/baerekraft",
   "/karriere",

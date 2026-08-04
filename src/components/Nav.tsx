@@ -64,8 +64,8 @@ export default function Nav() {
             {[
               ["Tjenester", "/tjenester"],
               ["Prosjekter", "/prosjekter"],
+              ["Prisestimat", "/prisestimat"],
               ["Om oss", "/om-oss"],
-              ["Bærekraft", "/baerekraft"],
               ["Kontakt", "/kontakt"]
             ].map(([label, href]) => (
               <Link
