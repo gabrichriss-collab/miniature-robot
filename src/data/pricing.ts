@@ -482,6 +482,512 @@ export const PRICE_DB: PriceEntry[] = [
     name: "Avfallshåndtering",
     note: "Container + levering",
     cat: "Diverse"
+  },
+
+  // ── BAD / VÅTROM ──────────────────────────────────────────────────
+  {
+    keywords: ["membran gulv", "gulvmembran", "smøremembran gulv"],
+    unit: "m²",
+    price: 950,
+    name: "Membran gulv (våtrom)",
+    note: "Inkl. hjørneforsterkning",
+    cat: "Bad"
+  },
+  {
+    keywords: ["membran vegg", "veggmembran", "smøremembran vegg"],
+    unit: "m²",
+    price: 850,
+    name: "Membran vegg (våtrom)",
+    cat: "Bad"
+  },
+  {
+    keywords: ["gulvvarme", "varmekabler", "gulvvarme kabler"],
+    unit: "m²",
+    price: 1500,
+    name: "Gulvvarme (kabler)",
+    note: "Elektrisk, inkl. tynnavretting",
+    cat: "Bad"
+  },
+  {
+    keywords: [
+      "dusjnisje",
+      "dusjhjørne",
+      "dusjsone",
+      "bygge dusj",
+      "walk-in dusj"
+    ],
+    unit: "stk",
+    price: 18000,
+    name: "Dusjnisje / dusjhjørne",
+    note: "Fall, membran, flis-fundament",
+    cat: "Bad"
+  },
+  {
+    keywords: ["dusjkabinett", "dusjhytte", "prefab dusj"],
+    unit: "stk",
+    price: 8500,
+    name: "Montering dusjkabinett",
+    note: "Ferdig produkt",
+    cat: "Bad"
+  },
+  {
+    keywords: [
+      "bad innredning",
+      "baderomsinnredning",
+      "vaskeplass",
+      "servantskap"
+    ],
+    unit: "lm",
+    price: 6500,
+    name: "Bad-innredning (fastmøbler)",
+    note: "Vask, speil og skap",
+    cat: "Bad"
+  },
+  {
+    keywords: ["toalett", "wc", "toalettmontering"],
+    unit: "stk",
+    price: 4500,
+    name: "Toalett — montering",
+    note: "Inkl. tilkoblinger, ekskl. armatur",
+    cat: "Bad"
+  },
+  {
+    keywords: ["badekar", "boblebad", "innfelt badekar"],
+    unit: "stk",
+    price: 12000,
+    name: "Badekar — montering",
+    note: "Fritt­stående eller innfelt",
+    cat: "Bad"
+  },
+
+  // ── KJØKKEN ───────────────────────────────────────────────────────
+  {
+    keywords: [
+      "kjøkken",
+      "kjøkkenmontering",
+      "kjøkkeninstallasjon",
+      "montering kjøkken"
+    ],
+    unit: "lm",
+    price: 3200,
+    name: "Kjøkkenmontering (standard)",
+    note: "Skap fra fabrikk, ferdig levert",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: [
+      "skreddersydd kjøkken",
+      "spesialkjøkken",
+      "håndverksmøbel kjøkken",
+      "eget kjøkken"
+    ],
+    unit: "lm",
+    price: 8500,
+    name: "Skreddersydd kjøkken",
+    note: "Egen produksjon på verkstedet",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: ["benkeplate laminat", "laminatbenkeplate"],
+    unit: "lm",
+    price: 2200,
+    name: "Benkeplate — laminat",
+    note: "Inkl. tilpasning og montering",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: [
+      "benkeplate tre",
+      "benkeplate massivtre",
+      "benkeplate eik",
+      "benkeplate ask"
+    ],
+    unit: "lm",
+    price: 6800,
+    name: "Benkeplate — massivtre",
+    note: "Egen produksjon, oljet",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: [
+      "benkeplate stein",
+      "corian",
+      "kompaktlaminat",
+      "granittbenkeplate"
+    ],
+    unit: "lm",
+    price: 6500,
+    name: "Benkeplate — stein/kompakt",
+    note: "Ekskl. materialkost",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: ["ventilator", "kjøkkenvifte", "avtrekk", "kjøkkenavtrekk"],
+    unit: "stk",
+    price: 4500,
+    name: "Ventilator — montering",
+    note: "Inkl. utblåsning",
+    cat: "Kjøkken"
+  },
+  {
+    keywords: ["kjøkkenkran", "blandebatteri", "vaskekran"],
+    unit: "stk",
+    price: 2500,
+    name: "Kjøkkenkran — montering",
+    note: "Ekskl. armatur",
+    cat: "Kjøkken"
+  },
+
+  // ── INNREDNING / FASTMØBLER ───────────────────────────────────────
+  {
+    keywords: [
+      "garderobe",
+      "garderobeskap",
+      "innebygd garderobe",
+      "fastmontert garderobe"
+    ],
+    unit: "lm",
+    price: 6500,
+    name: "Garderobe (standard)",
+    note: "Hylle, stang og skyvedører",
+    cat: "Innredning"
+  },
+  {
+    keywords: [
+      "skreddersydd garderobe",
+      "spesialgarderobe",
+      "walk-in",
+      "walkin"
+    ],
+    unit: "lm",
+    price: 12000,
+    name: "Skreddersydd garderobe",
+    note: "Etter mål, egen produksjon",
+    cat: "Innredning"
+  },
+  {
+    keywords: ["bokhylle", "vegghylle", "hylle-vegg"],
+    unit: "lm",
+    price: 8500,
+    name: "Bokhylle (skreddersydd)",
+    note: "Massivtre, montert",
+    cat: "Innredning"
+  },
+  {
+    keywords: ["bibliotek", "vegg til vegg hylle", "helvegghylle"],
+    unit: "lm",
+    price: 11000,
+    name: "Bibliotek / vegg-til-vegg",
+    note: "Skreddersydd, egen produksjon",
+    cat: "Innredning"
+  },
+  {
+    keywords: ["innebygd benk", "vindus benk", "kubbevegg"],
+    unit: "lm",
+    price: 5500,
+    name: "Innebygd benk",
+    note: "Med oppbevaring",
+    cat: "Innredning"
+  },
+  {
+    keywords: ["skyvedørssystem", "skyvedør garderobe", "skyvedører rom"],
+    unit: "stk",
+    price: 12000,
+    name: "Skyvedørssystem",
+    note: "Inkl. spor og dører",
+    cat: "Innredning"
+  },
+  {
+    keywords: ["tv benk", "tv møbel", "tv innredning", "mediemøbel"],
+    unit: "lm",
+    price: 8500,
+    name: "TV-benk (skreddersydd)",
+    note: "Med kabelkanal",
+    cat: "Innredning"
+  },
+
+  // ── UTEROM ────────────────────────────────────────────────────────
+  {
+    keywords: ["pergola", "solskjerming ute", "hagelysthus"],
+    unit: "m²",
+    price: 5500,
+    name: "Pergola (tre)",
+    note: "Furu, oljet",
+    cat: "Uterom"
+  },
+  {
+    keywords: ["pergola glasstak", "pergola m glasstak", "overbygd pergola"],
+    unit: "m²",
+    price: 8500,
+    name: "Pergola m/ glasstak",
+    note: "Herdet glass",
+    cat: "Uterom"
+  },
+  {
+    keywords: ["drivhus", "veksthus", "vinterhage"],
+    unit: "stk",
+    price: 45000,
+    name: "Drivhus — montering",
+    note: "Ferdig kit, ekskl. produkt",
+    cat: "Uterom"
+  },
+  {
+    keywords: ["spa terrasse", "hot tub terrasse", "boblebad terrasse"],
+    unit: "m²",
+    price: 2800,
+    name: "Spa-terrasse (forsterket)",
+    note: "Ekstra bjelker + membran",
+    cat: "Uterom"
+  },
+  {
+    keywords: ["utegulv", "hagegulv", "tredekk hage", "gulv ute"],
+    unit: "m²",
+    price: 1750,
+    name: "Utegulv i tre",
+    note: "Bakkeplate, bjelker, bord",
+    cat: "Uterom"
+  },
+  {
+    keywords: ["utedusj", "utedusj innramming", "utendørs dusj"],
+    unit: "stk",
+    price: 8500,
+    name: "Utedusj — innramming",
+    note: "Vegg + gulvsluk",
+    cat: "Uterom"
+  },
+
+  // ── GARASJE ───────────────────────────────────────────────────────
+  {
+    keywords: ["garasje", "garasje nøkkelferdig", "bygge garasje"],
+    unit: "m²",
+    price: 18000,
+    name: "Garasje (nøkkelferdig)",
+    note: "Fundament, vegger, tak",
+    cat: "Garasje"
+  },
+  {
+    keywords: ["carport", "biltak", "åpen garasje"],
+    unit: "m²",
+    price: 9500,
+    name: "Carport (åpen)",
+    note: "Bindingsverk, tak, kledning",
+    cat: "Garasje"
+  },
+  {
+    keywords: [
+      "garasjeport",
+      "vippeport",
+      "montering garasjeport",
+      "portmontering"
+    ],
+    unit: "stk",
+    price: 6500,
+    name: "Garasjeport (vippeport)",
+    note: "Elektrisk, ekskl. produkt",
+    cat: "Garasje"
+  },
+  {
+    keywords: ["leddport", "seksjonsport", "isolert garasjeport"],
+    unit: "stk",
+    price: 8500,
+    name: "Garasjeport (leddport)",
+    note: "Isolert, elektrisk",
+    cat: "Garasje"
+  },
+  {
+    keywords: ["loftsbjelker garasje", "hems garasje", "loft garasje"],
+    unit: "m²",
+    price: 950,
+    name: "Loftsbjelker garasje",
+    note: "Oppbevaring over parkering",
+    cat: "Garasje"
+  },
+
+  // ── FASADE ────────────────────────────────────────────────────────
+  {
+    keywords: ["vindsperre", "vindsperre montering", "vindsperre fasade"],
+    unit: "m²",
+    price: 320,
+    name: "Vindsperre — montering",
+    note: "Inkl. teiping",
+    cat: "Fasade"
+  },
+  {
+    keywords: ["utlekting", "sløyfer og lekter", "luftespalte lekter"],
+    unit: "m²",
+    price: 250,
+    name: "Utlekting for luftespalte",
+    note: "Trykk-impregnert",
+    cat: "Fasade"
+  },
+  {
+    keywords: ["sokkelbeslag", "sokkel beslag", "grunnmurbeslag"],
+    unit: "lm",
+    price: 620,
+    name: "Sokkelbeslag",
+    note: "Aluminium",
+    cat: "Fasade"
+  },
+  {
+    keywords: ["vannbord", "dryppnese", "vindus beslag"],
+    unit: "lm",
+    price: 380,
+    name: "Vannbord (dryppnese)",
+    cat: "Fasade"
+  },
+  {
+    keywords: [
+      "vindsperre tak",
+      "undertak diffusjon",
+      "diffusjonsåpent undertak"
+    ],
+    unit: "m²",
+    price: 280,
+    name: "Vindsperre tak",
+    note: "Sjikt over sperrer",
+    cat: "Fasade"
+  },
+
+  // ── ISOLASJON ─────────────────────────────────────────────────────
+  {
+    keywords: [
+      "loftisolering",
+      "blåst mineralull",
+      "isoler loft",
+      "hyttetak isolering"
+    ],
+    unit: "m²",
+    price: 550,
+    name: "Etterisolering loft",
+    note: "Blåst mineralull, åpen loft",
+    cat: "Isolasjon"
+  },
+  {
+    keywords: [
+      "kryperom isolasjon",
+      "kryperom",
+      "gulvisolering under",
+      "isolere gulv under"
+    ],
+    unit: "m²",
+    price: 780,
+    name: "Isolering av kryperom",
+    note: "Steinull + dampsperre",
+    cat: "Isolasjon"
+  },
+  {
+    keywords: ["kjellervegg utvendig", "isolere kjeller ute", "xps kjeller"],
+    unit: "m²",
+    price: 1200,
+    name: "Kjellervegg — utvendig isolasjon",
+    note: "XPS + puss",
+    cat: "Isolasjon"
+  },
+  {
+    keywords: ["kjellervegg innvendig", "isolere kjeller inne", "kjeller gips"],
+    unit: "m²",
+    price: 950,
+    name: "Kjellervegg — innvendig isolasjon",
+    note: "Isolasjon + gips",
+    cat: "Isolasjon"
+  },
+  {
+    keywords: [
+      "gulv over kaldt rom",
+      "isolere gulv kryperom",
+      "gulvisolering over kjeller"
+    ],
+    unit: "m²",
+    price: 620,
+    name: "Isolering av gulv (over kaldt rom)",
+    note: "Mineralull mellom bjelker",
+    cat: "Isolasjon"
+  },
+
+  // ── REHAB (utvidet) ───────────────────────────────────────────────
+  {
+    keywords: [
+      "bytte råtne stokker",
+      "råteskadet tømmer",
+      "rotskade",
+      "råteskade"
+    ],
+    unit: "stk",
+    price: 18000,
+    name: "Bytte råtne stokker",
+    note: "Vurderes per stokk etter befaring",
+    cat: "Rehab"
+  },
+  {
+    keywords: ["nytt bindingsverk", "bindingsverk vegg", "reisverk vegg"],
+    unit: "m²",
+    price: 2400,
+    name: "Nytt bindingsverk (vegg)",
+    note: "Ekskl. kledning",
+    cat: "Rehab"
+  },
+  {
+    keywords: [
+      "takstoler",
+      "sperrer",
+      "nytt takverk",
+      "nytt spærreverk"
+    ],
+    unit: "m²",
+    price: 2800,
+    name: "Nye takstoler / sperrer",
+    note: "Bygging inn på plass",
+    cat: "Rehab"
+  },
+  {
+    keywords: [
+      "undertak",
+      "nytt undertak",
+      "undertak dampsperre",
+      "undertaksplate"
+    ],
+    unit: "m²",
+    price: 1400,
+    name: "Nytt undertak",
+    note: "Dampsperre + isolasjon",
+    cat: "Rehab"
+  },
+  {
+    keywords: [
+      "sprossevindu",
+      "sprosser",
+      "kopi vindu",
+      "vindu original stil"
+    ],
+    unit: "stk",
+    price: 18000,
+    name: "Sprossevindu (kopi)",
+    note: "Håndverk i original stil",
+    cat: "Rehab"
+  },
+  {
+    keywords: [
+      "restaurering vindu",
+      "vindusrestaurering",
+      "originalt vindu restaurering"
+    ],
+    unit: "stk",
+    price: 8500,
+    name: "Restaurering av originalt vindu",
+    note: "Bevaring, riksantikvarveiledning",
+    cat: "Rehab"
+  },
+  {
+    keywords: [
+      "restaurering dør",
+      "dørsrestaurering",
+      "originaldør restaurering"
+    ],
+    unit: "stk",
+    price: 12000,
+    name: "Restaurering av originaldør",
+    note: "Bevaring, riksantikvarveiledning",
+    cat: "Rehab"
   }
 ];
 
