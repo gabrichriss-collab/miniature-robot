@@ -51,6 +51,11 @@ export default function Footer() {
               </Link>
             </li>
             <li>
+              <Link className="uline" href="/prisestimat">
+                Prisestimat
+              </Link>
+            </li>
+            <li>
               <Link className="uline" href="/om-oss">
                 Om oss
               </Link>

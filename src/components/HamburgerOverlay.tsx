@@ -6,10 +6,11 @@ import { useEffect, useRef } from "react";
 const items: Array<{ label: string; href: string; kicker: string }> = [
   { label: "Tjenester", href: "/tjenester", kicker: "01" },
   { label: "Prosjekter", href: "/prosjekter", kicker: "02" },
-  { label: "Om oss", href: "/om-oss", kicker: "03" },
-  { label: "Bærekraft", href: "/baerekraft", kicker: "04" },
-  { label: "Karriere", href: "/karriere", kicker: "05" },
-  { label: "Kontakt", href: "/kontakt", kicker: "06" }
+  { label: "Prisestimat", href: "/prisestimat", kicker: "03" },
+  { label: "Om oss", href: "/om-oss", kicker: "04" },
+  { label: "Bærekraft", href: "/baerekraft", kicker: "05" },
+  { label: "Karriere", href: "/karriere", kicker: "06" },
+  { label: "Kontakt", href: "/kontakt", kicker: "07" }
 ];
 
 export default function HamburgerOverlay({
