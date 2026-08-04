@@ -11,7 +11,7 @@ const config: Config = {
         char: "#1a1a1a",
         moss: "#3a3e35",
         rust: "#8a4a2f",
-        fog: "#7a7876"
+        fog: "#7a7570"
       },
       fontFamily: {
         display: ["var(--font-display)", "Sorts Mill Goudy", "Cormorant Garamond", "Georgia", "serif"],
