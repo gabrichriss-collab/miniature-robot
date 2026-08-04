@@ -1,6 +1,6 @@
 import Link from "next/link";
 import HeroSlider from "@/components/HeroSlider";
-import { services } from "@/data/services";
+import ServicesSlider from "@/components/ServicesSlider";
 import { projects } from "@/data/projects";
 
 export default function Home() {
@@ -42,27 +42,8 @@ export default function Home() {
         <div className="rule" />
       </div>
 
-      {/* Services */}
-      <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
-        <div className="mb-16 flex items-end justify-between">
-          <p className="eyebrow">02 — Tjenester</p>
-          <Link href="/tjenester" className="uline eyebrow">
-            Alle tjenester →
-          </Link>
-        </div>
-        <div className="grid gap-x-10 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
-          {services.slice(0, 6).map((s) => (
-            <article key={s.slug} className="group">
-              <p className="eyebrow mb-4 text-ink/60">{s.kicker}</p>
-              <h3 className="headline text-3xl md:text-4xl">{s.title}</h3>
-              <p className="mt-4 max-w-md text-ink/75">{s.lede}</p>
-              <span className="uline mt-6 inline-block eyebrow">
-                Utforsk →
-              </span>
-            </article>
-          ))}
-        </div>
-      </section>
+      {/* Services — Multiform-inspired horizontal slider */}
+      <ServicesSlider />
 
       {/* Featured projects — mosaic */}
       <section className="bg-ink text-bone">
