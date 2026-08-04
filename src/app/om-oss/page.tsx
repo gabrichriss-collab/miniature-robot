@@ -43,7 +43,7 @@ export default function OmOssPage() {
     <>
       <PageHeader
         kicker="Om oss"
-        title="Et lite verksted i Oslo."
+        title="Et lite verksted i Nordhordland."
         lede="Tømrer Kawiche ble grunnlagt i 2011 av tømrermester Kawiche N., med utgangspunkt i én overbevisning: at bygg fortsatt kan lages med hånd, hode og hjerte i samme rom."
       />
 
@@ -55,10 +55,10 @@ export default function OmOssPage() {
           </div>
           <div className="md:col-span-8 space-y-6 text-lg text-ink/80">
             <p>
-              Vi startet i et lite verksted på Kampen med to snekkerbenker og en
+              Vi startet i et lite verksted i Myking med to snekkerbenker og en
               høvelmaskin arvet fra Kawiches bestefar. De første oppdragene var
-              dører og trapper til nabolagets gårder. Rykte spredte seg —
-              stille, slik det gjør blant håndverkere.
+              dører og trapper til nabolagets gårder rundt Nordhordland. Rykte
+              spredte seg — stille, slik det gjør blant håndverkere.
             </p>
             <p>
               I dag er vi tolv, med et større verksted, mer utstyr og de samme
@@ -91,7 +91,7 @@ export default function OmOssPage() {
       <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
         <div className="mb-16 flex items-end justify-between">
           <p className="eyebrow">Teamet</p>
-          <p className="text-sm text-ink/60">Tolv håndverkere · Oslo</p>
+          <p className="text-sm text-ink/60">Tolv håndverkere · Nordhordland</p>
         </div>
         <ul className="grid grid-cols-1 gap-x-10 md:grid-cols-2 lg:grid-cols-3">
           {team.map((m, i) => (

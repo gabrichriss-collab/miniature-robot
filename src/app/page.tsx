@@ -22,7 +22,7 @@ export default function Home() {
               Rolig, presist og for lang tid.
             </h2>
             <p className="mt-10 max-w-2xl text-lg text-ink/80">
-              Tømrer Kawiche er et lite verksted i Oslo. Vi tegner, planlegger
+              Tømrer Kawiche er et lite verksted i Myking i Nordhordland. Vi tegner, planlegger
               og bygger boliger, tilbygg og spesialsnekkerier i tre — fra det
               første strekstroket i skissen til den siste finpussen av
               overflaten. Vårt håndverk er stille. Det viser seg i skjøtene,

@@ -78,15 +78,15 @@ export default function HamburgerOverlay({
             <p className="text-lg text-bone/90">
               post@tomrerkawiche.no
               <br />
-              +47 900 00 000
+              +47 92 12 82 53
             </p>
           </div>
           <div className="max-w-sm text-right">
             <p className="eyebrow mb-3 text-bone/50">Verksted</p>
             <p className="text-lg text-bone/90">
-              Tømrerveien 12
+              Uglåsvegen 26
               <br />
-              0000 Oslo, Norge
+              5957 Myking, Norge
             </p>
           </div>
         </div>

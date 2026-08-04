@@ -24,24 +24,30 @@ const body = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tomrerkawiche.no"),
   title: {
-    default: "Tømrer Kawiche — Tømrermester i Oslo · Håndverk med presisjon",
+    default: "Tømrer Kawiche — Tømrermester i Nordhordland · Håndverk med presisjon",
     template: "%s · Tømrer Kawiche"
   },
   description:
-    "Tømrer Kawiche er et tømrerverksted i Oslo. Vi bygger boliger, tilbygg, interiør og spesialsnekring i tre — med tradisjonelt håndverk og moderne presisjon.",
+    "Tømrer Kawiche er et tømrerverksted i Myking i Nordhordland. Vi bygger boliger, tilbygg, interiør og spesialsnekring i tre — med tradisjonelt håndverk og moderne presisjon. Vi arbeider i Alver, Osterøy, Bergen og resten av Vestland.",
   keywords: [
-    "tømrer Oslo",
-    "tømrermester",
-    "snekker Oslo",
-    "tilbygg",
-    "nybygg",
+    "tømrer Nordhordland",
+    "tømrer Alver",
+    "tømrer Bergen",
+    "tømrermester Vestland",
+    "snekker Nordhordland",
+    "snekker Bergen",
+    "tilbygg Vestland",
+    "nybygg Nordhordland",
     "påbygg",
     "spesialsnekring",
     "rehabilitering",
     "massivtre",
-    "byggmester",
+    "byggmester Bergen",
     "trehus",
-    "loftsutbygging"
+    "loftsutbygging",
+    "Myking",
+    "Alver",
+    "Osterøy"
   ],
   authors: [{ name: "Tømrer Kawiche AS" }],
   creator: "Tømrer Kawiche AS",
@@ -55,15 +61,15 @@ export const metadata: Metadata = {
     locale: "nb_NO",
     url: "https://tomrerkawiche.no",
     siteName: "Tømrer Kawiche",
-    title: "Tømrer Kawiche — Tømrermester i Oslo",
+    title: "Tømrer Kawiche — Tømrermester i Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon."
+      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon — for Nordhordland, Bergen og Vestland."
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tømrer Kawiche — Tømrermester i Oslo",
+    title: "Tømrer Kawiche — Tømrermester i Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon."
+      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon — for Nordhordland, Bergen og Vestland."
   },
   robots: {
     index: true,

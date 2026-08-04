@@ -11,28 +11,28 @@ export type Slide = {
 
 const defaultSlides: Slide[] = [
   {
-    eyebrow: "Bolig · Nordstrand",
+    eyebrow: "Bolig · Alversund",
     title: "Villa Furuli",
     meta: "Nybygg · 340 m² · Massivtre",
     gradient:
       "linear-gradient(120deg, #2a2622 0%, #4a3f34 40%, #7a6a55 100%)"
   },
   {
-    eyebrow: "Tilbygg · Bygdøy",
+    eyebrow: "Tilbygg · Meland",
     title: "Hus ved fjorden",
     meta: "Tilbygg · Eik og zink · 2024",
     gradient:
       "linear-gradient(120deg, #1c2320 0%, #3a4a3f 55%, #7a8a75 100%)"
   },
   {
-    eyebrow: "Interiør · Grünerløkka",
+    eyebrow: "Interiør · Sandviken",
     title: "Loftsleilighet",
     meta: "Totalrenovering · Ask og lin",
     gradient:
       "linear-gradient(120deg, #201a15 0%, #5a3d28 50%, #b58a5f 100%)"
   },
   {
-    eyebrow: "Kommersiell · Sentrum",
+    eyebrow: "Kommersiell · Bergen sentrum",
     title: "Kaffebrenneriet",
     meta: "Snekkerarbeid · Furu og messing",
     gradient:
