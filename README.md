@@ -33,12 +33,17 @@ Then open http://localhost:3000.
 
 ## Environment
 
-| Variable              | Purpose                                                |
-| --------------------- | ------------------------------------------------------ |
-| `CONTACT_WEBHOOK_URL` | Optional: outbound webhook for new contact submissions |
+| Variable              | Purpose                                                                     |
+| --------------------- | --------------------------------------------------------------------------- |
+| `RESEND_API_KEY`      | Resend API key (`re_...`) — enables email notifications for every new lead  |
+| `LEAD_TO_EMAIL`       | Inbox that receives leads (default: `post@tomrerkawiche.no`)                |
+| `LEAD_FROM_EMAIL`     | Sender header (default: `onboarding@resend.dev`; upgrade after domain verify) |
+| `CONTACT_WEBHOOK_URL` | Optional additional destination — Slack, Zapier, CRM (JSON POST)            |
 
-Submissions are also appended to `.data/contact.jsonl` locally when the
-runtime filesystem is writable.
+See [`.env.example`](./.env.example) for the setup walkthrough.
+Submissions are also appended to `.data/contact.jsonl` and
+`.data/prisestimat.jsonl` locally when the runtime filesystem is
+writable.
 
 ## Scripts
 
@@ -59,6 +64,8 @@ npm run typecheck   # strict typecheck
 - `/baerekraft` — Sustainability
 - `/karriere` — Careers (with prefill to contact)
 - `/kontakt` — Contact form → `/api/contact`
+- `/prisestimat` — Self-service line-item price estimator + PDF download
+- `/personvern` — GDPR privacy policy
 
 ## Deployment
 
