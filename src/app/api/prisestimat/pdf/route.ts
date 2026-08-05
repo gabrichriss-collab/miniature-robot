@@ -72,7 +72,7 @@ export async function POST(req: Request) {
 
   const totalKr = `${formatNok(totals.total)} kr`;
   const text = [
-    `Nytt prisestimat lastet ned fra nettsiden.`,
+    `Ny henvendelse via nettsiden — prisestimat lastet ned.`,
     ``,
     `Prosjekt: ${body.projectName || "(uten navn)"}`,
     `Kunde:    ${body.customerName}`,
@@ -94,9 +94,9 @@ export async function POST(req: Request) {
   const html = `
     <div style="font-family:Georgia,serif;color:#0a0a0a;max-width:640px">
       <h2 style="font-family:'Sorts Mill Goudy',Georgia,serif;font-weight:400;font-size:28px;margin:0 0 8px">
-        Nytt prisestimat
+        Ny henvendelse — Prisestimat
       </h2>
-      <p style="color:#666;margin:0 0 24px">Lastet ned fra tomrerkawiche.no</p>
+      <p style="color:#666;margin:0 0 24px">Kunde lastet ned et prisestimat fra tomrerkawiche.no</p>
       <table style="border-collapse:collapse;width:100%;font-size:14px">
         <tr><td style="padding:6px 0;color:#666;width:130px">Prosjekt</td><td style="padding:6px 0"><strong>${escape(body.projectName || "(uten navn)")}</strong></td></tr>
         <tr><td style="padding:6px 0;color:#666">Kunde</td><td style="padding:6px 0">${escape(body.customerName)}</td></tr>
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
 
   await notifyLead({
     kind: "prisestimat",
-    subject: `Nytt prisestimat: ${body.projectName || body.customerName} — ${totalKr}`,
+    subject: `Ny henvendelse — Prisestimat: ${body.projectName || body.customerName} — ${totalKr}`,
     text,
     html,
     meta: entry,
