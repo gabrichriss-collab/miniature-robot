@@ -2,7 +2,7 @@ export const site = {
   name: "Tømrer Kawiche",
   legalName: "Tømrer Kawiche AS",
   url: "https://tomrerkawiche.no",
-  email: "post@tomrerkawiche.no",
+  email: "kontakt@tomrerkawiche.no",
   phone: "+47 92 12 82 53",
   phoneHref: "tel:+4792128253",
   orgNumber: "933 526 399",

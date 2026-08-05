@@ -11,7 +11,7 @@ import { site } from "@/lib/site";
  * Env vars:
  *   RESEND_API_KEY   – "re_xxx..." from resend.com/api-keys
  *   LEAD_TO_EMAIL    – inbox to receive leads (default: site.email)
- *   LEAD_FROM_EMAIL  – sender ("Tømrer Kawiche <post@tomrerkawiche.no>")
+ *   LEAD_FROM_EMAIL  – sender ("Tømrer Kawiche <kontakt@tomrerkawiche.no>")
  *                      until the domain is verified in Resend, use
  *                      "onboarding@resend.dev" (works out of the box)
  *   CONTACT_WEBHOOK_URL – optional; JSON POSTed for Slack / CRM / Zapier

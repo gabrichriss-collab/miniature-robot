@@ -77,7 +77,7 @@ export default function HamburgerOverlay({
           <div className="max-w-md">
             <p className="eyebrow mb-3 text-bone/50">Kontakt</p>
             <p className="text-lg text-bone/90">
-              post@tomrerkawiche.no
+              kontakt@tomrerkawiche.no
               <br />
               +47 92 12 82 53
             </p>
