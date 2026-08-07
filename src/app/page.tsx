@@ -1,5 +1,4 @@
 import Link from "next/link";
-import HeroSlider from "@/components/HeroSlider";
 import ServicesSlider from "@/components/ServicesSlider";
 import { projects } from "@/data/projects";
 
@@ -7,7 +6,54 @@ export default function Home() {
   const featured = projects.slice(0, 4);
   return (
     <>
-      <HeroSlider />
+      {/* Static hero — dark wood-toned background, big headline, subtle Ken Burns */}
+      <section className="relative -mt-24 flex h-[100svh] w-full items-end overflow-hidden bg-ink text-bone">
+        <div
+          aria-hidden
+          className="kenburns absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
+          }}
+        />
+        <div
+          aria-hidden
+          className="noise absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-ink/40"
+        />
+
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-24 md:px-10 md:pb-32">
+          <p className="eyebrow rise rise-1 mb-6 text-bone/70">
+            Nordhordland · Vestland
+          </p>
+          <h1 className="headline rise rise-2 text-[clamp(3rem,10vw,9rem)]">
+            Bygget for å vare.
+          </h1>
+          <p className="rise rise-3 mt-6 max-w-xl text-lg text-bone/75">
+            Tømrerarbeid, tilbygg og spesialsnekring i tre — med tradisjonelt
+            håndverk og moderne presisjon.
+          </p>
+          <div className="rise rise-4 mt-10 flex flex-wrap gap-6">
+            <Link
+              href="/prisestimat"
+              className="group inline-flex items-center gap-4 border border-bone px-8 py-5 eyebrow text-bone transition-colors hover:bg-bone hover:text-ink"
+            >
+              Beregn prisestimat
+              <span
+                aria-hidden
+                className="transition-transform duration-500 ease-swoop group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+            <Link
+              href="/kontakt"
+              className="uline eyebrow text-bone/90 self-center"
+            >
+              Ta kontakt →
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Manifesto */}
       <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">

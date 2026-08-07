@@ -19,9 +19,6 @@ export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
 
   const hasDarkHero = DARK_HERO_ROUTES.has(pathname ?? "/");
-  // The header sits over a dark surface whenever:
-  //  - we're on a route with a dark hero and haven't scrolled past it, OR
-  //  - the fullscreen overlay is open (dark ink background).
   const overDark = (hasDarkHero && !scrolled) || open;
 
   useEffect(() => {
@@ -51,16 +48,19 @@ export default function Nav() {
           scrolled && !open ? "bg-bone/85 backdrop-blur-md" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto flex h-20 max-w-[var(--page-max)] items-center justify-between px-6 md:px-10">
+        <div className="mx-auto flex h-24 max-w-[var(--page-max)] items-center justify-between px-6 md:px-10">
+          {/* Stacked serif wordmark (Kononenko-style) */}
           <Link
             href="/"
-            className={`eyebrow tracking-widest2 transition-colors duration-500 ease-swoop ${textColor}`}
-            aria-label="TØMRER KAWICHE — Hjem"
+            aria-label="Tømrer Kawiche — Hjem"
+            className={`headline flex flex-col leading-[0.9] tracking-tightest transition-colors duration-500 ease-swoop ${textColor}`}
           >
-            TØMRER&nbsp;KAWICHE
+            <span className="text-xl md:text-2xl">Tømrer</span>
+            <span className="text-xl md:text-2xl">Kawiche</span>
           </Link>
 
-          <nav className="hidden gap-10 md:flex">
+          {/* Desktop inline nav (lg and up) */}
+          <nav className="hidden gap-10 lg:flex">
             {[
               ["Tjenester", "/tjenester"],
               ["Prosjekter", "/prosjekter"],
@@ -78,11 +78,12 @@ export default function Nav() {
             ))}
           </nav>
 
+          {/* Mobile + tablet hamburger (hidden on desktop) */}
           <button
             aria-label={open ? "Lukk meny" : "Åpne meny"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-[6px]"
+            className="relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-[6px] lg:hidden"
           >
             <span
               className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
