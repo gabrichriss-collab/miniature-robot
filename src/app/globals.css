@@ -185,3 +185,23 @@ h3 {
     transform: scaleX(1);
   }
 }
+
+/* Universal press feedback: subtle transform + coexists with colour transitions */
+@layer components {
+  .press {
+    transition-property: transform, color, background-color, border-color;
+    transition-duration: 140ms, 200ms, 200ms, 200ms;
+    transition-timing-function: cubic-bezier(0.7, 0, 0.2, 1);
+  }
+  .press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .press {
+      transition-duration: 90ms, 200ms, 200ms, 200ms;
+    }
+    .press:active:not(:disabled) {
+      transform: scale(0.99);
+    }
+  }
+}

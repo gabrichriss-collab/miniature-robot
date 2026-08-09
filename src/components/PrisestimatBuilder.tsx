@@ -333,7 +333,7 @@ export default function PrisestimatBuilder() {
                 type="button"
                 disabled={!canSubmit || sending}
                 onClick={downloadPdf}
-                className="group inline-flex items-center gap-4 border border-ink bg-ink px-8 py-5 eyebrow text-bone transition-colors hover:bg-transparent hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bone"
+                className="group inline-flex items-center gap-4 border border-ink bg-ink px-8 py-5 eyebrow text-bone press hover:bg-transparent hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bone"
               >
                 {sending ? "Genererer PDF…" : "Last ned prisestimat"}
                 <span aria-hidden className="transition-transform group-hover:translate-x-1">

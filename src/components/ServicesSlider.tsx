@@ -182,7 +182,7 @@ export default function ServicesSlider() {
             onClick={() => goTo(index - 1)}
             aria-label="Forrige tjeneste"
             disabled={index === 0}
-            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 transition-colors hover:bg-ink hover:text-bone disabled:opacity-30"
+            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 press hover:bg-ink hover:text-bone disabled:opacity-30"
           >
             <span aria-hidden className="transition-transform group-hover:-translate-x-0.5">
               ←
@@ -193,7 +193,7 @@ export default function ServicesSlider() {
             onClick={() => goTo(index + 1)}
             aria-label="Neste tjeneste"
             disabled={index === services.length - 1}
-            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 transition-colors hover:bg-ink hover:text-bone disabled:opacity-30"
+            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 press hover:bg-ink hover:text-bone disabled:opacity-30"
           >
             <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
               →

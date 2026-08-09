@@ -1,6 +1,6 @@
 # 001 — Add a `.press` utility for universal button press feedback
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: `5fdc192`
 - **Severity**: MEDIUM (frequency is Rare per button, but every commit moment on the site is affected)
 - **Category**: Purpose & frequency + Physicality & origin (press feedback is a canonical Feedback purpose)
