@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
-const items: Array<{ label: string; href: string; kicker: string }> = [
-  { label: "Tjenester", href: "/tjenester", kicker: "01" },
-  { label: "Prosjekter", href: "/prosjekter", kicker: "02" },
-  { label: "Prisestimat", href: "/prisestimat", kicker: "03" },
-  { label: "Om oss", href: "/om-oss", kicker: "04" },
-  { label: "Bærekraft", href: "/baerekraft", kicker: "05" },
-  { label: "Karriere", href: "/karriere", kicker: "06" },
-  { label: "Kontakt", href: "/kontakt", kicker: "07" }
+const items: Array<{ label: string; href: string }> = [
+  { label: "Tjenester", href: "/tjenester" },
+  { label: "Prosjekter", href: "/prosjekter" },
+  { label: "Prisestimat", href: "/prisestimat" },
+  { label: "Om oss", href: "/om-oss" },
+  { label: "Bærekraft", href: "/baerekraft" },
+  { label: "Karriere", href: "/karriere" },
+  { label: "Kontakt", href: "/kontakt" }
 ];
 
 export default function HamburgerOverlay({
@@ -44,13 +44,13 @@ export default function HamburgerOverlay({
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
-        <nav className="grid gap-2 md:gap-3">
+        <nav className="grid gap-1">
           {items.map((it, i) => (
             <Link
               key={it.href}
               href={it.href}
               onClick={onClose}
-              className="group grid grid-cols-[3rem_1fr_auto] items-baseline gap-6 border-b border-bone/15 py-4 md:py-6"
+              className="block py-2"
               style={{
                 transitionDelay: open ? `${120 + i * 60}ms` : "0ms",
                 opacity: open ? 1 : 0,
@@ -59,15 +59,8 @@ export default function HamburgerOverlay({
                   "opacity 600ms cubic-bezier(0.7,0,0.2,1), transform 700ms cubic-bezier(0.7,0,0.2,1)"
               }}
             >
-              <span className="eyebrow text-bone/50">{it.kicker}</span>
-              <span className="headline text-[clamp(2.25rem,7vw,5.5rem)]">
+              <span className="headline text-[clamp(1.75rem,5vw,3.25rem)]">
                 {it.label}
-              </span>
-              <span
-                aria-hidden
-                className="translate-x-0 text-bone/40 transition-transform duration-500 ease-swoop group-hover:translate-x-2"
-              >
-                →
               </span>
             </Link>
           ))}
