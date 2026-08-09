@@ -7,10 +7,10 @@ Self-contained implementation plans produced by the `improve-animations` skill. 
 | # | Title | Severity | Status | Blocked by |
 |---|---|---|---|---|
 | 001 | [Universal press feedback (`.press` utility)](./001-universal-press-feedback.md) | MEDIUM | DONE | — |
-| 002 | [Prisestimat row enter animation](./002-prisestimat-row-enter.md) | MEDIUM | TODO | — |
-| 003 | [Modal open/close for BrowseModal + SummaryModal](./003-modal-open-close.md) | MEDIUM | TODO | — |
-| 004 | [Auto-match badge fade-in](./004-automatch-badge-fade.md) | LOW | TODO | — |
-| 005 | [Projects mosaic scroll-in stagger](./005-projects-mosaic-reveal.md) | LOW | TODO | — |
+| 002 | [Prisestimat row enter animation](./002-prisestimat-row-enter.md) | MEDIUM | DONE | — |
+| 003 | [Modal open/close for BrowseModal + SummaryModal](./003-modal-open-close.md) | MEDIUM | DONE | — |
+| 004 | [Auto-match badge fade-in](./004-automatch-badge-fade.md) | LOW | DONE | — |
+| 005 | [Projects mosaic scroll-in stagger](./005-projects-mosaic-reveal.md) | LOW | DONE | — |
 
 ## Execution order
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ServicesSlider from "@/components/ServicesSlider";
+import FeaturedProjectsMosaic from "@/components/FeaturedProjectsMosaic";
 import { projects } from "@/data/projects";
 
 export default function Home() {
@@ -100,39 +101,7 @@ export default function Home() {
               Alle prosjekter →
             </Link>
           </div>
-          <div className="grid gap-8 md:grid-cols-12">
-            {featured.map((p, i) => (
-              <Link
-                key={p.slug}
-                href={`/prosjekter#${p.slug}`}
-                className={`group relative block overflow-hidden ${
-                  i % 3 === 0
-                    ? "md:col-span-7 md:row-span-2"
-                    : "md:col-span-5"
-                }`}
-                style={{ aspectRatio: i % 3 === 0 ? "4 / 3" : "5 / 4" }}
-              >
-                <div
-                  className="absolute inset-0 transition-transform duration-[1200ms] ease-swoop group-hover:scale-[1.04]"
-                  style={{ background: p.gradient }}
-                  aria-hidden
-                />
-                <div
-                  aria-hidden
-                  className="noise absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent"
-                />
-                <div className="relative z-10 flex h-full flex-col justify-end p-6 md:p-10">
-                  <p className="eyebrow text-bone/70">
-                    {p.category} · {p.year}
-                  </p>
-                  <h3 className="headline mt-3 text-3xl md:text-5xl">
-                    {p.title}
-                  </h3>
-                  <p className="mt-2 text-bone/70">{p.place}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <FeaturedProjectsMosaic projects={featured} />
         </div>
       </section>
 

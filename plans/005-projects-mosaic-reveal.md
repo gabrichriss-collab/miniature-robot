@@ -1,6 +1,6 @@
 # 005 — Projects mosaic scroll-in stagger
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: `493f929`
 - **Severity**: LOW (polish; a single scroll-triggered moment that adds weight to the below-fold content)
 - **Category**: Missed opportunity (group entrance) + Interruptibility

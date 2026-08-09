@@ -1,6 +1,6 @@
 # 003 — Modal open/close for BrowseModal + SummaryModal
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: `493f929`
 - **Severity**: MEDIUM
 - **Category**: Physicality & origin (missing spatial story) + Interruptibility

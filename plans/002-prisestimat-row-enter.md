@@ -1,6 +1,6 @@
 # 002 — Prisestimat row enter animation
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: `493f929`
 - **Severity**: MEDIUM
 - **Category**: Interruptibility + Physicality & origin (bridge a teleporting state)
