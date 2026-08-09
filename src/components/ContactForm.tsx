@@ -113,7 +113,7 @@ export default function ContactForm({ prefillRole }: { prefillRole?: string }) {
         <button
           type="submit"
           disabled={status === "sending"}
-          className="group inline-flex items-center gap-4 border border-ink px-8 py-5 eyebrow transition-colors hover:bg-ink hover:text-bone disabled:opacity-60"
+          className="group inline-flex items-center gap-4 border border-ink px-8 py-5 eyebrow press hover:bg-ink hover:text-bone disabled:opacity-60"
         >
           {status === "sending" ? "Sender…" : "Send melding"}
           <span

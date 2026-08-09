@@ -35,7 +35,7 @@ export default function Home() {
           <div className="rise rise-4 mt-10 flex flex-wrap gap-6">
             <Link
               href="/prisestimat"
-              className="group inline-flex items-center gap-4 border border-bone px-8 py-5 eyebrow text-bone transition-colors hover:bg-bone hover:text-ink"
+              className="group inline-flex items-center gap-4 border border-bone px-8 py-5 eyebrow text-bone press hover:bg-bone hover:text-ink"
             >
               Beregn prisestimat
               <span
@@ -194,7 +194,7 @@ export default function Home() {
           </h2>
           <Link
             href="/kontakt"
-            className="group inline-flex items-center gap-4 border border-ink px-8 py-5 eyebrow transition-colors hover:bg-ink hover:text-bone"
+            className="group inline-flex items-center gap-4 border border-ink px-8 py-5 eyebrow press hover:bg-ink hover:text-bone"
           >
             Ta kontakt
             <span

@@ -6,7 +6,7 @@ Self-contained implementation plans produced by the `improve-animations` skill. 
 
 | # | Title | Severity | Status | Blocked by |
 |---|---|---|---|---|
-| 001 | [Universal press feedback (`.press` utility)](./001-universal-press-feedback.md) | MEDIUM | TODO | — |
+| 001 | [Universal press feedback (`.press` utility)](./001-universal-press-feedback.md) | MEDIUM | DONE | — |
 
 ## Execution order
 
