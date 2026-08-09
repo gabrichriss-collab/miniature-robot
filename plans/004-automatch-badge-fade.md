@@ -1,6 +1,6 @@
 # 004 — Auto-match badge fade-in on fuzzy-match hit
 
-- **Status**: TODO
+- **Status**: DONE
 - **Commit**: `493f929`
 - **Severity**: LOW (polish, but a real feedback moment)
 - **Category**: Purpose & frequency (feedback confirming a system action)

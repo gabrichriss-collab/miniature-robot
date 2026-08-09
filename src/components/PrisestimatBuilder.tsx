@@ -404,7 +404,7 @@ function RowItem({
 
   return (
     <div
-      className={`grid grid-cols-1 gap-2 py-5 md:grid-cols-[1fr_5rem_6rem_7rem_8rem_2.5rem] md:items-center md:gap-4 ${
+      className={`row-enter grid grid-cols-1 gap-2 py-5 md:grid-cols-[1fr_5rem_6rem_7rem_8rem_2.5rem] md:items-center md:gap-4 ${
         index !== 0 ? "border-t border-ink/10" : ""
       }`}
     >
@@ -417,7 +417,7 @@ function RowItem({
           onChange={(e) => updateRow(row.id, "name", e.target.value)}
         />
         {row.matched && row.matchName ? (
-          <p className="mt-2 text-xs text-ink/60">
+          <p className="match-badge mt-2 text-xs text-ink/60">
             <span className="eyebrow mr-2 text-ink/80">Auto</span>
             {row.matchName}
             {row.note ? ` · ${row.note}` : ""}
@@ -528,12 +528,23 @@ function ModalShell({
   title: string;
   children: React.ReactNode;
 }) {
+  const [state, setState] = useState<"open" | "closed">("open");
+
+  const requestClose = useCallback(() => {
+    setState("closed");
+    window.setTimeout(onClose, 240);
+  }, [onClose]);
+
   return (
     <div
+      data-modal-backdrop
+      data-state={state}
       className="fixed inset-0 z-50 flex items-center justify-center bg-ink/70 p-4"
-      onClick={onClose}
+      onClick={requestClose}
     >
       <div
+        data-modal-panel
+        data-state={state}
         className="max-h-[85vh] w-full max-w-3xl overflow-auto bg-bone shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -541,7 +552,7 @@ function ModalShell({
           <p className="eyebrow">{title}</p>
           <button
             type="button"
-            onClick={onClose}
+            onClick={requestClose}
             aria-label="Lukk"
             className="text-2xl text-ink/50 hover:text-ink"
           >
