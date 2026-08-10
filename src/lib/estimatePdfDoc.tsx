@@ -240,10 +240,10 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
 
         <View style={styles.disclaimer}>
           <Text>
-            Dette er et prisestimat basert på oppgitte opplysninger, og er
-            ikke et bindende tilbud. Endelig tilbud gis skriftlig etter
-            befaring på stedet. Priser er i norske kroner og inkluderer 25 %
-            MVA. Estimatet dekker arbeidene som er listet opp; det tas
+            Dette er et prisestimat basert på det du har lagt inn, og er ikke
+            et bindende tilbud. Bindende tilbud gir vi skriftlig etter
+            befaring på stedet. Alle beløp er i norske kroner og inkluderer
+            25 % MVA. Estimatet dekker arbeidene som står i lista — vi tar
             forbehold om skjulte forhold, endringer i omfang og
             materialpriser.
           </Text>

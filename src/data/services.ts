@@ -14,7 +14,7 @@ export const services: Service[] = [
     kicker: "01 — Bolig",
     title: "Nybygg og enebolig",
     lede:
-      "Fra tomtebefaring til overlevering. Vi bygger boliger av tre med presisjon, ro og respekt for stedet.",
+      "Vi bygger nye boliger i tre — fra tomtebefaring til nøkkelen leveres. Alt planlagt, tegnet og satt opp i tett dialog med deg som byggherre.",
     points: [
       "Prosjekterings- og byggeledelse",
       "Massivtre, bindingsverk og reisverk",
@@ -28,7 +28,7 @@ export const services: Service[] = [
     kicker: "02 — Utvidelse",
     title: "Tilbygg og påbygg",
     lede:
-      "Vi lar det gamle møte det nye med samme håndverksmessige alvor. Detaljene bærer huset videre.",
+      "Skal huset utvides eller løftes med en etasje? Vi tar det nye på alvor og respekterer det som allerede står. Det er i skjøtene mellom gammelt og nytt jobben avgjøres.",
     points: [
       "Skreddersydde tilbygg i tre",
       "Loftsutbygging og takløft",
@@ -42,7 +42,7 @@ export const services: Service[] = [
     kicker: "03 — Interiør",
     title: "Interiør og spesialsnekring",
     lede:
-      "Kjøkken, garderobe, bibliotek. Møbler og fastinnredning tegnet og bygget for det ene rommet.",
+      "Kjøkken, garderober, bokhyller. Vi tegner og bygger fastinnredning på verkstedet vårt og monterer det hjemme hos deg.",
     points: [
       "Fastmøbler i massivtre og finér",
       "Trapper, dører og listverk",
@@ -56,7 +56,7 @@ export const services: Service[] = [
     kicker: "04 — Vern",
     title: "Rehabilitering og vern",
     lede:
-      "Å bevare er å bygge langsomt. Vi tilbakefører vinduer, fasader og konstruksjoner med opprinnelige teknikker.",
+      "Gamle hus krever tid og respekt. Vi tilbakefører vinduer, panel og konstruksjoner slik det opprinnelig ble gjort — der det er riktig å gjøre det.",
     points: [
       "Vinduer og dører i tradisjonelt håndverk",
       "Panel, list og fasaderehab",
@@ -70,7 +70,7 @@ export const services: Service[] = [
     kicker: "05 — Næring",
     title: "Kommersielt og kultur",
     lede:
-      "Kafé, galleri, kontor. Interiør og innredning bygget for hverdagens slitasje og et rolig uttrykk.",
+      "Kafé, galleri, kontor. Vi bygger innredning som tåler daglig slitasje uten at det synes.",
     points: [
       "Fastinnredning og bardisker",
       "Skillevegger og akustikk i tre",
@@ -84,7 +84,7 @@ export const services: Service[] = [
     kicker: "06 — Rådgivning",
     title: "Rådgivning og forprosjekt",
     lede:
-      "Før spikeren treffer. Vi kommer på befaring, tegner opp muligheter og gir et grunnlag å bygge videre på.",
+      "Før spikeren treffer treet. Vi kommer på befaring, ser på mulighetene og gir deg et ærlig grunnlag å ta beslutninger på.",
     points: [
       "Befaring og mulighetsstudie",
       "Kalkyle og fremdrift",

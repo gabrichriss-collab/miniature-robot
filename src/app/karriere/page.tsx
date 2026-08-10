@@ -13,21 +13,21 @@ const positions = [
     title: "Tømrer",
     type: "Fast · 100%",
     place: "Myking · Verksted og plass",
-    body: "Vi søker en erfaren tømrer med fagbrev, som liker å jobbe presist og selvstendig. Både verksted og montasje."
+    body: "Vi ser etter en erfaren tømrer med fagbrev, som liker å jobbe nøyaktig og selvstendig. Både på verkstedet og ute på plassen."
   },
   {
     slug: "snekker",
     title: "Møbelsnekker",
     type: "Fast · 100%",
     place: "Myking · Verksted",
-    body: "Til fastmøbler og spesialsnekring. Erfaring fra finér, massivtre og oljede overflater."
+    body: "Til fastmøbler og spesialsnekring. Det er en fordel om du har erfaring med finér, massivtre og oljede overflater."
   },
   {
     slug: "laerling",
     title: "Lærling",
     type: "2 år · Lærekontrakt",
     place: "Myking",
-    body: "Vi tar inn én lærling pr. år. Rolig opplæring, mesterlig oppfølging."
+    body: "Vi tar inn én lærling i året. Du får ro til å lære, og tett oppfølging av folk som kan faget."
   }
 ];
 
@@ -37,7 +37,7 @@ export default function KarrierePage() {
       <PageHeader
         kicker="Karriere"
         title="Bli med i verkstedet."
-        lede="Vi er et lite team og vokser sakte. Vi ansetter når vi kan gi ny kollega tid, plass og skikkelig oppfølging."
+        lede="Vi er et lite team og vokser rolig. Vi ansetter først når vi har tid og plass til å ta imot en ny kollega ordentlig."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">
@@ -86,8 +86,8 @@ export default function KarrierePage() {
           </div>
           <div className="md:col-span-8">
             <p className="max-w-2xl text-lg text-ink/80">
-              Vi tar imot åpne søknader året rundt. Skriv noen ord om deg, og
-              legg gjerne ved bilder av arbeid du er stolt av.
+              Vi tar imot åpne søknader hele året. Skriv litt om deg selv, og
+              send gjerne med bilder av noe du har laget som du er stolt av.
             </p>
             <Link
               href="/kontakt?rolle=Åpen%20søknad"

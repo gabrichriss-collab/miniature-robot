@@ -14,7 +14,7 @@ export default function PrisestimatPage() {
       <PageHeader
         kicker="Prisestimat"
         title="Beregn selv."
-        lede="Skriv hva som skal gjøres — bordkledning, terrasse, nytt vindu — så foreslår systemet enhet og pris fra vår prisliste. Estimatet oppdateres i sanntid, og du kan laste det ned som PDF når du er ferdig."
+        lede="Skriv hva som skal gjøres — bordkledning, terrasse, nytt vindu — så foreslår vi enhet og pris fra prislista vår. Summen oppdaterer seg mens du skriver, og du kan laste ned hele estimatet som PDF når du er ferdig."
       />
       <PrisestimatBuilder />
     </>

@@ -72,7 +72,7 @@ export default function ContactForm({ prefillRole }: { prefillRole?: string }) {
           rows={6}
           required
           className="mt-3 w-full resize-none border-b border-ink/30 bg-transparent py-3 text-lg outline-none transition-colors focus:border-ink"
-          placeholder="Fortell kort om prosjektet eller hvorfor du skriver…"
+          placeholder="Fortell kort hva du lurer på eller hva prosjektet handler om…"
         />
       </label>
 
@@ -87,12 +87,12 @@ export default function ContactForm({ prefillRole }: { prefillRole?: string }) {
       />
 
       <p className="mt-2 text-sm text-ink/60">
-        Ved å sende inn samtykker du til at vi kan kontakte deg vedrørende
-        henvendelsen. Vi behandler personopplysninger etter{" "}
+        Når du sender inn, kan vi ta kontakt om det du spør etter. Vi
+        behandler personopplysninger etter{" "}
         <a className="uline" href="/personvern">
           personvernerklæringen
         </a>{" "}
-        og deler dem ikke med tredjeparter.
+        og deler dem ikke med andre.
       </p>
 
       <div className="mt-4 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">

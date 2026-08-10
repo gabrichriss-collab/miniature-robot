@@ -30,8 +30,9 @@ export default function Home() {
             Bygget for å vare.
           </h1>
           <p className="rise rise-3 mt-6 max-w-xl text-lg text-bone/75">
-            Tømrerarbeid, tilbygg og spesialsnekring i tre — med tradisjonelt
-            håndverk og moderne presisjon.
+            Vi er et lite tømrerfirma i Myking. Vi bygger boliger, tilbygg,
+            terrasser og innredning i tre — i Nordhordland, Bergen og
+            resten av Vestland.
           </p>
           <div className="rise rise-4 mt-10 flex flex-wrap gap-6">
             <Link
@@ -64,16 +65,16 @@ export default function Home() {
           </div>
           <div className="md:col-span-8">
             <h2 className="headline text-[clamp(2.25rem,5.5vw,4.75rem)]">
-              Vi bygger med tre.
+              Vi bygger i tre.
               <br />
-              Rolig, presist og for lang tid.
+              Og vi bruker den tiden det tar.
             </h2>
             <p className="mt-10 max-w-2xl text-lg text-ink/80">
-              Tømrer Kawiche er et lite verksted i Myking i Nordhordland. Vi tegner, planlegger
-              og bygger boliger, tilbygg og spesialsnekkerier i tre — fra det
-              første strekstroket i skissen til den siste finpussen av
-              overflaten. Vårt håndverk er stille. Det viser seg i skjøtene,
-              i vekten på en dør, i hvordan et hus møter grunnen.
+              Tømrer Kawiche holder til i Myking i Nordhordland. Vi er tolv
+              folk som tegner, planlegger og bygger — fra det første
+              tegnearket til siste skru. Vi tar oppdrag vi kan følge fra
+              start til slutt, og vi jobber helst med tre. Detaljene der
+              gammelt møter nytt er der jobben avgjøres.
             </p>
             <Link
               href="/om-oss"

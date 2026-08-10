@@ -15,7 +15,7 @@ export default function TjenesterPage() {
       <PageHeader
         kicker="Tjenester"
         title="Det vi gjør."
-        lede="Vi tar oppdrag fra idé til overlevering. Alle prosjekter — enten det er en spisebordsbenk eller en enebolig — starter med en samtale og en befaring."
+        lede="Vi tar oppdrag fra første idé til nøkkelen er levert. Uansett størrelse — en spisebordsbenk eller en enebolig — starter det med en prat og en befaring."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">

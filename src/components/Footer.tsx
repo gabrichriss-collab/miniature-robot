@@ -11,7 +11,7 @@ export default function Footer() {
           <p className="headline text-4xl md:text-5xl">
             Bygget for å vare.
             <br />
-            Formet for å berøre.
+            Bygget her i Vestland.
           </p>
           <p className="mt-8 max-w-md text-bone/80">
             Tømrermester og medlem av Byggmesterforbundet. Sentralt godkjent
