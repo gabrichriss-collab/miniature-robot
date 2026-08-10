@@ -10,22 +10,22 @@ const values = [
   {
     k: "01",
     t: "Tid",
-    b: "Vi bygger uten hastverk. En riktig skjøt tar den tiden den tar."
+    b: "Vi tar oss tiden en jobb faktisk trenger. Ikke lenger, ikke kortere."
   },
   {
     k: "02",
     t: "Materiale",
-    b: "Vi jobber i tre — og lar det vise seg som det er. Aldring er en kvalitet."
+    b: "Vi jobber i tre. Vi lar det se ut som tre — og vi lar det få lov til å eldes."
   },
   {
     k: "03",
     t: "Presisjon",
-    b: "Millimeter betyr noe. Alt vi bygger måles, tegnes og prøvemonteres."
+    b: "Vi måler og tegner før vi kutter. Fastinnredning prøvemonteres på verkstedet før det havner hos deg."
   },
   {
     k: "04",
     t: "Nærhet",
-    b: "Vi er få. Byggherren kjenner oss ved navn — og møter oss på plassen."
+    b: "Vi er få, og det er meningen. Du snakker med dem som gjør jobben — ikke gjennom flere ledd."
   }
 ];
 
@@ -44,7 +44,7 @@ export default function OmOssPage() {
       <PageHeader
         kicker="Om oss"
         title="Et lite verksted i Nordhordland."
-        lede="Tømrer Kawiche ble grunnlagt i 2011 av tømrermester Kawiche N., med utgangspunkt i én overbevisning: at bygg fortsatt kan lages med hånd, hode og hjerte i samme rom."
+        lede="Vi startet i 2011. Kawiche N. er tømrermester og driver firmaet — resten av oss har kommet til underveis."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-24 md:px-10 md:pb-32">
@@ -55,19 +55,18 @@ export default function OmOssPage() {
           </div>
           <div className="md:col-span-8 space-y-6 text-lg text-ink/80">
             <p>
-              Vi startet i et lite verksted i Myking med to snekkerbenker og en
-              høvelmaskin arvet fra Kawiches bestefar. De første oppdragene var
-              dører og trapper til nabolagets gårder rundt Nordhordland. Rykte
-              spredte seg — stille, slik det gjør blant håndverkere.
+              Vi begynte i et lite verksted i Myking med to snekkerbenker og
+              en gammel høvelmaskin. De første jobbene var dører og trapper
+              til nabogårdene her i Nordhordland. Så kom det flere.
             </p>
             <p>
-              I dag er vi tolv, med et større verksted, mer utstyr og de samme
-              prinsippene. Vi tar prosjekter der vi kan holde hånden om
-              helheten — fra tegning til den siste skruen.
+              I dag er vi tolv, med et større verksted og mer utstyr. Vi tar
+              oppdrag der vi kan følge hele veien — fra tegneark til siste
+              skru.
             </p>
             <p>
-              Vi tror at et hus, en benk eller en dør skal kunne repareres av
-              den neste generasjonen. Vi bygger for barnebarn vi ikke har møtt.
+              Vi bygger slik at det kan repareres seinere, ikke skiftes ut.
+              Det er en av grunnene til at vi liker å jobbe i tre.
             </p>
           </div>
         </div>

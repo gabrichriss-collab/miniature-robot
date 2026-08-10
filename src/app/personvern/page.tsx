@@ -121,7 +121,7 @@ export default function PersonvernPage() {
       <PageHeader
         kicker="Personvern"
         title="Åpen om data."
-        lede="Kort og forståelig om hvordan vi behandler personopplysninger på denne nettsiden — i tråd med personvernforordningen (GDPR) og norsk personopplysningslov."
+        lede="Kort og forståelig om hvordan vi behandler personopplysninger på denne nettsiden — etter GDPR og norsk personopplysningslov."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">

@@ -20,7 +20,7 @@ export default function KontaktPage({
       <PageHeader
         kicker="Kontakt"
         title="La oss snakke."
-        lede="En kort e-post eller en telefon er alt som skal til. Vi kommer gjerne på befaring i Nordhordland, Bergen og resten av Vestland — det koster ingenting og forplikter til ingenting."
+        lede="En e-post eller en telefon holder for å komme i gang. Vi kommer gjerne på befaring i Nordhordland, Bergen og resten av Vestland — helt uforpliktende."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">

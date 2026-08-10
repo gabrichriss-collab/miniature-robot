@@ -175,8 +175,8 @@ export default function PrisestimatBuilder() {
           </h2>
           <p className="mt-6 max-w-sm text-ink/75">
             Skriv hva som skal gjøres — for eksempel <em>«terrasse 36 m²»</em> —
-            så foreslår systemet enhet og pris. Du kan også bla i prislisten og
-            justere alt selv. Estimatet oppdateres nederst i sanntid.
+            så foreslår vi enhet og pris. Du kan også bla i prislista og
+            endre alt selv. Summen oppdaterer seg nederst mens du skriver.
           </p>
         </div>
 
@@ -259,7 +259,7 @@ export default function PrisestimatBuilder() {
           </p>
           <p className="mt-4 max-w-md mx-auto text-ink/70">
             Skriv en beskrivelse i første post — <em>«terrasse 36 m²»</em>,{" "}
-            <em>«nytt vindu»</em>, <em>«ny kledning»</em> — så gjør vi resten.
+            <em>«nytt vindu»</em>, <em>«ny kledning»</em> — så tar vi resten.
           </p>
         </div>
       ) : (
@@ -321,10 +321,10 @@ export default function PrisestimatBuilder() {
             {/* Legal disclaimer */}
             <p className="mt-8 max-w-2xl border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
               <strong className="font-semibold">Prisestimat, ikke bindende tilbud.</strong>{" "}
-              Estimatet er basert på opplysningene du har oppgitt og våre
-              standard-satser. Endelig tilbud gis skriftlig etter befaring.
-              Alle priser er i norske kroner, inklusive materialer og
-              arbeidstimer for arbeidene som er listet opp.
+              Estimatet bygger på det du har lagt inn og våre normale satser.
+              Bindende tilbud gir vi skriftlig etter befaring. Alle beløp er i
+              norske kroner og inkluderer materialer og arbeidstimer for
+              punktene i lista.
             </p>
 
             {/* Submit + download */}
@@ -351,8 +351,8 @@ export default function PrisestimatBuilder() {
 
             {!canSubmit && (
               <p className="mt-4 text-sm text-ink/60">
-                Fyll inn navn og e-post for å laste ned. Da får både du og vi
-                en kopi.
+                Fyll inn navn og e-post for å laste ned — da får både du og
+                vi en kopi.
               </p>
             )}
             {feedback && (

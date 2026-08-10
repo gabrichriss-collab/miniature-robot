@@ -24,11 +24,11 @@ const body = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tomrerkawiche.no"),
   title: {
-    default: "Tømrer Kawiche — Tømrermester i Nordhordland · Håndverk med presisjon",
+    default: "Tømrer Kawiche — Tømrermester i Nordhordland",
     template: "%s · Tømrer Kawiche"
   },
   description:
-    "Tømrer Kawiche er et tømrerverksted i Myking i Nordhordland. Vi bygger boliger, tilbygg, interiør og spesialsnekring i tre — med tradisjonelt håndverk og moderne presisjon. Vi arbeider i Alver, Osterøy, Bergen og resten av Vestland.",
+    "Tømrer Kawiche er et tømrerverksted i Myking i Nordhordland. Vi bygger boliger, tilbygg, innredning og spesialsnekring i tre — for kunder i Alver, Osterøy, Bergen og resten av Vestland.",
   keywords: [
     "tømrer Nordhordland",
     "tømrer Alver",
@@ -63,13 +63,13 @@ export const metadata: Metadata = {
     siteName: "Tømrer Kawiche",
     title: "Tømrer Kawiche — Tømrermester i Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon — for Nordhordland, Bergen og Vestland."
+      "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
   },
   twitter: {
     card: "summary_large_image",
     title: "Tømrer Kawiche — Tømrermester i Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon — for Nordhordland, Bergen og Vestland."
+      "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
   },
   robots: {
     index: true,

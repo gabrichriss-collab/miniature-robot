@@ -11,22 +11,22 @@ const pillars = [
   {
     k: "01",
     t: "Materialer med opprinnelse",
-    b: "Vi kjøper tre fra kjente sagbruk. Vi vet hvilken skog det kommer fra, og hvem som har foredlet det."
+    b: "Vi kjøper tre fra sagbruk vi kjenner. Vi vet hvor skogen står og hvem som har foredlet det."
   },
   {
     k: "02",
     t: "Lang levetid",
-    b: "Vi bygger for reparasjon, ikke utskifting. Skjøter demonteres. Deler skiftes. Hus lever."
+    b: "Vi bygger slik at ting kan repareres — ikke skiftes ut. Skjøter kan tas fra hverandre, og enkeltdeler kan byttes."
   },
   {
     k: "03",
     t: "Lavere fotavtrykk",
-    b: "Tre binder karbon. Vi velger massivtre og tresjikt der det gir mest mening — og vi måler."
+    b: "Tre binder karbon. Vi velger massivtre og trebaserte løsninger der det passer, og fører enkelt regnskap på det vi bruker."
   },
   {
     k: "04",
     t: "Sunt inneklima",
-    b: "Naturlige overflater: olje, såpe, lin, kalk. Ingen tåkelagt kjemi — bare gjennomtenkte valg."
+    b: "Overflatene våre er stort sett olje, såpe, lin og kalk. Ingen skjult kjemi — bare valg vi kan stå for."
   }
 ];
 
@@ -35,8 +35,8 @@ export default function BaerekraftPage() {
     <>
       <PageHeader
         kicker="Bærekraft"
-        title="Å bygge for lenge."
-        lede="For oss er bærekraft først og fremst et spørsmål om tid: hvor lenge et hus står, hvor lett det er å reparere, og hvor mye det bærer videre til neste generasjon."
+        title="Å bygge for lang tid."
+        lede="For oss handler bærekraft først og fremst om levetid: hvor lenge huset står, hvor lett det kan repareres, og hvor mye det tåler før noe må skiftes."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">
@@ -68,9 +68,10 @@ export default function BaerekraftPage() {
                 Vi måler, dokumenterer og deler.
               </h2>
               <p className="mt-8 max-w-2xl text-bone/80">
-                Hvert prosjekt får et enkelt materialregnskap: hvor treet kom
-                fra, hvor mye CO₂e det binder, og hvor overskuddet gikk. Rester
-                brukes i mindre møbler, prøvebiter og lærlingoppgaver.
+                Hvert prosjekt får et enkelt materialregnskap: hvor treet
+                kommer fra, hvor mye CO₂e det binder, og hva som skjer med
+                overskuddet. Restene går til mindre møbler, prøvebiter og
+                lærlingoppgaver.
               </p>
               <dl className="mt-14 grid grid-cols-2 gap-8 md:grid-cols-3">
                 {[

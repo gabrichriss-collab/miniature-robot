@@ -13,7 +13,7 @@ export default function ProsjekterPage() {
       <PageHeader
         kicker="Prosjekter"
         title="Bygget arbeid."
-        lede="Et lite utvalg av prosjekter vi har hatt gleden av å levere. Alle er dokumentert i tett samarbeid med byggherre, arkitekt og fagmiljøet."
+        lede="Et utvalg jobber vi har levert de siste årene. Klikk deg gjennom for detaljer om sted, størrelse og materialbruk."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">
