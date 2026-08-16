@@ -23,8 +23,10 @@ export default function Home() {
         />
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-16 md:px-10 md:pb-20">
-          <h1 className="headline rise rise-2 text-[clamp(3rem,10vw,9rem)]">
-            Vi streber for generasjoner.
+          <h1 className="headline rise rise-2 text-[clamp(2rem,5vw,4.75rem)]">
+            Forpliktet til perfeksjon.
+            <br />
+            For kommende generasjoner.
           </h1>
           <div className="rise rise-4 mt-16 flex items-end justify-end md:mt-24">
             <Link
