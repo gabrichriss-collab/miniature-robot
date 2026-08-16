@@ -27,7 +27,7 @@ export default function Home() {
             Nordhordland · Vestland
           </p>
           <h1 className="headline rise rise-2 text-[clamp(3rem,10vw,9rem)]">
-            Ulike tomter, samme håndverk.
+            Vi streber for generasjoner.
           </h1>
           <p className="rise rise-3 mt-6 max-w-xl text-lg text-bone/75">
             Vi er et lite tømrerfirma i Myking. Vi bygger boliger, tilbygg,
