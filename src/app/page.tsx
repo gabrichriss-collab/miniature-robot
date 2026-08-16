@@ -7,19 +7,19 @@ export default function Home() {
   const featured = projects.slice(0, 4);
   return (
     <>
-      {/* Static hero — dark wood-toned background, big headline, subtle Ken Burns */}
+      {/* Static hero — landscape photograph with grain, big headline, subtle Ken Burns */}
       <section className="relative -mt-24 flex h-[100svh] w-full items-end overflow-hidden bg-ink text-bone">
         <div
           aria-hidden
-          className="kenburns absolute inset-0"
+          className="kenburns absolute inset-0 bg-cover bg-center"
           style={{
-            background:
-              "linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
+            backgroundImage:
+              "url(/images/hero.jpg), linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
           }}
         />
         <div
           aria-hidden
-          className="noise absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-ink/40"
+          className="grain-strong absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-ink/45"
         />
 
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-16 md:px-10 md:pb-20">
