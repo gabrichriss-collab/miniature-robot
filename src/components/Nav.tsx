@@ -53,10 +53,10 @@ export default function Nav() {
           <Link
             href="/"
             aria-label="Tømrer Kawiche — Hjem"
-            className={`headline flex flex-col leading-[0.9] tracking-tightest transition-colors duration-500 ease-swoop ${textColor}`}
+            className={`headline flex flex-col leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop ${textColor}`}
           >
-            <span className="text-xl md:text-2xl">Tømrer</span>
-            <span className="text-xl md:text-2xl">Kawiche</span>
+            <span className="text-[1.75rem] md:text-[2.25rem]">Tømrer</span>
+            <span className="text-[1.75rem] md:text-[2.25rem]">Kawiche</span>
           </Link>
 
           {/* Desktop inline nav (lg and up) */}
