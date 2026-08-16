@@ -22,36 +22,22 @@ export default function Home() {
           className="noise absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/10 to-ink/40"
         />
 
-        <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-24 md:px-10 md:pb-32">
-          <p className="eyebrow rise rise-1 mb-6 text-bone/70">
-            Nordhordland · Vestland
-          </p>
+        <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-16 md:px-10 md:pb-20">
           <h1 className="headline rise rise-2 text-[clamp(3rem,10vw,9rem)]">
             Vi streber for generasjoner.
           </h1>
-          <p className="rise rise-3 mt-6 max-w-xl text-lg text-bone/75">
-            Vi er et lite tømrerfirma i Myking. Vi bygger boliger, tilbygg,
-            terrasser og innredning i tre — i Nordhordland, Bergen og
-            resten av Vestland.
-          </p>
-          <div className="rise rise-4 mt-10 flex flex-wrap gap-6">
+          <div className="rise rise-4 mt-16 flex items-end justify-end md:mt-24">
             <Link
               href="/prisestimat"
-              className="group inline-flex items-center gap-4 border border-bone px-8 py-5 eyebrow text-bone press hover:bg-bone hover:text-ink"
+              className="group inline-flex items-center gap-3 eyebrow text-bone"
             >
-              Beregn prisestimat
+              <span className="uline">Beregn prisestimat</span>
               <span
                 aria-hidden
                 className="transition-transform duration-500 ease-swoop group-hover:translate-x-1"
               >
-                →
+                ↓
               </span>
-            </Link>
-            <Link
-              href="/kontakt"
-              className="uline eyebrow text-bone/90 self-center"
-            >
-              Ta kontakt →
             </Link>
           </div>
         </div>
