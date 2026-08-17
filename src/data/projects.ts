@@ -8,9 +8,26 @@ export type Project = {
   material: string;
   summary: string;
   gradient: string;
+  /** Optional real photo. Path under /public. When set, replaces the gradient. */
+  image?: string;
+  /** Optional focal alignment for the image; defaults to "center". */
+  imagePosition?: string;
 };
 
 export const projects: Project[] = [
+  {
+    slug: "baderom-myking",
+    title: "Baderom i tre og stein",
+    place: "Myking, Alver",
+    year: "2025",
+    category: "Interiør",
+    size: "9 m²",
+    material: "Eik, kalkstein, matt betongflis",
+    summary:
+      "Nytt baderom med frittstående kar, spesialtegnet servantskap i eik og skjulte armaturer. Rolig lys, varm palett.",
+    gradient: "linear-gradient(120deg,#2a231d,#6b5b46 55%,#c9b89a)",
+    image: "/images/projects/baderom.jpg"
+  },
   {
     slug: "villa-furuli",
     title: "Villa Furuli",

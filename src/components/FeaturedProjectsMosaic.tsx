@@ -50,7 +50,12 @@ export default function FeaturedProjectsMosaic({
         >
           <div
             className="absolute inset-0 transition-transform duration-[1200ms] ease-swoop group-hover:scale-[1.04]"
-            style={{ background: p.gradient }}
+            style={{
+              background: p.gradient,
+              backgroundImage: p.image ? `url(${p.image}), ${p.gradient}` : p.gradient,
+              backgroundSize: "cover",
+              backgroundPosition: p.imagePosition ?? "center"
+            }}
             aria-hidden
           />
           <div
