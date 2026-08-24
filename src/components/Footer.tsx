@@ -62,16 +62,6 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link className="uline" href="/baerekraft">
-                Bærekraft
-              </Link>
-            </li>
-            <li>
-              <Link className="uline" href="/karriere">
-                Karriere
-              </Link>
-            </li>
-            <li>
               <Link className="uline" href="/kontakt">
                 Kontakt
               </Link>

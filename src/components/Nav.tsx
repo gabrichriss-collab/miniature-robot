@@ -60,7 +60,7 @@ export default function Nav() {
           </Link>
 
           {/* Desktop inline nav (lg and up) */}
-          <nav className="hidden gap-10 lg:flex">
+          <nav className="hidden items-center gap-10 lg:flex">
             {[
               ["Tjenester", "/tjenester"],
               ["Prosjekter", "/prosjekter"],
@@ -76,6 +76,22 @@ export default function Nav() {
                 {label}
               </Link>
             ))}
+            <Link
+              href="/kontakt?type=tilbud"
+              className={`group inline-flex items-center gap-3 border px-5 py-3 eyebrow press transition-colors duration-500 ease-swoop ${
+                overDark
+                  ? "border-bone text-bone hover:bg-bone hover:text-ink"
+                  : "border-ink text-ink hover:bg-ink hover:text-bone"
+              }`}
+            >
+              Be om tilbud
+              <span
+                aria-hidden
+                className="transition-transform duration-500 ease-swoop group-hover:translate-x-0.5"
+              >
+                →
+              </span>
+            </Link>
           </nav>
 
           {/* Mobile + tablet hamburger (hidden on desktop) */}

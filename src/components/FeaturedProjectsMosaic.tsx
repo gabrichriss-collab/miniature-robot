@@ -36,7 +36,7 @@ export default function FeaturedProjectsMosaic({
       {projects.map((p, i) => (
         <Link
           key={p.slug}
-          href={`/prosjekter#${p.slug}`}
+          href={`/prosjekter/${p.slug}`}
           data-reveal={revealed ? "in" : "out"}
           style={{
             aspectRatio: i % 3 === 0 ? "4 / 3" : "5 / 4",
@@ -50,7 +50,14 @@ export default function FeaturedProjectsMosaic({
         >
           <div
             className="absolute inset-0 transition-transform duration-[1200ms] ease-swoop group-hover:scale-[1.04]"
-            style={{ background: p.gradient }}
+            style={{
+              background: p.gradient,
+              backgroundImage: p.heroImage
+                ? `url(${p.heroImage}), ${p.gradient}`
+                : p.gradient,
+              backgroundSize: "cover",
+              backgroundPosition: p.heroImagePosition ?? "center"
+            }}
             aria-hidden
           />
           <div
@@ -64,7 +71,7 @@ export default function FeaturedProjectsMosaic({
             <h3 className="headline mt-3 text-3xl md:text-5xl">
               {p.title}
             </h3>
-            <p className="mt-2 text-bone/70">{p.place}</p>
+            <p className="mt-2 text-bone/70">{p.location}</p>
           </div>
         </Link>
       ))}

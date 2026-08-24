@@ -45,6 +45,19 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
   return { subtotal, markupAmount, subWithMarkup, mvaAmount, total };
 }
 
+/**
+ * Turn a single point estimate into a low/high range that the customer sees
+ * as "Veiledende prisestimat". ±15 % is a defensible spread for line-item
+ * carpentry work where the tender still needs a site visit.
+ */
+export function estimateRange(total: number): { low: number; high: number } {
+  const spread = 0.15;
+  return {
+    low: Math.round((total * (1 - spread)) / 1000) * 1000,
+    high: Math.round((total * (1 + spread)) / 1000) * 1000
+  };
+}
+
 /** Norsk tallformat, "1 234 567". */
 export function formatNok(n: number): string {
   return Number(n).toLocaleString("nb-NO", {

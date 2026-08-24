@@ -8,9 +8,8 @@ const items: Array<{ label: string; href: string }> = [
   { label: "Prosjekter", href: "/prosjekter" },
   { label: "Prisestimat", href: "/prisestimat" },
   { label: "Om oss", href: "/om-oss" },
-  { label: "Bærekraft", href: "/baerekraft" },
-  { label: "Karriere", href: "/karriere" },
-  { label: "Kontakt", href: "/kontakt" }
+  { label: "Kontakt", href: "/kontakt" },
+  { label: "Be om tilbud", href: "/kontakt?type=tilbud" }
 ];
 
 export default function HamburgerOverlay({

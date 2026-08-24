@@ -1,86 +1,55 @@
+/**
+ * Real projects only. Add entries here as photos and permission from the
+ * customer are in place. Empty by design — the UI on `/prosjekter` and
+ * the homepage falls back to an empty state until the first real case
+ * study lands.
+ *
+ * When adding a project, drop images under `public/images/projects/<slug>/`
+ * and reference them with paths like `/images/projects/villaX/hero.jpg`.
+ */
+
+export type ProjectCategory =
+  | "Rehabilitering"
+  | "Tilbygg"
+  | "Terrasse & uterom"
+  | "Fasade"
+  | "Vinduer & dører"
+  | "Innvendig";
+
 export type Project = {
   slug: string;
   title: string;
-  place: string;
+  /** General location — e.g. "Alver" or "Bergen Nord". Never a private street address. */
+  location: string;
+  /** e.g. "2025". Year of completion or "Pågående". */
   year: string;
-  category: "Bolig" | "Tilbygg" | "Interiør" | "Næring" | "Rehabilitering";
-  size: string;
-  material: string;
-  summary: string;
+  category: ProjectCategory;
+  /** One-sentence card summary. */
+  shortDescription: string;
+  /** Path under /public to the hero photograph. If missing, the gradient shows as a fallback. */
+  heroImage?: string;
+  /** Optional focal alignment for the hero image. */
+  heroImagePosition?: string;
+  /** Before / underveis / ferdig image paths under /public. Each optional. */
+  beforeImages?: string[];
+  processImages?: string[];
+  finishedImages?: string[];
+  /** Case-study body sections. All optional — omit what does not apply. */
+  challenge?: string;
+  solution?: string;
+  execution?: string;
+  details?: string;
+  /** Related services (slugs from services.ts) for internal linking. */
+  services?: string[];
+  /** Wood-toned gradient used as visual fallback when no hero image is present. */
   gradient: string;
 };
 
-export const projects: Project[] = [
-  {
-    slug: "villa-furuli",
-    title: "Villa Furuli",
-    place: "Alversund, Alver",
-    year: "2024",
-    category: "Bolig",
-    size: "340 m²",
-    material: "Massivtre, sedertre, ubehandlet ask",
-    summary:
-      "Enebolig over tre etasjer med synlig massivtre fra kjeller til møne. Fasaden er ubehandlet og får gråne fritt.",
-    gradient: "linear-gradient(120deg,#2a2622,#4a3f34 40%,#7a6a55)"
-  },
-  {
-    slug: "hus-ved-fjorden",
-    title: "Hus ved fjorden",
-    place: "Meland, Alver",
-    year: "2024",
-    category: "Tilbygg",
-    size: "72 m²",
-    material: "Eik, zink, kalkpuss",
-    summary:
-      "Tilbygg til et hus fra 1930-tallet. Overgangen fra gammelt til nytt er løst med en fugefri kobling i eik.",
-    gradient: "linear-gradient(120deg,#1c2320,#3a4a3f 55%,#7a8a75)"
-  },
-  {
-    slug: "loftsleilighet-sandviken",
-    title: "Loftsleilighet",
-    place: "Sandviken, Bergen",
-    year: "2023",
-    category: "Interiør",
-    size: "118 m²",
-    material: "Ask, lin, brent tre",
-    summary:
-      "Totalrenovering av loftsleilighet. Kjøkken og bibliotek er tegnet spesielt for rommet, i ask med linolje.",
-    gradient: "linear-gradient(120deg,#201a15,#5a3d28 50%,#b58a5f)"
-  },
-  {
-    slug: "kaffebrenneriet",
-    title: "Kaffebrenneriet",
-    place: "Bergen sentrum",
-    year: "2023",
-    category: "Næring",
-    size: "210 m²",
-    material: "Furu, messing, oljet stål",
-    summary:
-      "Kafé og brenneri. Bardisk, hyller og skillevegger ble bygget hos oss og fraktet inn ferdig.",
-    gradient: "linear-gradient(120deg,#16130f,#3a2b1e 50%,#8a6a3f)"
-  },
-  {
-    slug: "sveitservillaen",
-    title: "Sveitservillaen",
-    place: "Nordnes, Bergen",
-    year: "2022",
-    category: "Rehabilitering",
-    size: "410 m²",
-    material: "Original furu, lin, tradisjonell maling",
-    summary:
-      "Tilbakeføring av fasade, vinduer og listverk etter Riksantikvarens veiledere — i tradisjonelt håndverk hele veien.",
-    gradient: "linear-gradient(120deg,#1a1614,#4a3b30 55%,#a08863)"
-  },
-  {
-    slug: "atelier-i-hagen",
-    title: "Atelier i hagen",
-    place: "Osterøy",
-    year: "2022",
-    category: "Bolig",
-    size: "48 m²",
-    material: "Sedertre, gran, oljet gulv",
-    summary:
-      "Frittstående atelier i hagen. Enkel form, mye lys, og materialer som får eldes uten behandling.",
-    gradient: "linear-gradient(120deg,#151a17,#3a4a3f 55%,#8ea38a)"
-  }
-];
+/**
+ * TODO: ADD REAL PROJECTS
+ *
+ * When Tømrer Kawiche has verified case-study material, add entries below.
+ * Do NOT invent projects to fill the grid — the empty state is the
+ * honest default until real work + photos are ready.
+ */
+export const projects: Project[] = [];
