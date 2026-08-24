@@ -28,8 +28,7 @@ export default function JsonLd() {
     knowsLanguage: ["nb-NO", "nn-NO", "en"],
     vatID: `NO${site.orgNumber.replace(/\s/g, "")}MVA`,
     taxID: site.orgNumber.replace(/\s/g, ""),
-    foundingDate: "2011",
-    slogan: "Håndverk med presisjon.",
+    slogan: "Forpliktet til perfeksjon. For kommende generasjoner.",
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
@@ -49,12 +48,12 @@ export default function JsonLd() {
       "@type": "OfferCatalog",
       name: "Tjenester",
       itemListElement: [
-        "Nybygg og enebolig",
-        "Tilbygg og påbygg",
-        "Interiør og spesialsnekring",
-        "Rehabilitering og vern",
-        "Kommersielt og kultur",
-        "Rådgivning og forprosjekt"
+        "Rehabilitering",
+        "Tilbygg",
+        "Terrasse og uterom",
+        "Fasade og kledning",
+        "Vinduer og dører",
+        "Innvendig tømrerarbeid"
       ].map((name) => ({
         "@type": "Offer",
         itemOffered: { "@type": "Service", name, serviceType: name }

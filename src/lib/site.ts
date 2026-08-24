@@ -22,16 +22,14 @@ export const site = {
     instagram: "https://instagram.com",
     linkedin: "https://linkedin.com"
   },
-  // Norsk kontekst brukt i copy og strukturerte data
+  // Primær geografi brukt i copy og strukturerte data
   areasServed: [
+    "Bergen",
     "Nordhordland",
     "Alver",
     "Osterøy",
-    "Modalen",
-    "Masfjorden",
-    "Austrheim",
-    "Fedje",
-    "Bergen",
+    "Åsane",
     "Vestland"
-  ]
+  ],
+  positioning: "Bergen, Nordhordland og omegn"
 } as const;

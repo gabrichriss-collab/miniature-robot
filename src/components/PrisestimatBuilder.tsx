@@ -10,8 +10,10 @@ import {
   type PriceEntry
 } from "@/data/pricing";
 import { findBestMatch } from "@/lib/fuzzyMatch";
+import Link from "next/link";
 import {
   calcTotals,
+  estimateRange,
   formatNok,
   type EstimateRow,
   type EstimateInput
@@ -310,22 +312,56 @@ export default function PrisestimatBuilder() {
                 label={`MVA (${mvaRate}%)`}
                 value={`${formatNok(totals.mvaAmount)} kr`}
               />
-              <div className="mt-4 flex items-baseline justify-between border-t border-ink pt-4">
-                <span className="eyebrow">Estimert totalt</span>
-                <span className="headline text-4xl md:text-5xl">
-                  {formatNok(totals.total)} kr
-                </span>
+              <div className="mt-4 border-t border-ink pt-4">
+                <p className="eyebrow mb-2 text-ink/60">Veiledende prisestimat</p>
+                <div className="flex flex-wrap items-baseline justify-between gap-4">
+                  <span className="headline text-3xl md:text-5xl">
+                    {formatNok(estimateRange(totals.total).low)}
+                    <span className="text-ink/40"> — </span>
+                    {formatNok(estimateRange(totals.total).high)} kr
+                  </span>
+                  <span className="text-sm text-ink/60">
+                    Punkt: {formatNok(totals.total)} kr
+                  </span>
+                </div>
               </div>
             </dl>
 
             {/* Legal disclaimer */}
             <p className="mt-8 max-w-2xl border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
-              <strong className="font-semibold">Prisestimat, ikke bindende tilbud.</strong>{" "}
-              Estimatet bygger på det du har lagt inn og våre normale satser.
-              Bindende tilbud gir vi skriftlig etter befaring. Alle beløp er i
-              norske kroner og inkluderer materialer og arbeidstimer for
-              punktene i lista.
+              <strong className="font-semibold">Veiledende prisestimat — ikke bindende tilbud.</strong>{" "}
+              Estimatet er basert på opplysningene du har lagt inn og våre
+              normale satser. Endelig pris fastsettes etter gjennomgang av
+              prosjektet og eventuell befaring. Alle beløp er i norske kroner
+              og inkluderer materialer og arbeidstimer for punktene i lista.
             </p>
+
+            {/* Enquiry hand-off — pre-fills the contact form so the customer
+                doesn't type the project a second time */}
+            <div className="mt-10 border border-ink/20 p-6 md:p-8">
+              <p className="eyebrow mb-3 text-ink/60">Neste steg</p>
+              <p className="headline text-2xl md:text-3xl">
+                Vil du at vi vurderer prosjektet nærmere?
+              </p>
+              <p className="mt-3 max-w-xl text-ink/75">
+                Vi tar gjerne en befaring — gratis og uforpliktende.
+                Prosjektet du har skissert her sendes med, slik at du ikke
+                trenger å skrive det inn på nytt.
+              </p>
+              <Link
+                href={`/kontakt?type=tilbud&tjeneste=${encodeURIComponent(
+                  projectName || "Prisestimat"
+                )}&melding=${encodeURIComponent(
+                  buildEnquiryPrefill({ input, totals })
+                )}`}
+                className="group mt-6 inline-flex items-center gap-3 border border-ink bg-ink px-7 py-4 eyebrow text-bone press hover:bg-transparent hover:text-ink"
+              >
+                Be om befaring
+                <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </div>
 
             {/* Submit + download */}
             <div className="mt-10 flex flex-wrap items-center gap-6">
@@ -766,4 +802,38 @@ function SummaryModal({
       </div>
     </ModalShell>
   );
+}
+
+/**
+ * Build a message body that summarises the estimator state so the customer
+ * doesn't have to re-type their project when landing on the enquiry form.
+ */
+function buildEnquiryPrefill({
+  input,
+  totals
+}: {
+  input: EstimateInput;
+  totals: ReturnType<typeof calcTotals>;
+}): string {
+  const range = estimateRange(totals.total);
+  const lines: string[] = [];
+  if (input.projectName) lines.push(`Prosjekt: ${input.projectName}`);
+  if (input.customerPostal) lines.push(`Postnummer: ${input.customerPostal}`);
+  lines.push("");
+  lines.push("Poster fra prisestimatet:");
+  for (const r of input.rows) {
+    if (!r.name) continue;
+    const qty = String(r.qty || "");
+    const price = String(r.price || "");
+    lines.push(`• ${r.name}${qty ? ` — ${qty} ${r.unit}` : ""}${price ? ` @ ${price} kr/${r.unit}` : ""}`);
+  }
+  lines.push("");
+  lines.push(
+    `Veiledende estimat: ${formatNok(range.low)} — ${formatNok(range.high)} kr (inkl. MVA)`
+  );
+  if (input.message) {
+    lines.push("");
+    lines.push(input.message);
+  }
+  return lines.join("\n");
 }

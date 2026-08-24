@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import MobileActionBar from "@/components/MobileActionBar";
 
 const display = Sorts_Mill_Goudy({
   subsets: ["latin"],
@@ -28,26 +29,20 @@ export const metadata: Metadata = {
     template: "%s · Tømrer Kawiche"
   },
   description:
-    "Tømrer Kawiche er et tømrerverksted i Myking i Nordhordland. Vi bygger boliger, tilbygg, innredning og spesialsnekring i tre — for kunder i Alver, Osterøy, Bergen og resten av Vestland.",
+    "Tømrer Kawiche er et tømrerfirma i Bergen, Nordhordland og omegn. Vi tar rehabilitering, tilbygg, terrasser, fasade, vinduer og innvendige arbeider — planlagt, utført og ferdigstilt av samme håndverker.",
   keywords: [
+    "tømrer Bergen",
+    "snekker Bergen",
+    "terrasse Bergen",
+    "bygge terrasse Bergen",
+    "rehabilitering Bergen",
+    "tilbygg Bergen",
+    "skifte kledning Bergen",
+    "kledning Bergen",
+    "bytte vinduer Bergen",
     "tømrer Nordhordland",
     "tømrer Alver",
-    "tømrer Bergen",
-    "tømrer Vestland",
-    "snekker Nordhordland",
-    "snekker Bergen",
-    "tilbygg Vestland",
-    "nybygg Nordhordland",
-    "påbygg",
-    "spesialsnekring",
-    "rehabilitering",
-    "massivtre",
-    "byggmester Bergen",
-    "trehus",
-    "loftsutbygging",
-    "Myking",
-    "Alver",
-    "Osterøy"
+    "tømrer Åsane"
   ],
   authors: [{ name: "Tømrer Kawiche AS" }],
   creator: "Tømrer Kawiche AS",
@@ -89,8 +84,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-bone text-ink antialiased">
         <JsonLd />
         <Nav />
-        <main>{children}</main>
+        <main className="pb-14 lg:pb-0">{children}</main>
         <Footer />
+        <MobileActionBar />
       </body>
     </html>
   );
