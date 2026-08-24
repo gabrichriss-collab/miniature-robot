@@ -24,7 +24,7 @@ const body = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tomrerkawiche.no"),
   title: {
-    default: "Tømrer Kawiche — Tømrermester i Nordhordland",
+    default: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
     template: "%s · Tømrer Kawiche"
   },
   description:
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     "tømrer Nordhordland",
     "tømrer Alver",
     "tømrer Bergen",
-    "tømrermester Vestland",
+    "tømrer Vestland",
     "snekker Nordhordland",
     "snekker Bergen",
     "tilbygg Vestland",
@@ -61,13 +61,13 @@ export const metadata: Metadata = {
     locale: "nb_NO",
     url: "https://tomrerkawiche.no",
     siteName: "Tømrer Kawiche",
-    title: "Tømrer Kawiche — Tømrermester i Nordhordland",
+    title: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
     description:
       "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tømrer Kawiche — Tømrermester i Nordhordland",
+    title: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
     description:
       "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
   },

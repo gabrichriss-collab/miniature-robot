@@ -14,8 +14,9 @@ export default function Footer() {
             Bygget her i Vestland.
           </p>
           <p className="mt-8 max-w-md text-bone/80">
-            Tømrermester og medlem av Byggmesterforbundet. Sentralt godkjent
-            for utførelse av tømrerarbeid, klasse&nbsp;2.
+            Basert i Myking, Nordhordland. Vi bygger boliger, tilbygg og
+            innredning i tre — for kunder i Alver, Osterøy, Bergen og resten
+            av Vestland.
           </p>
         </div>
 

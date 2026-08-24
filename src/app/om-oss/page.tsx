@@ -30,7 +30,7 @@ const values = [
 ];
 
 const team = [
-  { name: "Kawiche N.", role: "Grunnlegger, tømrermester" },
+  { name: "Kawiche N.", role: "Grunnlegger, tømrer" },
   { name: "Marte S.", role: "Byggeleder" },
   { name: "Ole T.", role: "Snekker, verksted" },
   { name: "Halvor R.", role: "Snekker, montasje" },
@@ -44,7 +44,7 @@ export default function OmOssPage() {
       <PageHeader
         kicker="Om oss"
         title="Et lite verksted i Nordhordland."
-        lede="Vi startet i 2011. Kawiche N. er tømrermester og driver firmaet — resten av oss har kommet til underveis."
+        lede="Vi startet i 2011. Kawiche N. er tømrer og driver firmaet — resten av oss har kommet til underveis."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-24 md:px-10 md:pb-32">
