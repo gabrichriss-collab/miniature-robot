@@ -25,11 +25,11 @@ const body = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tomrerkawiche.no"),
   title: {
-    default: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
+    default: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     template: "%s · Tømrer Kawiche"
   },
   description:
-    "Tømrer Kawiche er et tømrerfirma i Bergen, Nordhordland og omegn. Vi tar rehabilitering, tilbygg, terrasser, fasade, vinduer og innvendige arbeider — planlagt, utført og ferdigstilt av samme håndverker.",
+    "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn.",
   keywords: [
     "tømrer Bergen",
     "snekker Bergen",
@@ -56,15 +56,15 @@ export const metadata: Metadata = {
     locale: "nb_NO",
     url: "https://tomrerkawiche.no",
     siteName: "Tømrer Kawiche",
-    title: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
+    title: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     description:
-      "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
+      "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn."
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tømrer Kawiche — Håndverk i tre for kommende generasjoner",
+    title: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     description:
-      "Boliger, tilbygg, innredning og spesialsnekring i tre — for Nordhordland, Bergen og resten av Vestland."
+      "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn."
   },
   robots: {
     index: true,
