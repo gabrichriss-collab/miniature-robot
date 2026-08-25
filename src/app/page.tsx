@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { services } from "@/data/services";
 import { projects } from "@/data/projects";
 import FeaturedProjectsMosaic from "@/components/FeaturedProjectsMosaic";
+import ServicesSlider from "@/components/ServicesSlider";
 
 const processSteps = [
   {
@@ -39,7 +39,6 @@ const craftDetails = [
 ];
 
 export default function Home() {
-  const primaryServices = services.slice(0, 6);
   const featured = projects.slice(0, 4);
   const hasRealProjects = projects.length > 0;
 
@@ -169,9 +168,9 @@ export default function Home() {
         <div className="rule" />
       </div>
 
-      {/* 4. SERVICES */}
-      <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
-        <div className="mb-16 flex flex-col gap-8 md:mb-20 md:flex-row md:items-end md:justify-between">
+      {/* 4. SERVICES — Multiform-inspired horizontal slider */}
+      <section className="py-28 md:py-40">
+        <div className="mx-auto mb-14 flex max-w-[var(--page-max)] flex-col gap-8 px-6 md:mb-20 md:flex-row md:items-end md:justify-between md:px-10">
           <div>
             <p className="eyebrow">02 — Tjenester</p>
             <h2 className="headline mt-6 text-[clamp(2.25rem,5vw,4.25rem)]">
@@ -182,30 +181,7 @@ export default function Home() {
             Alle tjenester →
           </Link>
         </div>
-        <ul className="grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-2 lg:grid-cols-3">
-          {primaryServices.map((s, i) => (
-            <li key={s.slug}>
-              <Link
-                href={`/tjenester/${s.slug}`}
-                className="group grid grid-cols-[3rem_1fr] items-baseline gap-4 border-b border-ink/10 py-8 md:py-10"
-              >
-                <span className="eyebrow text-ink/40">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div>
-                  <h3 className="headline text-3xl md:text-4xl">{s.title}</h3>
-                  <p className="mt-3 text-ink/70">{s.lede}</p>
-                  <span
-                    aria-hidden
-                    className="eyebrow mt-4 inline-block text-ink/50 transition-transform duration-500 ease-swoop group-hover:translate-x-1"
-                  >
-                    Les mer →
-                  </span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <ServicesSlider />
       </section>
 
       {/* 5. SELECTED PROJECTS */}
