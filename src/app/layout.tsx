@@ -5,6 +5,7 @@ import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import MobileActionBar from "@/components/MobileActionBar";
+import UnderConstructionBanner from "@/components/UnderConstructionBanner";
 
 const display = Sorts_Mill_Goudy({
   subsets: ["latin"],
@@ -83,6 +84,7 @@ export default function RootLayout({
     <html lang="nb-NO" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-bone text-ink antialiased">
         <JsonLd />
+        <UnderConstructionBanner />
         <Nav />
         <main className="pb-14 lg:pb-0">{children}</main>
         <Footer />
