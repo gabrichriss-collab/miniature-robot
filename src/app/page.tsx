@@ -59,18 +59,11 @@ export default function Home() {
           className="grain-strong absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-ink/45"
         />
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-16 md:px-10 md:pb-20">
-          <p className="eyebrow rise rise-1 mb-6 text-bone/70">
-            Bergen, Nordhordland og omegn
-          </p>
           <h1 className="headline rise rise-2 text-[clamp(2rem,5vw,4.75rem)]">
             Forpliktet til perfeksjon.
             <br />
             For kommende generasjoner.
           </h1>
-          <p className="rise rise-3 mt-6 max-w-xl text-bone/80">
-            Tømrerarbeid, rehabilitering, tilbygg og utvendige arbeider —
-            i Bergen og omegn.
-          </p>
           <div className="rise rise-4 mt-10 flex flex-wrap items-center gap-6">
             <Link
               href="/kontakt?type=tilbud"
