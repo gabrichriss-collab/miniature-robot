@@ -21,6 +21,10 @@ export type Service = {
   gradient: string;
   /** Optional real photo. Path under /public. Replaces the gradient when set. */
   image?: string;
+  /** Alt text for the image. Required whenever `image` is set. */
+  imageAlt?: string;
+  /** CSS object-position for the image, e.g. "center", "50% 30%". Default: "center". */
+  imagePosition?: string;
 };
 
 export const services: Service[] = [
@@ -68,7 +72,9 @@ export const services: Service[] = [
         a: "Det kommer an på omfanget. På større rehab-jobber gir det som regel raskere fremdrift om huset står tomt, men mye kan gjøres etappevis."
       }
     ],
-    gradient: "linear-gradient(150deg,#161311 0%,#4a3b30 55%,#9a8265 100%)"
+    gradient: "linear-gradient(150deg,#161311 0%,#4a3b30 55%,#9a8265 100%)",
+    image: "/images/services/rehabilitering.jpg",
+    imageAlt: "Rehabilitering av trehus med stillas og utskifting av kledning"
   },
   {
     slug: "tilbygg",
@@ -114,7 +120,9 @@ export const services: Service[] = [
         a: "Fra befaring til ferdig utført ligger de fleste tilbygg mellom 8 og 20 uker, avhengig av størrelse og søknadsprosess."
       }
     ],
-    gradient: "linear-gradient(150deg,#181c1a 0%,#3a4a3f 50%,#7c8c78 100%)"
+    gradient: "linear-gradient(150deg,#181c1a 0%,#3a4a3f 50%,#7c8c78 100%)",
+    image: "/images/services/tilbygg.jpg",
+    imageAlt: "Moderne tilbygg i tre med store glassdører og terrasse"
   },
   {
     slug: "terrasse-og-uterom",
@@ -160,7 +168,9 @@ export const services: Service[] = [
         a: "Ja. Vi kan dimensjonere fundament og bæring for et fremtidig tak eller pergola, slik at du ikke må gjøre om jobben når du er klar."
       }
     ],
-    gradient: "linear-gradient(150deg,#1e1712 0%,#5a3d28 50%,#b58a5f 100%)"
+    gradient: "linear-gradient(150deg,#1e1712 0%,#5a3d28 50%,#b58a5f 100%)",
+    image: "/images/services/terrasse-uterom.jpg",
+    imageAlt: "Terrasse i tre med glassrekkverk og utsikt"
   },
   {
     slug: "fasade",
@@ -206,7 +216,9 @@ export const services: Service[] = [
         a: "Ja. Vi bytter én fasadeside om gangen slik at huset holdes tett gjennom hele prosessen."
       }
     ],
-    gradient: "linear-gradient(150deg,#171614 0%,#3d3830 50%,#8a8377 100%)"
+    gradient: "linear-gradient(150deg,#171614 0%,#3d3830 50%,#8a8377 100%)",
+    image: "/images/services/fasade.jpg",
+    imageAlt: "Moderne fasade med mørk stående trekledning"
   },
   {
     slug: "vinduer-og-dorer",
@@ -252,7 +264,9 @@ export const services: Service[] = [
         a: "Et vanlig enebolig-bytte gjøres på 1–2 uker, avhengig av antall og om det skal endres på åpningsstørrelser."
       }
     ],
-    gradient: "linear-gradient(150deg,#1c1a17 0%,#3a3128 50%,#6b5b46 100%)"
+    gradient: "linear-gradient(150deg,#1c1a17 0%,#3a3128 50%,#6b5b46 100%)",
+    image: "/images/services/vinduer-dorer.jpg",
+    imageAlt: "Hvite vinduer montert i trekledd bolig"
   },
   {
     slug: "innvendig",
@@ -298,6 +312,8 @@ export const services: Service[] = [
         a: "Ja. Vi tegner og bygger fastinnredning tilpasset rommet — hyller, benker, garderober og skjulte oppbevaringsløsninger."
       }
     ],
-    gradient: "linear-gradient(150deg,#14110e 0%,#3a2b1e 50%,#8a6a3f 100%)"
+    gradient: "linear-gradient(150deg,#14110e 0%,#3a2b1e 50%,#8a6a3f 100%)",
+    image: "/images/services/innvendig.jpg",
+    imageAlt: "Innvendig tømrerarbeid med spilevegg og spesialtilpasset entré"
   }
 ];

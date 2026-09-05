@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { services } from "@/data/services";
@@ -122,7 +123,7 @@ export default function ServicesSlider() {
             href={`/tjenester/${s.slug}`}
             data-slide
             aria-roledescription="slide"
-            aria-label={`${i + 1} av ${services.length}`}
+            aria-label={`${i + 1} av ${services.length} — ${s.title}`}
             className="group relative flex-none snap-start overflow-hidden text-bone"
             style={{
               // 82vw mobile, ~40vw desktop, cap width so it looks right on large screens
@@ -130,11 +131,33 @@ export default function ServicesSlider() {
               aspectRatio: "3 / 4"
             }}
           >
+            {/* Wood-tone gradient — sits behind the photograph as a graceful
+                fallback if the file is missing (or hasn't been uploaded yet). */}
             <div
-              className="absolute inset-0 transition-transform duration-[1400ms] ease-swoop group-hover:scale-[1.05]"
+              className="absolute inset-0"
               style={{ background: s.gradient }}
               aria-hidden
             />
+
+            {/* Real photograph — optimized via next/image (WebP/AVIF served
+                automatically to browsers that support it). */}
+            {s.image ? (
+              <div className="absolute inset-0 transition-transform duration-[1400ms] ease-swoop group-hover:scale-[1.05]">
+                <Image
+                  src={s.image}
+                  alt={s.imageAlt ?? s.title}
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 82vw"
+                  className="object-cover"
+                  style={{ objectPosition: s.imagePosition ?? "center" }}
+                  // Only eagerly load the first card so it counts toward LCP;
+                  // the rest are off-screen (or in the slider peek).
+                  priority={i === 0}
+                  loading={i === 0 ? undefined : "lazy"}
+                />
+              </div>
+            ) : null}
+
             <div
               aria-hidden
               className="noise absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/10 to-transparent"
