@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { services } from "@/data/services";
@@ -131,32 +130,24 @@ export default function ServicesSlider() {
               aspectRatio: "3 / 4"
             }}
           >
-            {/* Wood-tone gradient — sits behind the photograph as a graceful
-                fallback if the file is missing (or hasn't been uploaded yet). */}
+            {/* Photograph layered over the wood-tone gradient via CSS
+                background-image. If the file is missing (or hasn't been
+                uploaded yet), the browser silently paints nothing and the
+                gradient fully shows through — the card never looks
+                broken. */}
             <div
-              className="absolute inset-0"
-              style={{ background: s.gradient }}
-              aria-hidden
+              role={s.image ? "img" : undefined}
+              aria-label={s.image ? s.imageAlt : undefined}
+              className="absolute inset-0 transition-transform duration-[1400ms] ease-swoop group-hover:scale-[1.05]"
+              style={{
+                background: s.gradient,
+                backgroundImage: s.image
+                  ? `url(${s.image}), ${s.gradient}`
+                  : s.gradient,
+                backgroundSize: "cover",
+                backgroundPosition: s.imagePosition ?? "center"
+              }}
             />
-
-            {/* Real photograph — optimized via next/image (WebP/AVIF served
-                automatically to browsers that support it). */}
-            {s.image ? (
-              <div className="absolute inset-0 transition-transform duration-[1400ms] ease-swoop group-hover:scale-[1.05]">
-                <Image
-                  src={s.image}
-                  alt={s.imageAlt ?? s.title}
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 82vw"
-                  className="object-cover"
-                  style={{ objectPosition: s.imagePosition ?? "center" }}
-                  // Only eagerly load the first card so it counts toward LCP;
-                  // the rest are off-screen (or in the slider peek).
-                  priority={i === 0}
-                  loading={i === 0 ? undefined : "lazy"}
-                />
-              </div>
-            ) : null}
 
             <div
               aria-hidden
