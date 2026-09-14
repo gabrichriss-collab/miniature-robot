@@ -35,10 +35,22 @@ export type PriceEntry = {
   /** Norske søkeord som utløser fuzzy-match i inntastingsfeltet. */
   keywords: string[];
   unit: PriceUnit;
+  /**
+   * Legacy kr/enhet. Beholdt for bakoverkompatibilitet i UI-visningen.
+   * NB: for poster med `workItemKey` skal totalberegningen alltid komme
+   * fra arbeidstime-motoren, ikke fra dette feltet.
+   */
   price: number;
   name: string;
   note?: string;
   cat: string;
+  /**
+   * Peker mot en post i `WORK_ITEMS` (src/config/pricing.ts). Når satt,
+   * beregner motoren pris fra `mengde × timer × timerate × vanskelighet`.
+   * Poster uten nøkkel er ikke kartlagt ennå — de flagges som
+   * "beregnes ved befaring" i summeringen.
+   */
+  workItemKey?: string;
 };
 
 export const PRICE_DB: PriceEntry[] = [
@@ -49,7 +61,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1650,
     name: "Bygging av terrasse (standard)",
     note: "Inkl. bjelkelag, terrassebord",
-    cat: "Terrasse"
+    cat: "Terrasse",
+    workItemKey: "terraceComplete"
   },
   {
     keywords: [
@@ -62,7 +75,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1950,
     name: "Terrasse m/ skjult innfesting",
     note: "Camo/tilsvarende system",
-    cat: "Terrasse"
+    cat: "Terrasse",
+    workItemKey: "terraceComplete"
   },
   {
     keywords: [
@@ -76,7 +90,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 2200,
     name: "Terrasse m/ termofuru",
     note: "Premium materialer",
-    cat: "Terrasse"
+    cat: "Terrasse",
+    workItemKey: "terraceComplete"
   },
   {
     keywords: [
@@ -90,7 +105,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 440,
     name: "Riving av terrasse",
     note: "Inkl. bortkjøring",
-    cat: "Terrasse"
+    cat: "Terrasse",
+    workItemKey: "terraceDemolition"
   },
   {
     keywords: ["rekkverk tre", "gelender tre", "terrasse rekkverk"],
@@ -98,7 +114,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1800,
     name: "Rekkverk (tre)",
     note: "Inkl. stolper og håndlist",
-    cat: "Terrasse"
+    cat: "Terrasse",
+    workItemKey: "terraceRailing"
   },
   {
     keywords: ["rekkverk glass", "glass rekkverk", "glassrekkverk"],
@@ -116,7 +133,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1200,
     name: "Utvendig kledning",
     note: "Gran, grunnet",
-    cat: "Kledning"
+    cat: "Kledning",
+    workItemKey: "timberCladding"
   },
   {
     keywords: ["stående kledning", "stående panel"],
@@ -124,7 +142,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1100,
     name: "Stående kledning",
     note: "Gran, grunnet",
-    cat: "Kledning"
+    cat: "Kledning",
+    workItemKey: "timberCladding"
   },
   {
     keywords: [
@@ -136,7 +155,8 @@ export const PRICE_DB: PriceEntry[] = [
     unit: "m²",
     price: 350,
     name: "Riving av kledning",
-    cat: "Kledning"
+    cat: "Kledning",
+    workItemKey: "facadeDemolition"
   },
   {
     keywords: [
@@ -151,7 +171,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 2800,
     name: "Etterisolering + ny kledning",
     note: "Vindsperre, lekting, kledning",
-    cat: "Kledning"
+    cat: "Kledning",
+    workItemKey: "facadeComplete"
   },
   {
     keywords: ["panel innvendig", "innvendig panel", "veggpanel"],
@@ -159,7 +180,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 850,
     name: "Panel innvendig",
     note: "Furu/gran",
-    cat: "Kledning"
+    cat: "Kledning",
+    workItemKey: "finishedWallPanel"
   },
   {
     keywords: [
@@ -191,7 +213,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 5500,
     name: "Montering vindu (standard)",
     note: "Inkl. foring og listeverk",
-    cat: "Vinduer"
+    cat: "Vinduer",
+    workItemKey: "windowReplacement"
   },
   {
     keywords: [
@@ -234,7 +257,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 7500,
     name: "Montering ytterdør",
     note: "Standard",
-    cat: "Vinduer"
+    cat: "Vinduer",
+    workItemKey: "exteriorDoorReplacement"
   },
   {
     keywords: [
@@ -362,7 +386,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 1200,
     name: "Letvegg m/ gips",
     note: "Stender, isolasjon, gips",
-    cat: "Vegger"
+    cat: "Vegger",
+    workItemKey: "interiorPartitionWall"
   },
   {
     keywords: ["lydvegg", "dobbel gips"],
@@ -385,7 +410,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 550,
     name: "Gipsing",
     note: "Inkl. sparkling",
-    cat: "Vegger"
+    cat: "Vegger",
+    workItemKey: "plasterboardSingleLayer"
   },
   {
     keywords: [
@@ -428,7 +454,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 18000,
     name: "Trapp (utvendig)",
     note: "Inkl. rekkverk",
-    cat: "Diverse"
+    cat: "Diverse",
+    workItemKey: "exteriorStairSimple"
   },
   {
     keywords: ["trapp inne", "innvendig trapp", "inne trapp"],
@@ -810,7 +837,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 320,
     name: "Vindsperre — montering",
     note: "Inkl. teiping",
-    cat: "Fasade"
+    cat: "Fasade",
+    workItemKey: "windBarrier"
   },
   {
     keywords: ["utlekting", "sløyfer og lekter", "luftespalte lekter"],
@@ -818,7 +846,8 @@ export const PRICE_DB: PriceEntry[] = [
     price: 250,
     name: "Utlekting for luftespalte",
     note: "Trykk-impregnert",
-    cat: "Fasade"
+    cat: "Fasade",
+    workItemKey: "facadeBattens"
   },
   {
     keywords: ["sokkelbeslag", "sokkel beslag", "grunnmurbeslag"],
