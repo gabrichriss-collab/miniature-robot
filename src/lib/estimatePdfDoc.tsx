@@ -15,7 +15,7 @@ import { calcTotals, formatNok, type EstimateInput } from "@/lib/estimateCalc";
 
 const colors = {
   ink: "#0a0a0a",
-  bone: "#f4f1ec",
+  bone: "#e7e5df",
   muted: "#666666",
   rule: "#c9c4bc"
 };
