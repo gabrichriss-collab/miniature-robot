@@ -1,0 +1,331 @@
+/**
+ * Sentral prisingskonfig for prisestimat-motoren.
+ *
+ * SINGLE SOURCE OF TRUTH. Endre timerate, MVA, vanskelighetsfaktorer eller
+ * arbeidsproduktivitet HER — kalkulasjonen og hele UI-en oppdateres.
+ *
+ * Prinsipp:
+ *   pris = mengde × timer_per_enhet × timerate × vanskelighetsfaktor
+ *   MVA = pris × VAT_RATE
+ *
+ * Materialkostnader er BEVISST holdt separat fra denne fila. Legg til
+ * `materialCostPerUnit` her når reelle materialtall er kartlagt.
+ */
+
+/** Timerate eks. mva. Endre her → hele estimatoren følger etter. */
+export const HOURLY_RATE_EX_VAT = 850;
+
+/** Norsk MVA (25 %). */
+export const VAT_RATE = 0.25;
+
+/**
+ * Vanskelighetsfaktorer justerer timeforbruket per rad. Standard er
+ * 1.00 (normal jobb). Faktoren gjelder KUN arbeidstimer — materialkostnader
+ * påvirkes ikke.
+ */
+export const DIFFICULTY_FACTORS = {
+  normal: 1.0,
+  difficult: 1.15,
+  veryDifficult: 1.3
+} as const;
+
+export type DifficultyKey = keyof typeof DIFFICULTY_FACTORS;
+
+export const DIFFICULTY_LABELS: Record<DifficultyKey, string> = {
+  normal: "Normal tilkomst",
+  difficult: "Krevende tilkomst",
+  veryDifficult: "Svært krevende tilkomst"
+};
+
+export type WorkUnit = "m²" | "lm" | "stk" | "m";
+
+export type WorkItem = {
+  /** Kortlabel som vises i UI. */
+  label: string;
+  /** Enhet mengden legges inn i. */
+  unit: WorkUnit;
+  /** Antall arbeidstimer per enhet. */
+  laborHoursPerUnit: number;
+  /**
+   * Valgfri materialkostnad per enhet, eks. mva. Foreløpig ikke fylt ut
+   * for de fleste postene — arkitekturen støtter det for framtiden.
+   */
+  materialCostPerUnit?: number;
+  /** Kategori — brukes til gruppering i bla-modalen. */
+  category:
+    | "Terrasse & uterom"
+    | "Fasade & kledning"
+    | "Vinduer & dører"
+    | "Innvendig"
+    | "Rehabilitering"
+    | "Tilbygg";
+};
+
+/**
+ * Arbeidsposter med kartlagt produktivitet. Nøkkelen brukes som stabil ID
+ * i EstimateRow og i lenkinger mot fuzzy-match-databasen.
+ */
+export const WORK_ITEMS = {
+  // ── TERRASSE & UTEROM ────────────────────────────────────────────
+  terraceComplete: {
+    label: "Komplett terrasse",
+    unit: "m²",
+    laborHoursPerUnit: 1.6,
+    category: "Terrasse & uterom"
+  },
+  terraceDeckingOnly: {
+    label: "Terrassebord — kun montering",
+    unit: "m²",
+    laborHoursPerUnit: 0.65,
+    category: "Terrasse & uterom"
+  },
+  terraceDemolition: {
+    label: "Riving av eksisterende terrasse",
+    unit: "m²",
+    laborHoursPerUnit: 0.35,
+    category: "Terrasse & uterom"
+  },
+  terraceRailing: {
+    label: "Rekkverk terrasse",
+    unit: "lm",
+    laborHoursPerUnit: 1.2,
+    category: "Terrasse & uterom"
+  },
+  privacyScreen: {
+    label: "Levegg",
+    unit: "m²",
+    laborHoursPerUnit: 1.0,
+    category: "Terrasse & uterom"
+  },
+  exteriorStairSimple: {
+    label: "Enkel utvendig trapp",
+    unit: "stk",
+    laborHoursPerUnit: 6.0,
+    category: "Terrasse & uterom"
+  },
+
+  // ── FASADE & KLEDNING ────────────────────────────────────────────
+  facadeComplete: {
+    label: "Komplett utskifting av kledning",
+    unit: "m²",
+    laborHoursPerUnit: 2.0,
+    category: "Fasade & kledning"
+  },
+  facadeDemolition: {
+    label: "Riving av gammel kledning",
+    unit: "m²",
+    laborHoursPerUnit: 0.45,
+    category: "Fasade & kledning"
+  },
+  windBarrier: {
+    label: "Vindsperre",
+    unit: "m²",
+    laborHoursPerUnit: 0.25,
+    category: "Fasade & kledning"
+  },
+  facadeBattens: {
+    label: "Lekting",
+    unit: "m²",
+    laborHoursPerUnit: 0.3,
+    category: "Fasade & kledning"
+  },
+  timberCladding: {
+    label: "Ny trekledning",
+    unit: "m²",
+    laborHoursPerUnit: 0.85,
+    category: "Fasade & kledning"
+  },
+  exteriorInsulation: {
+    label: "Etterisolering fasade",
+    unit: "m²",
+    laborHoursPerUnit: 0.55,
+    category: "Fasade & kledning"
+  },
+
+  // ── VINDUER & DØRER ───────────────────────────────────────────────
+  windowReplacement: {
+    label: "Bytte standard vindu",
+    unit: "stk",
+    laborHoursPerUnit: 5.5,
+    category: "Vinduer & dører"
+  },
+  exteriorDoorReplacement: {
+    label: "Bytte ytterdør",
+    unit: "stk",
+    laborHoursPerUnit: 7.0,
+    category: "Vinduer & dører"
+  },
+
+  // ── INNVENDIG ─────────────────────────────────────────────────────
+  interiorPartitionWall: {
+    label: "Innvendig skillevegg",
+    unit: "m²",
+    laborHoursPerUnit: 1.4,
+    category: "Innvendig"
+  },
+  plasterboardSingleLayer: {
+    label: "Gips — ett lag",
+    unit: "m²",
+    laborHoursPerUnit: 0.35,
+    category: "Innvendig"
+  },
+  finishedWallPanel: {
+    label: "MDF / ferdig veggplate",
+    unit: "m²",
+    laborHoursPerUnit: 0.45,
+    category: "Innvendig"
+  },
+  ceilingWork: {
+    label: "Himling",
+    unit: "m²",
+    laborHoursPerUnit: 0.9,
+    category: "Innvendig"
+  },
+  flooringInstallation: {
+    label: "Montering gulv",
+    unit: "m²",
+    laborHoursPerUnit: 0.35,
+    category: "Innvendig"
+  },
+  trimInstallation: {
+    label: "Listing",
+    unit: "lm",
+    laborHoursPerUnit: 0.12,
+    category: "Innvendig"
+  },
+
+  // ── REHABILITERING (komplekse enkeltrom / etasjer) ───────────────
+  rehabilitationLight: {
+    label: "Lett rehabilitering",
+    unit: "m²",
+    laborHoursPerUnit: 1.5,
+    category: "Rehabilitering"
+  },
+  rehabilitationMedium: {
+    label: "Middels rehabilitering",
+    unit: "m²",
+    laborHoursPerUnit: 3.0,
+    category: "Rehabilitering"
+  },
+  rehabilitationHeavy: {
+    label: "Omfattende rehabilitering",
+    unit: "m²",
+    laborHoursPerUnit: 5.0,
+    category: "Rehabilitering"
+  },
+
+  // ── TILBYGG ───────────────────────────────────────────────────────
+  extensionCarpentry: {
+    label: "Tilbygg — tømrerarbeid",
+    unit: "m²",
+    laborHoursPerUnit: 8.5,
+    category: "Tilbygg"
+  }
+} as const satisfies Record<string, WorkItem>;
+
+export type WorkItemKey = keyof typeof WORK_ITEMS;
+
+/** Alle kategorier i innsettingsrekkefølge. */
+export const WORK_CATEGORIES = [
+  "Terrasse & uterom",
+  "Fasade & kledning",
+  "Vinduer & dører",
+  "Innvendig",
+  "Rehabilitering",
+  "Tilbygg"
+] as const;
+
+/**
+ * PRODUKTIVITETSFAKTOR IKKE KARTLAGT ENNÅ — arbeidsposter som fantes i
+ * fuzzy-match-databasen fra tidligere, men som fortsatt trenger
+ * beslutning fra Gabriel før de kan prises via arbeidstimer.
+ *
+ * Disse skal enten:
+ *   (a) få en laborHoursPerUnit-verdi og flyttes inn i WORK_ITEMS, eller
+ *   (b) fjernes fra estimatoren om de ikke skal tilbys.
+ *
+ * Foreløpig vises de fortsatt i bla-modalen som "Beregnes ved befaring".
+ */
+export const WORK_ITEMS_NEEDS_INPUT: Array<{
+  key: string;
+  label: string;
+  unit: WorkUnit | string;
+  category: string;
+  note: string;
+}> = [
+  { key: "roofTilesLaying", label: "Taktekking (takstein)", unit: "m²", category: "Tak", note: "Trenger h/m² for taklegging" },
+  { key: "roofSteelLaying", label: "Taktekking (stålplater)", unit: "m²", category: "Tak", note: "Trenger h/m²" },
+  { key: "guttering", label: "Takrenner", unit: "lm", category: "Tak", note: "Trenger h/lm" },
+  { key: "roofInsulation", label: "Etterisolering tak", unit: "m²", category: "Tak", note: "Trenger h/m²" },
+  { key: "roofDemolition", label: "Riving av tak", unit: "m²", category: "Tak", note: "Trenger h/m²" },
+  { key: "floorParquet", label: "Parkett (heltre)", unit: "m²", category: "Gulv", note: "Kan mappe til flooringInstallation? Bekreft." },
+  { key: "floorLaminate", label: "Laminat", unit: "m²", category: "Gulv", note: "Trenger egen h/m² eller mappes til flooringInstallation" },
+  { key: "floorTiles", label: "Flislegging (gulv)", unit: "m²", category: "Gulv", note: "Trenger h/m² for flis" },
+  { key: "floorVinyl", label: "Vinylgulv", unit: "m²", category: "Gulv", note: "Trenger h/m²" },
+  { key: "floorSanding", label: "Sliping av tregulv", unit: "m²", category: "Gulv", note: "Trenger h/m²" },
+  { key: "floorDemolition", label: "Riving av gulv", unit: "m²", category: "Gulv", note: "Trenger h/m²" },
+  { key: "wallSoundproof", label: "Letvegg — lydvegg (dobbel gips)", unit: "m²", category: "Vegger", note: "Kan mappes til interiorPartitionWall × 1.15 difficulty?" },
+  { key: "wallDemolition", label: "Riving av vegg", unit: "m²", category: "Vegger", note: "Trenger h/m²" },
+  { key: "tileWall", label: "Flislegging (vegg, våtrom)", unit: "m²", category: "Bad", note: "Trenger h/m²" },
+  { key: "paintingExterior", label: "Maling/beising utvendig", unit: "m²", category: "Fasade", note: "Malerarbeid — er dette en tjeneste vi tar?" },
+  { key: "largeWindow", label: "Montering vindu (stort)", unit: "stk", category: "Vinduer", note: "Kan mappes til windowReplacement × difficulty?" },
+  { key: "patioDoor", label: "Montering terrassedør", unit: "stk", category: "Vinduer", note: "Trenger egen h/stk" },
+  { key: "slidingDoor", label: "Montering skyvedør", unit: "stk", category: "Vinduer", note: "Trenger egen h/stk" },
+  { key: "windowDoorDemolition", label: "Demontering dør/vindu", unit: "stk", category: "Vinduer", note: "Trenger h/stk" },
+  { key: "glassRailing", label: "Rekkverk m/ glass", unit: "lm", category: "Terrasse", note: "Trenger egen h/lm eller mappes til terraceRailing × difficulty" },
+  { key: "hiddenFasteningTerrace", label: "Terrasse m/ skjult innfesting", unit: "m²", category: "Terrasse", note: "Variant av terraceComplete + krevende — bekreft" },
+  { key: "premiumTerrace", label: "Terrasse m/ termofuru", unit: "m²", category: "Terrasse", note: "Samme h/m² som terraceComplete, høyere materialkost" },
+  { key: "interiorStair", label: "Trapp (innvendig)", unit: "stk", category: "Diverse", note: "Trenger h/stk" },
+  { key: "shed", label: "Bod/skur", unit: "m²", category: "Diverse", note: "Trenger h/m² — eller mappes til extensionCarpentry?" },
+  { key: "scaffolding", label: "Stillas", unit: "m²", category: "Diverse", note: "Infrastruktur, ikke arbeidstimer — flat rate?" },
+  { key: "transport", label: "Transport", unit: "tur", category: "Diverse", note: "Flat rate — pass på i beregningen" },
+  { key: "wasteManagement", label: "Avfallshåndtering", unit: "stk", category: "Diverse", note: "Materialpost, ikke arbeidstimer" },
+  { key: "bathroomMembraneFloor", label: "Membran gulv (våtrom)", unit: "m²", category: "Bad", note: "Trenger h/m²" },
+  { key: "bathroomMembraneWall", label: "Membran vegg (våtrom)", unit: "m²", category: "Bad", note: "Trenger h/m²" },
+  { key: "underfloorHeating", label: "Gulvvarme (kabler)", unit: "m²", category: "Bad", note: "Elektro — skal vi tilby dette?" },
+  { key: "showerNiche", label: "Dusjnisje / dusjhjørne", unit: "stk", category: "Bad", note: "Trenger h/stk" },
+  { key: "showerCabinet", label: "Montering dusjkabinett", unit: "stk", category: "Bad", note: "Trenger h/stk" },
+  { key: "bathroomJoinery", label: "Bad-innredning (fastmøbler)", unit: "lm", category: "Bad", note: "Trenger h/lm" },
+  { key: "toiletInstall", label: "Toalett — montering", unit: "stk", category: "Bad", note: "Rørleggerpost?" },
+  { key: "bathtubInstall", label: "Badekar — montering", unit: "stk", category: "Bad", note: "Trenger h/stk" },
+  { key: "kitchenStandard", label: "Kjøkkenmontering (standard)", unit: "lm", category: "Kjøkken", note: "Trenger h/lm" },
+  { key: "kitchenBespoke", label: "Skreddersydd kjøkken", unit: "lm", category: "Kjøkken", note: "Trenger h/lm — variabel etter design" },
+  { key: "counterLaminate", label: "Benkeplate — laminat", unit: "lm", category: "Kjøkken", note: "Trenger h/lm" },
+  { key: "counterSolid", label: "Benkeplate — massivtre", unit: "lm", category: "Kjøkken", note: "Trenger h/lm" },
+  { key: "counterStone", label: "Benkeplate — stein/kompakt", unit: "lm", category: "Kjøkken", note: "Underleverandør — arbeid vår del?" },
+  { key: "ventilator", label: "Ventilator — montering", unit: "stk", category: "Kjøkken", note: "Trenger h/stk" },
+  { key: "kitchenTap", label: "Kjøkkenkran — montering", unit: "stk", category: "Kjøkken", note: "Rørleggerpost?" },
+  { key: "wardrobeStandard", label: "Garderobe (standard)", unit: "lm", category: "Innredning", note: "Trenger h/lm" },
+  { key: "wardrobeBespoke", label: "Skreddersydd garderobe", unit: "lm", category: "Innredning", note: "Trenger h/lm — variabel" },
+  { key: "shelvingBespoke", label: "Bokhylle (skreddersydd)", unit: "lm", category: "Innredning", note: "Trenger h/lm" },
+  { key: "libraryWall", label: "Bibliotek / vegg-til-vegg", unit: "lm", category: "Innredning", note: "Trenger h/lm" },
+  { key: "builtInBench", label: "Innebygd benk", unit: "lm", category: "Innredning", note: "Trenger h/lm" },
+  { key: "slidingDoorSystem", label: "Skyvedørssystem", unit: "stk", category: "Innredning", note: "Trenger h/stk" },
+  { key: "tvUnit", label: "TV-benk (skreddersydd)", unit: "lm", category: "Innredning", note: "Trenger h/lm" },
+  { key: "pergola", label: "Pergola (tre)", unit: "m²", category: "Uterom", note: "Trenger h/m²" },
+  { key: "pergolaGlass", label: "Pergola m/ glasstak", unit: "m²", category: "Uterom", note: "Trenger h/m²" },
+  { key: "greenhouse", label: "Drivhus — montering", unit: "stk", category: "Uterom", note: "Trenger h/stk" },
+  { key: "spaDeck", label: "Spa-terrasse (forsterket)", unit: "m²", category: "Uterom", note: "Variant av terraceComplete + forsterket" },
+  { key: "gardenDeck", label: "Utegulv i tre", unit: "m²", category: "Uterom", note: "Kan mappes til terraceComplete-variant" },
+  { key: "outdoorShower", label: "Utedusj — innramming", unit: "stk", category: "Uterom", note: "Trenger h/stk" },
+  { key: "garage", label: "Garasje (nøkkelferdig)", unit: "m²", category: "Garasje", note: "Trenger h/m² — kan mappes til extensionCarpentry?" },
+  { key: "carport", label: "Carport (åpen)", unit: "m²", category: "Garasje", note: "Trenger h/m²" },
+  { key: "garageDoorTilting", label: "Garasjeport (vippeport)", unit: "stk", category: "Garasje", note: "Trenger h/stk" },
+  { key: "garageDoorSectional", label: "Garasjeport (leddport)", unit: "stk", category: "Garasje", note: "Trenger h/stk" },
+  { key: "garageLoft", label: "Loftsbjelker garasje", unit: "m²", category: "Garasje", note: "Trenger h/m²" },
+  { key: "plinthFlashing", label: "Sokkelbeslag", unit: "lm", category: "Fasade", note: "Trenger h/lm" },
+  { key: "dripBoard", label: "Vannbord (dryppnese)", unit: "lm", category: "Fasade", note: "Trenger h/lm" },
+  { key: "roofWindBarrier", label: "Vindsperre tak", unit: "m²", category: "Fasade", note: "Trenger h/m²" },
+  { key: "atticInsulation", label: "Etterisolering loft", unit: "m²", category: "Isolasjon", note: "Trenger h/m²" },
+  { key: "crawlspaceInsulation", label: "Isolering av kryperom", unit: "m²", category: "Isolasjon", note: "Trenger h/m²" },
+  { key: "basementExtInsulation", label: "Kjellervegg — utvendig isolasjon", unit: "m²", category: "Isolasjon", note: "Trenger h/m²" },
+  { key: "basementIntInsulation", label: "Kjellervegg — innvendig isolasjon", unit: "m²", category: "Isolasjon", note: "Trenger h/m²" },
+  { key: "floorOverColdRoom", label: "Isolering av gulv (over kaldt rom)", unit: "m²", category: "Isolasjon", note: "Trenger h/m²" },
+  { key: "rottenLog", label: "Bytte råtne stokker", unit: "stk", category: "Rehab", note: "Vurderes per befaring — forbli 'ved befaring'?" },
+  { key: "newFraming", label: "Nytt bindingsverk (vegg)", unit: "m²", category: "Rehab", note: "Trenger h/m²" },
+  { key: "newRafters", label: "Nye takstoler / sperrer", unit: "m²", category: "Rehab", note: "Trenger h/m²" },
+  { key: "newRoofUnderlay", label: "Nytt undertak", unit: "m²", category: "Rehab", note: "Trenger h/m²" },
+  { key: "mullionedWindow", label: "Sprossevindu (kopi)", unit: "stk", category: "Rehab", note: "Trenger h/stk — antikvarisk" },
+  { key: "windowRestoration", label: "Restaurering av originalt vindu", unit: "stk", category: "Rehab", note: "Trenger h/stk" },
+  { key: "doorRestoration", label: "Restaurering av originaldør", unit: "stk", category: "Rehab", note: "Trenger h/stk" }
+];

@@ -15,9 +15,16 @@ import {
   calcTotals,
   estimateRange,
   formatNok,
+  laborLinesForRows,
+  HOURLY_RATE_EX_VAT,
+  VAT_RATE,
   type EstimateRow,
   type EstimateInput
 } from "@/lib/estimateCalc";
+import {
+  DIFFICULTY_LABELS,
+  type DifficultyKey
+} from "@/config/pricing";
 
 /**
  * Prisestimat-bygger — line-item verktøy i tråd med hvordan norske
@@ -66,7 +73,9 @@ export default function PrisestimatBuilder() {
         price: entry.price,
         note: entry.note ?? "",
         matched: true,
-        matchName: entry.name
+        matchName: entry.name,
+        workItemKey: entry.workItemKey,
+        difficulty: "normal"
       }
     ]);
     setShowBrowse(false);
@@ -87,10 +96,13 @@ export default function PrisestimatBuilder() {
                 updated.note = match.note ?? "";
                 updated.matched = true;
                 updated.matchName = match.name;
+                updated.workItemKey = match.workItemKey;
+                updated.difficulty = updated.difficulty ?? "normal";
               }
             } else {
               updated.matched = false;
               updated.matchName = "";
+              updated.workItemKey = undefined;
             }
           }
           return updated;
@@ -288,52 +300,112 @@ export default function PrisestimatBuilder() {
         </div>
       )}
 
-      {/* Totals */}
+      {/* Totals — labor-based pricing engine */}
       {rows.length > 0 && (
         <div className="mt-14 grid gap-10 md:grid-cols-12">
           <div className="md:col-span-4">
-            <p className="eyebrow text-ink/60">Estimat</p>
+            <p className="eyebrow text-ink/60">Estimert arbeid</p>
+            <p className="mt-4 max-w-xs text-sm text-ink/60">
+              Beregnet fra {totals.laborHours.toLocaleString("nb-NO", {
+                minimumFractionDigits: totals.laborHours % 1 === 0 ? 0 : 1,
+                maximumFractionDigits: 1
+              })} arbeidstimer × {formatNok(HOURLY_RATE_EX_VAT)} kr/time.
+              Materialkostnad kommer i tillegg.
+            </p>
           </div>
           <div className="md:col-span-8">
             <dl className="grid gap-2 border-t border-ink/15 pt-6 text-ink/80">
               <TotalLine
-                label="Sum arbeider (eks. mva)"
-                value={`${formatNok(totals.subtotal)} kr`}
+                label="Estimert arbeid (eks. mva)"
+                value={`${formatNok(totals.laborExVat + totals.legacyExVat)} kr`}
               />
               <TotalLine
-                label={`Påslag (${markup}%)`}
-                value={`${formatNok(totals.markupAmount)} kr`}
-              />
-              <TotalLine
-                label="Sum m/ påslag"
-                value={`${formatNok(totals.subWithMarkup)} kr`}
-              />
-              <TotalLine
-                label={`MVA (${mvaRate}%)`}
+                label={`MVA (${Math.round(VAT_RATE * 100)}%)`}
                 value={`${formatNok(totals.mvaAmount)} kr`}
               />
+              <TotalLine
+                label="Arbeid inkl. mva"
+                value={`${formatNok(totals.total)} kr`}
+              />
               <div className="mt-4 border-t border-ink pt-4">
-                <p className="eyebrow mb-2 text-ink/60">Veiledende prisestimat</p>
+                <p className="eyebrow mb-2 text-ink/60">Veiledende arbeidsestimat</p>
                 <div className="flex flex-wrap items-baseline justify-between gap-4">
                   <span className="headline text-3xl md:text-5xl">
-                    {formatNok(estimateRange(totals.total).low)}
-                    <span className="text-ink/40"> — </span>
-                    {formatNok(estimateRange(totals.total).high)} kr
+                    {formatNok(totals.range.low)}
+                    <span className="text-ink/40"> – </span>
+                    {formatNok(totals.range.high)} kr
                   </span>
-                  <span className="text-sm text-ink/60">
-                    Punkt: {formatNok(totals.total)} kr
-                  </span>
+                  <span className="text-sm text-ink/60">inkl. mva</span>
                 </div>
               </div>
             </dl>
 
+            {/* Materials — kept separate from labor per the pricing model */}
+            <div className="mt-8 border border-dashed border-ink/20 p-4 text-sm text-ink/70">
+              <p className="eyebrow mb-2 text-ink/60">Materialer</p>
+              <p>
+                Materialkostnad beregnes etter valgt løsning og materialtype,
+                og legges til i skriftlig tilbud etter befaring.
+              </p>
+            </div>
+
+            {/* Detailed breakdown */}
+            {totals.laborHours > 0 && (
+              <details className="mt-8 border border-ink/15">
+                <summary className="cursor-pointer px-4 py-3 eyebrow text-ink/70">
+                  Se detaljert beregning
+                </summary>
+                <div className="border-t border-ink/10 p-4 text-sm text-ink/75">
+                  {laborLinesForRows(rows).map((l) => (
+                    <div
+                      key={`${l.workItemKey}-${l.label}`}
+                      className="grid grid-cols-[1fr_auto] gap-4 border-b border-ink/5 py-2"
+                    >
+                      <span>
+                        {l.label}
+                        <span className="text-ink/50">
+                          {" "}— {l.quantity} {l.unit} × {l.laborHoursPerUnit} h/{l.unit}
+                          {l.difficultyFactor !== 1
+                            ? ` × ${l.difficultyFactor}`
+                            : ""} = {l.totalLaborHours} h
+                        </span>
+                      </span>
+                      <span className="tabular-nums">
+                        {formatNok(l.laborPriceExVat)} kr
+                      </span>
+                    </div>
+                  ))}
+                  <div className="mt-3 grid grid-cols-[1fr_auto] gap-4 pt-3 text-ink/85">
+                    <span>Sum arbeidstimer</span>
+                    <span className="tabular-nums">
+                      {totals.laborHours.toLocaleString("nb-NO", {
+                        minimumFractionDigits:
+                          totals.laborHours % 1 === 0 ? 0 : 1,
+                        maximumFractionDigits: 1
+                      })} h
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto] gap-4 text-ink/85">
+                    <span>Sum arbeid × {formatNok(HOURLY_RATE_EX_VAT)} kr/time</span>
+                    <span className="tabular-nums">
+                      {formatNok(totals.laborExVat + totals.legacyExVat)} kr eks. mva
+                    </span>
+                  </div>
+                </div>
+              </details>
+            )}
+
             {/* Legal disclaimer */}
             <p className="mt-8 max-w-2xl border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
-              <strong className="font-semibold">Veiledende prisestimat — ikke bindende tilbud.</strong>{" "}
-              Estimatet er basert på opplysningene du har lagt inn og våre
-              normale satser. Endelig pris fastsettes etter gjennomgang av
-              prosjektet og eventuell befaring. Alle beløp er i norske kroner
-              og inkluderer materialer og arbeidstimer for punktene i lista.
+              <strong className="font-semibold">
+                Veiledende prisestimat — ikke bindende tilbud.
+              </strong>{" "}
+              Dette er et veiledende prisestimat basert på opplysningene du
+              har lagt inn og standard beregnet arbeidstid. Faktisk pris kan
+              variere på grunn av eksisterende konstruksjon, tilkomst,
+              materialvalg, detaljer og andre forhold som først kan vurderes
+              ved gjennomgang eller befaring. Endelig pris fastsettes i et
+              skriftlig tilbud.
             </p>
 
             {/* Enquiry hand-off — pre-fills the contact form so the customer
@@ -430,8 +502,15 @@ function RowItem({
   deleteRow: (id: EstimateRow["id"]) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const rowTotal =
-    (parseFloat(String(row.qty)) || 0) * (parseFloat(String(row.price)) || 0);
+
+  // Labor-engine rows compute rowTotal from hours × rate × difficulty;
+  // legacy rows still fall back to qty × price.
+  const laborLine = row.workItemKey
+    ? laborLinesForRows([row])[0]
+    : undefined;
+  const rowTotal = laborLine
+    ? laborLine.laborPriceExVat
+    : (parseFloat(String(row.qty)) || 0) * (parseFloat(String(row.price)) || 0);
 
   useEffect(() => {
     if (!row.name && inputRef.current) inputRef.current.focus();
@@ -456,8 +535,32 @@ function RowItem({
           <p className="match-badge mt-2 text-xs text-ink/60">
             <span className="eyebrow mr-2 text-ink/80">Auto</span>
             {row.matchName}
+            {laborLine ? (
+              <span className="text-ink/50">
+                {" "}· {laborLine.laborHoursPerUnit} h/{laborLine.unit}
+              </span>
+            ) : null}
             {row.note ? ` · ${row.note}` : ""}
           </p>
+        ) : null}
+        {row.workItemKey ? (
+          <label className="mt-2 flex items-center gap-2 text-xs text-ink/60">
+            <span className="eyebrow text-ink/50">Tilkomst</span>
+            <select
+              value={row.difficulty ?? "normal"}
+              onChange={(e) =>
+                updateRow(row.id, "difficulty", e.target.value as DifficultyKey)
+              }
+              className="border-b border-ink/20 bg-transparent py-1 text-xs focus:border-ink focus:outline-none"
+              aria-label="Tilkomst"
+            >
+              {(Object.keys(DIFFICULTY_LABELS) as DifficultyKey[]).map((k) => (
+                <option key={k} value={k}>
+                  {DIFFICULTY_LABELS[k]}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : null}
       </div>
 
@@ -497,7 +600,7 @@ function RowItem({
       />
 
       <div className="text-right text-base font-medium text-ink md:text-lg">
-        {row.qty && row.price ? `${formatNok(rowTotal)} kr` : "—"}
+        {rowTotal > 0 ? `${formatNok(rowTotal)} kr` : "—"}
       </div>
 
       <button
@@ -815,21 +918,55 @@ function buildEnquiryPrefill({
   input: EstimateInput;
   totals: ReturnType<typeof calcTotals>;
 }): string {
-  const range = estimateRange(totals.total);
   const lines: string[] = [];
   if (input.projectName) lines.push(`Prosjekt: ${input.projectName}`);
   if (input.customerPostal) lines.push(`Postnummer: ${input.customerPostal}`);
   lines.push("");
   lines.push("Poster fra prisestimatet:");
+  const labor = laborLinesForRows(input.rows);
+  const laborByLabel = new Map(labor.map((l) => [l.label, l]));
   for (const r of input.rows) {
     if (!r.name) continue;
     const qty = String(r.qty || "");
-    const price = String(r.price || "");
-    lines.push(`• ${r.name}${qty ? ` — ${qty} ${r.unit}` : ""}${price ? ` @ ${price} kr/${r.unit}` : ""}`);
+    const label = r.matchName || r.name;
+    const l = laborByLabel.get(label);
+    if (l) {
+      const diff =
+        r.difficulty && r.difficulty !== "normal"
+          ? ` (${DIFFICULTY_LABELS[r.difficulty as DifficultyKey]})`
+          : "";
+      lines.push(
+        `• ${label}${diff} — ${qty} ${r.unit} × ${l.laborHoursPerUnit} h/${r.unit} = ${l.totalLaborHours} h`
+      );
+    } else {
+      const price = String(r.price || "");
+      lines.push(
+        `• ${r.name}${qty ? ` — ${qty} ${r.unit}` : ""}${price ? ` @ ${price} kr/${r.unit}` : ""}`
+      );
+    }
   }
   lines.push("");
+  if (totals.laborHours > 0) {
+    lines.push(
+      `Sum arbeidstimer: ${totals.laborHours.toLocaleString("nb-NO", {
+        minimumFractionDigits: totals.laborHours % 1 === 0 ? 0 : 1,
+        maximumFractionDigits: 1
+      })} h`
+    );
+  }
   lines.push(
-    `Veiledende estimat: ${formatNok(range.low)} — ${formatNok(range.high)} kr (inkl. MVA)`
+    `Estimert arbeid: ${formatNok(
+      totals.laborExVat + totals.legacyExVat
+    )} kr eks. mva`
+  );
+  lines.push(
+    `Veiledende estimat: ${formatNok(totals.range.low)} – ${formatNok(
+      totals.range.high
+    )} kr inkl. mva`
+  );
+  lines.push("");
+  lines.push(
+    "Materialkostnad beregnes etter valgt løsning og materialtype og legges til i skriftlig tilbud etter befaring."
   );
   if (input.message) {
     lines.push("");
