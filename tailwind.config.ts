@@ -6,7 +6,7 @@ const config: Config = {
     extend: {
       colors: {
         ink: "#0a0a0a",
-        bone: "#f4f1ec",
+        bone: "#e7e5df",
         stone: "#c9c4bc",
         char: "#1a1a1a",
         moss: "#3a3e35",
