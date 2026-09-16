@@ -32,7 +32,7 @@ export default function ServicePage({ params }: Params) {
   return (
     <>
       <PageHeader
-        kicker={service.kicker}
+        kicker="Tjenester"
         title={service.title}
         lede={service.lede}
       />
@@ -55,14 +55,11 @@ export default function ServicePage({ params }: Params) {
             <p className="eyebrow">Typisk omfang</p>
           </div>
           <ul className="md:col-span-8 grid gap-4 md:grid-cols-2">
-            {service.typicalScope.map((s, i) => (
+            {service.typicalScope.map((s) => (
               <li
                 key={s}
-                className="flex items-baseline gap-3 border-t border-ink/10 pt-4 text-ink/85"
+                className="border-t border-ink/10 pt-4 text-ink/85"
               >
-                <span className="eyebrow text-ink/40">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
                 {s}
               </li>
             ))}
@@ -111,14 +108,11 @@ export default function ServicePage({ params }: Params) {
             <p className="eyebrow">Hva påvirker prisen</p>
           </div>
           <ul className="md:col-span-8 grid gap-4 md:grid-cols-2">
-            {service.priceFactors.map((p, i) => (
+            {service.priceFactors.map((p) => (
               <li
                 key={p}
-                className="flex items-baseline gap-3 border-t border-ink/10 pt-4 text-ink/85"
+                className="border-t border-ink/10 pt-4 text-ink/85"
               >
-                <span className="eyebrow text-ink/40">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
                 {p}
               </li>
             ))}
