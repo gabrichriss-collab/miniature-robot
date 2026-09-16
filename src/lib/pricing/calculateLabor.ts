@@ -13,7 +13,11 @@ import {
   pricingSettings,
   type DifficultyKey
 } from "../../config/pricing/settings";
-import { laborHoursForItem } from "../../config/pricing/labor";
+import {
+  laborPendingNote,
+  resolveLaborHoursPerUnit,
+  type LaborOptions
+} from "../../config/pricing/labor";
 
 export type LaborLineInput = {
   /** Referanse inn i WORK_ITEMS. Utelates for eldre fritekstrader. */
@@ -27,6 +31,8 @@ export type LaborLineInput = {
   difficulty?: DifficultyKey;
   /** Overstyrer den globale timeraten. */
   hourlyRateExVat?: number;
+  /** Valg på raden som endrer timeforbruket. */
+  options?: LaborOptions;
 };
 
 export type LaborLine = {
@@ -45,10 +51,19 @@ export type LaborLine = {
   laborPriceExVat: number;
   vat: number;
   laborPriceIncVat: number;
+  /**
+   * True når posten bevisst ikke kan prises ennå. Da er beløpet 0 fordi
+   * vi IKKE gjetter — ikke fordi arbeidet er gratis.
+   */
+  laborPending: boolean;
+  /** Kundevendt forklaring når `laborPending` er satt. */
+  pendingNote?: string;
 };
 
 export type LaborTotal = {
   lines: LaborLine[];
+  /** True når minst én post ikke kunne prises. */
+  hasPendingLabor: boolean;
   totalLaborHours: number;
   totalLaborExVat: number;
   totalVat: number;
@@ -77,13 +92,15 @@ export function calcLaborLine(input: LaborLineInput): LaborLine {
       ? input.hourlyRateExVat
       : pricingSettings.hourlyRateExVat;
 
-  const catalogHours = input.workItemKey
-    ? laborHoursForItem(String(input.workItemKey))
+  const resolved = input.workItemKey
+    ? resolveLaborHoursPerUnit(String(input.workItemKey), input.options ?? {})
     : undefined;
+  // `null` = bevisst ikke prisbar. `undefined` = ukjent post.
+  const laborPending = resolved === null;
   const laborHoursPerUnit =
     typeof input.laborHoursPerUnit === "number" && input.laborHoursPerUnit > 0
       ? input.laborHoursPerUnit
-      : catalogHours ?? 0;
+      : (resolved ?? 0);
 
   const baseLaborHours = round2(quantity * laborHoursPerUnit);
   const totalLaborHours = round2(quantity * laborHoursPerUnit * difficultyFactor);
@@ -104,7 +121,11 @@ export function calcLaborLine(input: LaborLineInput): LaborLine {
     totalLaborHours,
     laborPriceExVat,
     vat,
-    laborPriceIncVat
+    laborPriceIncVat,
+    laborPending,
+    pendingNote: laborPending
+      ? laborPendingNote(String(input.workItemKey), input.options ?? {})
+      : undefined
   };
 }
 
@@ -119,5 +140,12 @@ export function calcLaborTotal(inputs: LaborLineInput[]): LaborTotal {
   const totalVat = round2(lines.reduce((s, l) => s + l.vat, 0));
   const totalLaborIncVat = round2(totalLaborExVat + totalVat);
 
-  return { lines, totalLaborHours, totalLaborExVat, totalVat, totalLaborIncVat };
+  return {
+    lines,
+    hasPendingLabor: lines.some((l) => l.laborPending && l.quantity > 0),
+    totalLaborHours,
+    totalLaborExVat,
+    totalVat,
+    totalLaborIncVat
+  };
 }

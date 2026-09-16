@@ -24,6 +24,11 @@
  */
 
 import type { MaterialTier } from "./settings";
+import type {
+  CeilingTypeKey,
+  InsulationOptionKey,
+  PartitionScopeKey
+} from "./labor";
 
 /**
  * Navngitte konstruksjonsforutsetninger. ALLE er markert for godkjenning
@@ -50,10 +55,11 @@ export const STRUCTURAL_ASSUMPTIONS = {
   /** Løpemeter terrassebord per m² dekke, 28×120. Oppgitt av Gabriel. */
   deckingLmPerM2: 8.4,
   /**
-   * Løpemeter stående kledning 19×148 per m² fasade, før svinn.
-   * Referanseprofil for standard fasadeestimat.
+   * Løpemeter stående kledning 19×148 rektangulær per m² fasade, før
+   * svinn. Referanseprodukt for standard fasadeestimat — betyr ikke at
+   * ethvert fasadeprosjekt skal bruke akkurat denne kledningen.
    */
-  claddingLmPerM2: 7.7
+  claddingLmPerM2: 8.13
 } as const;
 
 /**
@@ -89,6 +95,9 @@ export type RecipeOptions = {
   terraceConstruction?: TerraceConstructionKey;
   terraceFastening?: TerraceFasteningKey;
   terraceFoundation?: TerraceFoundationKey;
+  ceilingType?: CeilingTypeKey;
+  partitionScope?: PartitionScopeKey;
+  facadeInsulation?: InsulationOptionKey;
 };
 
 export type MaterialRecipeComponent = {
@@ -193,8 +202,8 @@ function terraceStructure(options: RecipeOptions): {
     // CAMO_PRICE_PENDING — skal ikke prises med C4-skruepris.
     components.push({
       materialId: "terrace_hidden_fastening",
-      quantityPerUnit: 1,
-      assumption: "skjult innfesting, 1 sett per m² dekke"
+      quantityPerUnit: deckScrewsPerM2,
+      assumption: `skjult innfesting, ${deckScrewsPerM2} skruer per m² dekke`
     });
   }
 
@@ -243,8 +252,8 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
             : [
                 {
                   materialId: "terrace_hidden_fastening",
-                  quantityPerUnit: 1,
-                  assumption: "skjult innfesting, 1 sett per m² dekke"
+                  quantityPerUnit: deckScrewsPerM2,
+                  assumption: `skjult innfesting, ${deckScrewsPerM2} skruer per m² dekke`
                 }
               ]
       };
@@ -327,7 +336,8 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
     status: "pending",
     components: [],
     customerNote: DESIGN_DEPENDENT_NOTE,
-    internalNote: "TRENGER BESLUTNING: standard leveggoppbygging og kledningstype."
+    internalNote:
+      "Enhet er m² (lengde × høyde). Standard oppbygging og kledningstype mangler. Fundament og stolper er egne poster."
   },
 
   exteriorStairSimple: {
@@ -346,6 +356,12 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
     status: "assumed",
     components: [
       {
+        materialId: "cladding_19x148_rectangular",
+        quantityPerUnit: STRUCTURAL_ASSUMPTIONS.claddingLmPerM2,
+        assumption:
+          "stående kledning 19×148 rektangulær, 8,13 lm per m² fasade før svinn"
+      },
+      {
         materialId: "wind_barrier",
         quantityPerUnit: 1,
         assumption: "1 m² vindsperre per m² fasade — omlegg dekkes av svinn"
@@ -355,14 +371,44 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
         quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
         assumption: `c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm lekteavstand`
       },
-      {
-        materialId: "cladding_19x148_standing",
-        quantityPerUnit: STRUCTURAL_ASSUMPTIONS.claddingLmPerM2,
-        assumption: "stående kledning 19×148, 7,7 lm per m² fasade før svinn"
-      }
+      { materialId: "cladding_fasteners", quantityPerUnit: 1 },
+      { materialId: "wind_barrier_tape", quantityPerUnit: 1 }
     ],
+    // Etterisolering er et VALG — den ligger ikke inne som standard.
+    dynamic: (options) => {
+      const choice = options.facadeInsulation ?? "none";
+      if (choice === "mm100") {
+        return {
+          components: [
+            {
+              materialId: "insulation_100mm",
+              quantityPerUnit: 1,
+              assumption: "100 mm etterisolering, 1 m² per m² fasade"
+            },
+            {
+              materialId: "timber_48x98_imp",
+              quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
+              assumption: `påforing 48×98 c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm`
+            }
+          ]
+        };
+      }
+      if (choice === "other") {
+        return {
+          pending: [
+            {
+              label: "Etterisolering",
+              reason: "Pris beregnes etter valgt isolasjonstykkelse."
+            }
+          ]
+        };
+      }
+      return {};
+    },
+    customerNote:
+      "Stillas, vinduer, dører, konstruksjonsreparasjoner og råteskader er egne poster.",
     internalNote:
-      "CLADDING_PRICE_PENDING — vindsperre og lekting er priset, kledningen mangler referansepris."
+      "Festemidler og vindsperreteip mangler referansepris — de navngis til de er lagt inn."
   },
 
   facadeDemolition: {
@@ -405,34 +451,50 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
     status: "assumed",
     components: [
       {
-        materialId: "cladding_19x148_standing",
+        materialId: "cladding_19x148_rectangular",
         quantityPerUnit: STRUCTURAL_ASSUMPTIONS.claddingLmPerM2,
         assumption:
-          "stående kledning 19×148, 7,7 lm per m² fasade før svinn"
-      }
+          "stående kledning 19×148 rektangulær, 8,13 lm per m² fasade før svinn"
+      },
+      { materialId: "cladding_fasteners", quantityPerUnit: 1 }
     ],
     internalNote:
-      "CLADDING_PRICE_PENDING — forbruket er bestemt, referanseprisen mangler."
+      "Referanseprodukt. Andre profiler og materialer må få egne oppskrifter."
   },
 
   exteriorInsulation: {
     id: "exteriorInsulation",
     unit: "m²",
     status: "assumed",
-    components: [
-      {
-        materialId: "insulation_100mm",
-        quantityPerUnit: 1,
-        assumption: "100 mm etterisolering, 1 m² per m² fasade"
-      },
-      {
-        materialId: "timber_48x98_imp",
-        quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
-        assumption: `påforing 48×98 c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm`
+    components: [],
+    dynamic: (options) => {
+      const choice = options.facadeInsulation ?? "mm100";
+      if (choice === "mm100") {
+        return {
+          components: [
+            {
+              materialId: "insulation_100mm",
+              quantityPerUnit: 1,
+              assumption: "100 mm etterisolering, 1 m² per m² fasade"
+            },
+            {
+              materialId: "timber_48x98_imp",
+              quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
+              assumption: `påforing 48×98 c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm`
+            }
+          ]
+        };
       }
-    ],
-    internalNote:
-      "Bekreft at 100 mm er standard etterisoleringstykkelse i tilbudene våre."
+      return {
+        pending: [
+          {
+            label: "Etterisolering",
+            reason: "Pris beregnes etter valgt isolasjonstykkelse."
+          }
+        ]
+      };
+    },
+    internalNote: "100 mm er standard valgbart alternativ."
   },
 
   // ══ VINDUER & DØRER ═════════════════════════════════════════════════
@@ -468,20 +530,31 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
             2 / STRUCTURAL_ASSUMPTIONS.wallHeightM
         ),
         assumption: `stendere c/c ${STRUCTURAL_ASSUMPTIONS.studSpacingM * 1000} mm + sville og toppsvill ved ${STRUCTURAL_ASSUMPTIONS.wallHeightM} m vegghøyde`
-      },
-      {
-        materialId: "plasterboard_standard",
-        quantityPerUnit: 2,
-        assumption: "ett lag gips på begge sider"
-      },
-      {
-        materialId: "insulation_100mm",
-        quantityPerUnit: 1,
-        assumption: "isolasjon i full veggtykkelse"
       }
     ],
+    // Reisverk = kun bindingsverk. Komplett = i tillegg isolasjon og ett
+    // lag gips på BEGGE sider.
+    dynamic: (options) => {
+      if ((options.partitionScope ?? "complete") === "framingOnly") return {};
+      return {
+        components: [
+          {
+            materialId: "insulation_100mm",
+            quantityPerUnit: 1,
+            assumption: "isolasjon i full veggtykkelse"
+          },
+          {
+            materialId: "plasterboard_standard",
+            quantityPerUnit: 2,
+            assumption: "ett lag gips på begge sider — 2 m² per m² vegg"
+          }
+        ]
+      };
+    },
+    customerNote:
+      "Sparkling og maling er ikke inkludert. Elektrikerarbeid, dører og egne lydsystemer kommer i tillegg.",
     internalNote:
-      "BEKREFT OMFANG: inkluderer skilleveggen gips og isolasjon, eller kun bindingsverk?"
+      "Reisverk 0,70 t/m² er AVLEDET (1,40 minus 2 × 0,35 gips) — bekreft timetallet."
   },
 
   plasterboardSingleLayer: {
@@ -503,49 +576,68 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
   ceilingWork: {
     id: "ceilingWork",
     unit: "m²",
-    status: "partial",
-    components: [
-      { materialId: "plasterboard_standard", quantityPerUnit: 1 }
-    ],
-    pending: [
-      {
-        label: "Underlag / nedforing",
-        reason:
-          "Avhenger av om himlingen festes direkte i bjelkelaget eller fores ned."
+    status: "assumed",
+    components: [],
+    dynamic: (options) => {
+      const type = options.ceilingType ?? "direct";
+      if (type === "direct") {
+        return {
+          components: [
+            {
+              materialId: "plasterboard_standard",
+              quantityPerUnit: 1,
+              assumption: "himlingsplate montert direkte i bjelkelaget"
+            }
+          ]
+        };
       }
-    ],
+      if (type === "battened") {
+        return {
+          components: [
+            {
+              materialId: "batten_36x48_imp",
+              quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
+              assumption: `nedlekting c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm`
+            },
+            { materialId: "plasterboard_standard", quantityPerUnit: 1 }
+          ]
+        };
+      }
+      return {
+        pending: [
+          {
+            label: "Nedforet / kompleks himling",
+            reason: "Må vurderes etter ønsket nedforing og konstruksjon."
+          }
+        ]
+      };
+    },
     internalNote:
-      "TRENGER BESLUTNING: er direktemontert himling standard, eller nedforet? Lekteforbruk følger av valget."
+      "Tre himlingstyper: direktemontert 0,90 t/m², nedlektet 1,20 t/m², nedforet vurderes."
   },
 
   flooringInstallation: {
     id: "flooringInstallation",
     unit: "m²",
-    status: "partial",
-    components: [],
+    status: "assumed",
+    // Underlaget er et EGET materiale, ikke gjemt i gulvprisen. Uten
+    // verifisert referansepris navngis det i stedet for å bli 0 kr.
+    components: [{ materialId: "standard_underlay", quantityPerUnit: 1 }],
     tiers: {
       standard: [{ materialId: "laminate_standard", quantityPerUnit: 1 }],
       premium: [{ materialId: "oak_parquet_standard", quantityPerUnit: 1 }]
     },
-    pending: [
-      {
-        label: "Undergulv og trinnlydsmatte",
-        reason: "Ikke lagt inn i materialdatabasen ennå."
-      }
-    ],
     internalNote:
-      "TRENGER BESLUTNING: referansepris per m² for trinnlydsmatte/undergulv."
+      "UNDERLAY_PRICE_PENDING — både standard_underlay og acoustic_underlay finnes i databasen."
   },
 
   trimInstallation: {
     id: "trimInstallation",
     unit: "lm",
-    status: "pending",
-    components: [],
-    customerNote:
-      "Materialpris avklares etter valgt listtype og overflatebehandling.",
+    status: "assumed",
+    components: [{ materialId: "trim_standard", quantityPerUnit: 1 }],
     internalNote:
-      "TRENGER BESLUTNING: referansepris per lm for standard gulv-, tak- og dørlist."
+      "TRIM_PRICE_PENDING — arbeidet regnes, materialprisen avhenger av valgt list."
   },
 
   // ══ REHABILITERING ══════════════════════════════════════════════════

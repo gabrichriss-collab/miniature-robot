@@ -63,6 +63,8 @@ export type EstimateScenario = {
   range: { low: number; high: number };
   /** True når materialsummen er et gulv fordi noe er upriset. */
   isFloor: boolean;
+  /** False når kurven mangler et nødvendig materiale — se rule 12. */
+  materialEstimateComplete: boolean;
   materials: MaterialTotal;
 };
 
@@ -77,6 +79,8 @@ export type EstimateResult = {
   premiumAvailable: boolean;
   /** Poster der materialkostnaden bevisst ikke er beregnet. */
   unpricedMaterials: MaterialTotal["unpriced"];
+  /** True når minst én arbeidspost ikke kunne prises (f.eks. nedforet himling). */
+  hasPendingLabor: boolean;
 };
 
 function scenario(
@@ -111,6 +115,8 @@ function scenario(
       high: roundForDisplay(withVat(highExVat))
     },
     isFloor: tier !== "none" && materials.hasFloorLines,
+    materialEstimateComplete:
+      tier === "none" ? true : materials.materialEstimateComplete,
     materials
   };
 }
@@ -121,7 +127,8 @@ export function calculateEstimate(lines: EstimateLine[]): EstimateResult {
     label: l.label,
     unit: l.unit,
     quantity: l.quantity,
-    difficulty: l.difficulty
+    difficulty: l.difficulty,
+    options: l.options
   }));
 
   const labor = calcLaborTotal(laborInputs);
@@ -185,6 +192,7 @@ export function calculateEstimate(lines: EstimateLine[]): EstimateResult {
     scenarios,
     materialsAvailable,
     premiumAvailable,
-    unpricedMaterials: standard.unpriced
+    unpricedMaterials: standard.unpriced,
+    hasPendingLabor: labor.hasPendingLabor
   };
 }

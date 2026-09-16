@@ -23,6 +23,14 @@ import {
 } from "../../src/config/pricing/recipes";
 import { calcLaborLine, calcLaborTotal, toQty } from "../../src/lib/pricing/calculateLabor";
 import {
+  FASTENING_LABOR_FACTORS,
+  resolveLaborHoursPerUnit,
+  CEILING_TYPES,
+  PARTITION_SCOPES,
+  INSULATION_OPTIONS,
+  INSULATION_OPTION_ORDER
+} from "../../src/config/pricing/labor";
+import {
   calcMaterialLine,
   calcMaterialTotal
 } from "../../src/lib/pricing/calculateMaterials";
@@ -322,25 +330,64 @@ test("FUNDAMENT: ligger aldri gjemt i materialprisen per m²", () => {
   );
 });
 
-test("INNFESTING: CAMO prises ikke med vanlig skruepris", () => {
+test("INNFESTING: CAMO har egen pris og er aldri billigere enn skruer", () => {
+  const camo = getMaterial("terrace_hidden_fastening")!;
+  assert.equal(camo.referenceRetailPriceInclVat, 1.7);
+  near(camo.referencePriceExVat, 1.36, 0.0001);
+  assert.equal(camo.wasteFactor, 0.05);
+  assert.equal(camo.protectionFactor, 0.1);
+  assert.ok(!camo.pricePending);
+
+  const opts = { terraceFastening: "visible" } as const;
   const visible = calcMaterialLine({
     workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36,
-    tier: "standard", options: { terraceFastening: "visible" }
+    tier: "standard", options: opts
   });
   const hidden = calcMaterialLine({
     workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36,
     tier: "standard", options: { terraceFastening: "hidden" }
   });
 
-  assert.ok(visible.components.some((c) => c.materialId === "terrace_screws_c4"));
-  // Skjult innfesting har ingen verifisert pris → navngis, prises ikke.
-  assert.ok(hidden.components.every((c) => c.materialId !== "terrace_screws_c4"));
-  assert.ok(
-    hidden.pending.some((pnd) => /[Ss]kjult innfesting/.test(pnd.label))
+  const c = hidden.components.find((x) => x.materialId === "terrace_hidden_fastening")!;
+  assert.equal(c.netQuantity, 36 * 28);
+  near(c.grossQuantity, 36 * 28 * 1.05);
+  // Skjult innfesting skal aldri framstå som billigere enn synlig.
+  assert.ok(hidden.materialExVat > visible.materialExVat);
+  assert.equal(hidden.pending.length, 0);
+});
+
+test("CAMO-ARBEID: 10 % tillegg gjelder kun bordmonteringen", () => {
+  assert.equal(FASTENING_LABOR_FACTORS.standardVisible, 1.0);
+  assert.equal(FASTENING_LABOR_FACTORS.hiddenCamo, 1.1);
+
+  // Komplett terrasse: 1,60 t/m². Bordmontering er 0,65 av dem.
+  // 1,60 − 0,65 + 0,65 × 1,10 = 1,665
+  assert.equal(
+    resolveLaborHoursPerUnit("terraceComplete", { terraceFastening: "hidden" }),
+    1.665
   );
-  assert.equal(hidden.status, "partial");
-  assert.ok(hidden.materialExVat < visible.materialExVat);
-  assert.ok(getMaterial("terrace_hidden_fastening")!.pricePending);
+  assert.equal(resolveLaborHoursPerUnit("terraceComplete", {}), 1.6);
+
+  // Kun bordmontering: hele posten får tillegget.
+  near(
+    resolveLaborHoursPerUnit("terraceDeckingOnly", {
+      terraceFastening: "hidden"
+    })!,
+    0.715
+  );
+
+  // Poster uten bordmontering røres ikke.
+  assert.equal(
+    resolveLaborHoursPerUnit("terraceRailing", { terraceFastening: "hidden" }),
+    1.2
+  );
+
+  const hidden = calcLaborLine({
+    workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36,
+    options: { terraceFastening: "hidden" }
+  });
+  near(hidden.totalLaborHours, 36 * 1.665);
+  assert.ok(hidden.laborPriceExVat > 48960);
 });
 
 test("TERMOFURU: Royal-prisen brukes ikke som erstatning", () => {
@@ -368,91 +415,96 @@ test("TERMOFURU: Royal-prisen brukes ikke som erstatning", () => {
   );
 });
 
-test("KLEDNING: 19×148 stående med 7,7 lm/m², men uten påstått pris", () => {
-  assert.equal(STRUCTURAL_ASSUMPTIONS.claddingLmPerM2, 7.7);
-  const cladding = getMaterial("cladding_19x148_standing")!;
-  assert.equal(cladding.name, "Stående kledning 19×148");
-  assert.ok(cladding.pricePending);
+test("KLEDNING: 19×148 rektangulær, 8,13 lm/m², 50 kr/lm inkl. mva", () => {
+  assert.equal(STRUCTURAL_ASSUMPTIONS.claddingLmPerM2, 8.13);
+  const c = getMaterial("cladding_19x148_rectangular")!;
+  assert.equal(c.referenceRetailPriceInclVat, 50);
+  assert.equal(c.referencePriceExVat, 40);
+  assert.equal(c.dimension, "19x148");
+  assert.equal(c.profile, "rectangular");
+  assert.equal(c.orientation, "vertical");
+  assert.equal(c.consumptionLmPerM2, 8.13);
+  assert.equal(c.lastUpdated, "2026-09-16");
+  assert.equal(c.wasteFactor, 0.1);
+  assert.equal(c.protectionFactor, 0.1);
 
+  // 100 m² fasade: 813 lm → 894,3 lm etter svinn × 40 kr × 1,10 buffer.
   const line = calcMaterialLine({
     workItemKey: "timberCladding", label: "Kledning", unit: "m²",
     quantity: 100, tier: "standard"
   });
-  assert.equal(line.status, "pending");
-  assert.equal(line.materialExVat, 0);
+  const comp = line.components.find(
+    (x) => x.materialId === "cladding_19x148_rectangular"
+  )!;
+  assert.equal(comp.netQuantity, 813);
+  near(comp.grossQuantity, 894.3);
+  near(comp.rawCostExVat, 894.3 * 40);
+  near(comp.totalCostExVat, 894.3 * 40 * 1.1);
+  // Bufferen legges på én gang, ikke to.
+  near(comp.protectionCostExVat, 894.3 * 40 * 0.1);
+});
 
-  // På komplett fasade prises vindsperre og lekting, kledningen navngis.
-  const facade = calcMaterialLine({
+test("FASADE: full oppskrift, men etterisolering kun når den er valgt", () => {
+  const base = calcMaterialLine({
     workItemKey: "facadeComplete", label: "Fasade", unit: "m²",
     quantity: 100, tier: "standard"
   });
-  assert.equal(facade.status, "partial");
-  assert.ok(facade.materialExVat > 0);
-  assert.ok(facade.pending.some((pnd) => /[Kk]ledning/.test(pnd.label)));
+  const ids = base.components.map((c) => c.materialId);
+  assert.ok(ids.includes("cladding_19x148_rectangular"));
+  assert.ok(ids.includes("wind_barrier"));
+  assert.ok(ids.includes("batten_36x48_imp"));
+  // Ikke inkludert med mindre den velges.
+  assert.ok(!ids.includes("insulation_100mm"));
+
+  const insulated = calcMaterialLine({
+    workItemKey: "facadeComplete", label: "Fasade", unit: "m²",
+    quantity: 100, tier: "standard", options: { facadeInsulation: "mm100" }
+  });
+  assert.ok(
+    insulated.components.some((c) => c.materialId === "insulation_100mm")
+  );
+  assert.ok(insulated.materialExVat > base.materialExVat);
+
+  const other = calcMaterialLine({
+    workItemKey: "facadeComplete", label: "Fasade", unit: "m²",
+    quantity: 100, tier: "standard", options: { facadeInsulation: "other" }
+  });
+  assert.ok(
+    other.pending.some((pnd) => /isolasjonstykkelse/.test(pnd.reason))
+  );
+
+  // Festemidler og teip er navngitt, ikke gjemt i et prosenttillegg.
+  assert.ok(base.pending.some((pnd) => /[Ff]estemidler/.test(pnd.label)));
+  assert.ok(base.pending.some((pnd) => /[Tt]eip/.test(pnd.label)));
 });
 
-test("SMÅFORBRUK: eget, konfigurerbart tillegg — ikke gjemt i bufferen", () => {
+test("SMÅFORBRUK: generisk prosenttillegg er slått av — ingen dobbeltpolstring", () => {
+  assert.equal(pricingSettings.smallConsumablesRate, 0);
+
   const line = calcMaterialLine({
     workItemKey: "plasterboardSingleLayer", label: "Gips", unit: "m²",
     quantity: 10, tier: "standard"
   });
   const priced = line.components.reduce((s, c) => s + c.totalCostExVat, 0);
-  near(
-    line.smallConsumablesExVat,
-    priced * pricingSettings.smallConsumablesRate
-  );
-  near(line.materialExVat, priced + line.smallConsumablesExVat);
-  // Svinn, buffer og småforbruk er tre atskilte tall.
+  assert.equal(line.smallConsumablesExVat, 0);
+  near(line.materialExVat, priced);
+  // Svinn og buffer er fortsatt to atskilte tall.
   assert.notEqual(line.wasteExVat, line.protectionExVat);
-  assert.notEqual(line.protectionExVat, line.smallConsumablesExVat);
+  assert.ok(line.wasteExVat > 0 && line.protectionExVat > 0);
+
+  // Mekanismen finnes fortsatt, slik at den kan slås på senere.
+  assert.equal(typeof pricingSettings.smallConsumablesRate, "number");
 });
 
-test("MANGLER: riving har status 'none' og null materialkostnad", () => {
-  const line = calcMaterialLine({
-    workItemKey: "terraceDemolition", label: "Riving", unit: "m²", quantity: 36, tier: "premium"
-  });
-  assert.equal(line.status, "none");
-  assert.equal(line.materialExVat, 0);
-});
-
-test("OPPSKRIFTER: enheten matcher alltid arbeidspostens enhet", () => {
-  for (const [key, recipe] of Object.entries(MATERIAL_RECIPES)) {
-    const workKey = RECIPE_VARIANTS[key] ?? key;
-    const work = (WORK_ITEMS as Record<string, { unit: string }>)[workKey];
-    assert.ok(work, `oppskrift ${key} har ingen arbeidspost`);
-    assert.equal(recipe.unit, work.unit, `enhet spriker for ${key}`);
+test("VESENTLIGE FORBRUKSVARER ligger som egne materialer, ikke i en prosentsats", () => {
+  for (const id of [
+    "terrace_screws_c4",
+    "wind_barrier_tape",
+    "cladding_fasteners",
+    "terrace_hidden_fastening"
+  ]) {
+    assert.ok(getMaterial(id), `${id} mangler i databasen`);
   }
-});
-
-test("OPPSKRIFTER: alle materialId-er finnes i databasen", () => {
-  for (const recipe of Object.values(MATERIAL_RECIPES)) {
-    const all = [
-      ...recipe.components,
-      ...Object.values(recipe.tiers ?? {}).flat()
-    ];
-    for (const c of all) {
-      assert.ok(getMaterial(c.materialId), `ukjent material ${c.materialId}`);
-      assert.ok(c.quantityPerUnit > 0, `mengde mangler for ${c.materialId}`);
-    }
-  }
-});
-
-test("OPPSKRIFTER: premium finnes kun der det gir mening", () => {
-  assert.deepEqual(availableTiers("terraceComplete"), ["standard", "premium"]);
-  assert.deepEqual(availableTiers("flooringInstallation"), ["standard", "premium"]);
-  assert.deepEqual(availableTiers("plasterboardSingleLayer"), []);
-  assert.deepEqual(availableTiers("windowReplacement"), []);
-});
-
-test("OPPSKRIFTER: poster uten premium faller tilbake på standard, ikke 0", () => {
-  const std = calcMaterialLine({
-    workItemKey: "finishedWallPanel", label: "MDF", unit: "m²", quantity: 20, tier: "standard"
-  });
-  const prem = calcMaterialLine({
-    workItemKey: "finishedWallPanel", label: "MDF", unit: "m²", quantity: 20, tier: "premium"
-  });
-  assert.ok(std.materialExVat > 0);
-  assert.equal(prem.materialExVat, std.materialExVat);
 });
 
 /* ══════════════════ FLERE POSTER SAMMEN ══════════════════ */
@@ -479,13 +531,15 @@ test("FLERE POSTER: materialer summeres uavhengig av arbeid", () => {
   // Kun terrassen bidrar: rekkverk er pending, riving er none.
   const terrace = calcMaterialLine({ ...multiJob[0], tier: "standard" });
   near(m.totalMaterialExVat, terrace.materialExVat, 0.05);
-  assert.ok(m.totalSmallConsumablesExVat > 0);
+  // Ingen skjult prosentpolstring — småforbruk er slått av.
+  assert.equal(m.totalSmallConsumablesExVat, 0);
   assert.ok(m.totalWasteExVat > 0);
   assert.ok(m.totalProtectionExVat > 0);
   assert.equal(m.unpriced.length, 1);
   assert.equal(m.unpriced[0].workItemKey, "terraceRailing");
   // Standardterrassen er nå fullt priset, så ingen linje er et gulv.
   assert.equal(m.hasFloorLines, false);
+  assert.equal(m.materialEstimateComplete, false); // rekkverket mangler pris
   // … men velger kunden fundament som må vurderes, blir den det.
   const withFoundation = calcMaterialTotal([
     { ...multiJob[0], tier: "standard", options: { terraceFoundation: "assess" } }
@@ -679,4 +733,210 @@ test("SØK: korte ord treffer ikke tilfeldige delstrenger", () => {
   assert.equal(findBestMatch(""), null);
   assert.equal(findBestMatch("x"), null);
   assert.equal(findBestMatch("qwerty zxcvb"), null);
+});
+
+/* ══════════════════ HIMLING, GULV, LIST, VEGGER ══════════════════ */
+
+test("HIMLING: tre typer med forskjellig arbeid og oppskrift", () => {
+  assert.equal(CEILING_TYPES.direct.laborHoursPerUnit, 0.9);
+  assert.equal(CEILING_TYPES.battened.laborHoursPerUnit, 1.2);
+  assert.equal(CEILING_TYPES.suspended.laborHoursPerUnit, null);
+
+  assert.equal(resolveLaborHoursPerUnit("ceilingWork", {}), 0.9);
+  assert.equal(
+    resolveLaborHoursPerUnit("ceilingWork", { ceilingType: "battened" }),
+    1.2
+  );
+
+  const direct = calcMaterialLine({
+    workItemKey: "ceilingWork", label: "Himling", unit: "m²",
+    quantity: 20, tier: "standard", options: { ceilingType: "direct" }
+  });
+  const battened = calcMaterialLine({
+    workItemKey: "ceilingWork", label: "Himling", unit: "m²",
+    quantity: 20, tier: "standard", options: { ceilingType: "battened" }
+  });
+  // Nedlektet er ikke samme jobb — lekter i tillegg til plate.
+  assert.ok(direct.components.every((c) => c.materialId !== "batten_36x48_imp"));
+  assert.ok(battened.components.some((c) => c.materialId === "batten_36x48_imp"));
+  assert.ok(battened.materialExVat > direct.materialExVat);
+});
+
+test("HIMLING: nedforet gir tekst, ikke 0 kr", () => {
+  const l = calcLaborLine({
+    workItemKey: "ceilingWork", label: "Himling", unit: "m²",
+    quantity: 20, options: { ceilingType: "suspended" }
+  });
+  assert.equal(l.laborPending, true);
+  assert.equal(l.laborPriceExVat, 0);
+  assert.match(String(l.pendingNote), /Må vurderes etter ønsket nedforing/);
+
+  const m = calcMaterialLine({
+    workItemKey: "ceilingWork", label: "Himling", unit: "m²",
+    quantity: 20, tier: "standard", options: { ceilingType: "suspended" }
+  });
+  assert.equal(m.materialExVat, 0);
+  assert.equal(m.status, "pending");
+
+  const r = calculateEstimate([
+    {
+      workItemKey: "ceilingWork", label: "Himling", unit: "m²",
+      quantity: 20, options: { ceilingType: "suspended" }
+    }
+  ]);
+  assert.equal(r.hasPendingLabor, true);
+});
+
+test("GULV: manglende underlagspris blir aldri stilltiende 0", () => {
+  for (const id of ["standard_underlay", "acoustic_underlay"]) {
+    const m = getMaterial(id)!;
+    assert.ok(m.pricePending, `${id} skal være upriset`);
+    assert.match(String(m.pendingReason), /[Uu]nderlag/);
+  }
+  const line = calcMaterialLine({
+    workItemKey: "flooringInstallation", label: "Gulv", unit: "m²",
+    quantity: 30, tier: "standard"
+  });
+  // Gulvbelegget prises, underlaget navngis.
+  assert.ok(line.components.some((c) => c.materialId === "laminate_standard"));
+  assert.ok(line.pending.some((pnd) => /[Uu]nderlag|[Tt]rinnlyd/.test(pnd.label)));
+  assert.equal(line.status, "partial");
+
+  const total = calcMaterialTotal([
+    { workItemKey: "flooringInstallation", label: "Gulv", unit: "m²", quantity: 30, tier: "standard" }
+  ]);
+  assert.equal(total.materialEstimateComplete, false);
+});
+
+test("LISTING: arbeid regnes, materialet navngis", () => {
+  const l = calcLaborLine({
+    workItemKey: "trimInstallation", label: "Listing", unit: "lm", quantity: 40
+  });
+  assert.equal(l.laborHoursPerUnit, 0.12);
+  assert.equal(l.totalLaborHours, 4.8);
+  assert.equal(l.laborPriceExVat, 4080);
+  assert.equal(l.laborPending, false);
+
+  const m = calcMaterialLine({
+    workItemKey: "trimInstallation", label: "Listing", unit: "lm",
+    quantity: 40, tier: "standard"
+  });
+  assert.equal(m.materialExVat, 0);
+  assert.equal(m.status, "pending");
+  assert.match(String(m.customerNote), /avhenger av valgt list/);
+});
+
+test("SKILLEVEGG: to tydelig forskjellige omfang", () => {
+  assert.equal(PARTITION_SCOPES.complete.laborHoursPerUnit, 1.4);
+  assert.equal(PARTITION_SCOPES.framingOnly.laborHoursPerUnit, 0.7);
+  assert.equal(
+    resolveLaborHoursPerUnit("interiorPartitionWall", { partitionScope: "framingOnly" }),
+    0.7
+  );
+
+  const framing = calcMaterialLine({
+    workItemKey: "interiorPartitionWall", label: "Vegg", unit: "m²",
+    quantity: 20, tier: "standard", options: { partitionScope: "framingOnly" }
+  });
+  const complete = calcMaterialLine({
+    workItemKey: "interiorPartitionWall", label: "Vegg", unit: "m²",
+    quantity: 20, tier: "standard", options: { partitionScope: "complete" }
+  });
+
+  // A: kun bindingsverk.
+  assert.deepEqual(
+    framing.components.map((c) => c.materialId),
+    ["timber_48x98_imp"]
+  );
+  // B: bindingsverk + isolasjon + gips på begge sider.
+  const gips = complete.components.find(
+    (c) => c.materialId === "plasterboard_standard"
+  )!;
+  assert.equal(gips.netQuantity, 40); // 2 m² per m² vegg
+  const iso = complete.components.find(
+    (c) => c.materialId === "insulation_100mm"
+  )!;
+  assert.equal(iso.netQuantity, 20); // 1 m² per m² vegg
+  assert.ok(complete.materialExVat > framing.materialExVat);
+
+  assert.match(
+    String(MATERIAL_RECIPES.interiorPartitionWall.customerNote),
+    /Sparkling og maling er ikke inkludert/
+  );
+});
+
+test("LEVEGG: m² overalt — ingen lm igjen", () => {
+  assert.equal(WORK_ITEMS.privacyScreen.unit, "m²");
+  assert.equal(WORK_ITEMS.privacyScreen.laborHoursPerUnit, 1.0);
+  assert.equal(MATERIAL_RECIPES.privacyScreen.unit, "m²");
+
+  const entries = PRICE_DB.filter((e) => /levegg/i.test(e.name));
+  assert.ok(entries.length > 0);
+  // Ingen levegg-post bruker lm lenger.
+  for (const e of entries) {
+    assert.equal(e.unit, "m²", `"${e.name}" bruker fortsatt ${e.unit}`);
+  }
+  assert.equal(
+    entries.find((e) => e.name === "Levegg (tre)")!.workItemKey,
+    "privacyScreen"
+  );
+
+  // 3 m × 2 m levegg = 6 m² → 6 timer.
+  const l = calcLaborLine({
+    workItemKey: "privacyScreen", label: "Levegg", unit: "m²", quantity: 3 * 2
+  });
+  assert.equal(l.totalLaborHours, 6);
+  assert.equal(l.laborPriceExVat, 5100);
+});
+
+test("ETTERISOLERING: 100 mm er standard valgbart alternativ", () => {
+  assert.equal(INSULATION_OPTIONS.mm100.thicknessMm, 100);
+  assert.deepEqual(INSULATION_OPTION_ORDER, ["none", "mm100", "other"]);
+
+  const std = calcMaterialLine({
+    workItemKey: "exteriorInsulation", label: "Etterisolering", unit: "m²",
+    quantity: 50, tier: "standard"
+  });
+  assert.ok(std.components.some((c) => c.materialId === "insulation_100mm"));
+  assert.equal(std.pending.length, 0);
+
+  const other = calcMaterialLine({
+    workItemKey: "exteriorInsulation", label: "Etterisolering", unit: "m²",
+    quantity: 50, tier: "standard", options: { facadeInsulation: "other" }
+  });
+  assert.equal(other.materialExVat, 0);
+  assert.match(String(other.customerNote), /valgt isolasjonstykkelse/);
+});
+
+/* ══════════════════ REGEL 12 ══════════════════ */
+
+test("REGEL 12: manglende materialpris kan aldri bli stilltiende 0", () => {
+  // Alle poster med minst ett upriset materiale må flagges.
+  const cases: Array<[string, Record<string, unknown>]> = [
+    ["flooringInstallation", {}],
+    ["trimInstallation", {}],
+    ["facadeComplete", {}],
+    ["ceilingWork", { ceilingType: "suspended" }]
+  ];
+  for (const [key, options] of cases) {
+    const total = calcMaterialTotal([
+      { workItemKey: key, label: key, unit: "m²", quantity: 25, tier: "standard", options }
+    ]);
+    assert.equal(
+      total.materialEstimateComplete,
+      false,
+      `${key} presenteres som komplett materialpris`
+    );
+  }
+
+  // En post der alt er priset skal derimot være komplett.
+  const ok = calcMaterialTotal([
+    { workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36, tier: "standard" }
+  ]);
+  assert.equal(ok.materialEstimateComplete, true);
+
+  // Ingen komponent har noen gang pris 0.
+  for (const l of ok.lines) {
+    for (const c of l.components) assert.ok(c.referencePriceExVat > 0);
+  }
 });

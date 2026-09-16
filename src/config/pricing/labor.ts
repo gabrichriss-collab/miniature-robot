@@ -302,3 +302,171 @@ export const WORK_ITEMS_NEEDS_INPUT: Array<{
   { key: "windowRestoration", label: "Restaurering av originalt vindu", unit: "stk", category: "Rehab", note: "Trenger h/stk" },
   { key: "doorRestoration", label: "Restaurering av originaldør", unit: "stk", category: "Rehab", note: "Trenger h/stk" }
 ];
+
+/* ══════════════════ VALG SOM PÅVIRKER ARBEIDSTIDEN ══════════════════ */
+
+/**
+ * Innfesting. Skjult innfesting tar noe lengre tid, men tillegget skal
+ * KUN gjelde selve bordmonteringen — ikke hele terrassebyggingen.
+ * Rekalibreres når vi har tall fra reelle prosjekter.
+ */
+export const FASTENING_LABOR_FACTORS = {
+  standardVisible: 1.0,
+  hiddenCamo: 1.1
+} as const;
+
+/**
+ * Hvor mange av arbeidspostens timer som er selve bordmonteringen.
+ * Innfestingsfaktoren over ganges bare med denne andelen.
+ */
+export const DECKING_INSTALL_HOURS_PER_UNIT: Record<string, number> = {
+  terraceComplete: 0.65,
+  terraceDeckingOnly: 0.65,
+  terraceThermowood: 0.65
+};
+
+export type CeilingTypeKey = "direct" | "battened" | "suspended";
+
+export const CEILING_TYPES: Record<
+  CeilingTypeKey,
+  {
+    key: CeilingTypeKey;
+    label: string;
+    /** `null` = kan ikke prises automatisk ennå. */
+    laborHoursPerUnit: number | null;
+    note?: string;
+  }
+> = {
+  direct: {
+    key: "direct",
+    label: "Direktemontert himling",
+    laborHoursPerUnit: 0.9
+  },
+  battened: {
+    key: "battened",
+    label: "Nedlektet himling",
+    laborHoursPerUnit: 1.2
+  },
+  suspended: {
+    key: "suspended",
+    label: "Nedforet / kompleks himling",
+    laborHoursPerUnit: null,
+    note: "Må vurderes etter ønsket nedforing og konstruksjon."
+  }
+};
+
+export const CEILING_TYPE_ORDER: CeilingTypeKey[] = [
+  "direct",
+  "battened",
+  "suspended"
+];
+
+export type PartitionScopeKey = "framingOnly" | "complete";
+
+export const PARTITION_SCOPES: Record<
+  PartitionScopeKey,
+  {
+    key: PartitionScopeKey;
+    label: string;
+    laborHoursPerUnit: number;
+    note?: string;
+  }
+> = {
+  framingOnly: {
+    key: "framingOnly",
+    label: "Reisverk / tømrerarbeid",
+    // AVLEDET: komplett vegg (1,40) minus to lag gips (2 × 0,35).
+    // Bekreft dette timetallet.
+    laborHoursPerUnit: 0.7,
+    note: "Kun bindingsverk. Plater, isolasjon og overflate kommer i tillegg."
+  },
+  complete: {
+    key: "complete",
+    label: "Komplett standard skillevegg",
+    laborHoursPerUnit: 1.4,
+    note: "Bindingsverk, isolasjon og ett lag gips på begge sider. Sparkling og maling er ikke inkludert."
+  }
+};
+
+export const PARTITION_SCOPE_ORDER: PartitionScopeKey[] = [
+  "framingOnly",
+  "complete"
+];
+
+export type InsulationOptionKey = "none" | "mm100" | "other";
+
+export const INSULATION_OPTIONS: Record<
+  InsulationOptionKey,
+  { key: InsulationOptionKey; label: string; thicknessMm: number | null; note?: string }
+> = {
+  none: { key: "none", label: "Ingen etterisolering", thicknessMm: null },
+  mm100: { key: "mm100", label: "100 mm", thicknessMm: 100 },
+  other: {
+    key: "other",
+    label: "Annen tykkelse",
+    thicknessMm: null,
+    note: "Pris beregnes etter valgt isolasjonstykkelse."
+  }
+};
+
+export const INSULATION_OPTION_ORDER: InsulationOptionKey[] = [
+  "none",
+  "mm100",
+  "other"
+];
+
+/** Valgene en rad kan bære som endrer arbeidstiden. */
+export type LaborOptions = {
+  terraceFastening?: "visible" | "hidden";
+  ceilingType?: CeilingTypeKey;
+  partitionScope?: PartitionScopeKey;
+};
+
+/**
+ * Timer per enhet etter at radens valg er tatt hensyn til.
+ *
+ *   number     — kan prises
+ *   null       — bevisst ikke prisbar ennå; vis tekst, aldri 0 kr
+ *   undefined  — ukjent arbeidspost
+ */
+export function resolveLaborHoursPerUnit(
+  workItemKey: string,
+  options: LaborOptions = {}
+): number | null | undefined {
+  if (workItemKey === "ceilingWork") {
+    return CEILING_TYPES[options.ceilingType ?? "direct"].laborHoursPerUnit;
+  }
+  if (workItemKey === "interiorPartitionWall") {
+    return PARTITION_SCOPES[options.partitionScope ?? "complete"]
+      .laborHoursPerUnit;
+  }
+
+  const base = laborHoursForItem(workItemKey);
+  if (base == null) return undefined;
+
+  // Skjult innfesting: tillegget gjelder KUN bordmonteringen, ikke hele
+  // terrassebyggingen.
+  if (options.terraceFastening === "hidden") {
+    const decking = DECKING_INSTALL_HOURS_PER_UNIT[workItemKey];
+    if (decking != null) {
+      const rest = base - decking;
+      return (
+        Math.round(
+          (rest + decking * FASTENING_LABOR_FACTORS.hiddenCamo) * 10000
+        ) / 10000
+      );
+    }
+  }
+  return base;
+}
+
+/** Kundevendt forklaring når arbeidsposten bevisst ikke kan prises. */
+export function laborPendingNote(
+  workItemKey: string,
+  options: LaborOptions = {}
+): string | undefined {
+  if (workItemKey === "ceilingWork") {
+    return CEILING_TYPES[options.ceilingType ?? "direct"].note;
+  }
+  return undefined;
+}

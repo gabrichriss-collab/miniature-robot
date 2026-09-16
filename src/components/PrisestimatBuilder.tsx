@@ -38,6 +38,12 @@ import {
   TERRACE_FOUNDATION_ORDER,
   TERRACE_STRUCTURAL_CAVEAT,
   TERRACE_WORK_ITEMS,
+  CEILING_TYPES,
+  CEILING_TYPE_ORDER,
+  PARTITION_SCOPES,
+  PARTITION_SCOPE_ORDER,
+  INSULATION_OPTIONS,
+  INSULATION_OPTION_ORDER,
   type DifficultyKey,
   type MaterialTier
 } from "@/config/pricing";
@@ -431,6 +437,7 @@ function EstimatePanel({
             {visibleTiers.map((tier) => {
               const s = estimate.scenarios[tier];
               const selected = tier === totals.materialTier;
+              const incomplete = tier !== "none" && !s.materialEstimateComplete;
               return (
                 <button
                   key={tier}
@@ -454,7 +461,7 @@ function EstimatePanel({
                     {/* «Fra» når noe er upriset — summen er et minimum,
                         ikke en total. Da kan den ikke leses som et
                         ferdig sammenligningstall. */}
-                    {s.isFloor ? "Fra " : ""}
+                    {incomplete ? "Fra " : ""}
                     {formatNok(s.subtotalExVat)} kr
                   </span>
                   <span
@@ -465,7 +472,7 @@ function EstimatePanel({
                     eks. mva
                   </span>
                   <span className="mt-3 block text-base font-medium">
-                    {s.isFloor ? "Fra " : ""}
+                    {incomplete ? "Fra " : ""}
                     {formatNok(s.totalIncVat)} kr
                   </span>
                   <span
@@ -475,13 +482,17 @@ function EstimatePanel({
                   >
                     inkl. mva
                   </span>
-                  {s.isFloor ? (
+                  {/* REGEL: en ufullstendig materialkurv skal aldri kunne
+                      leses som en ferdig materialpris. */}
+                  {tier !== "none" && !s.materialEstimateComplete ? (
                     <span
                       className={`mt-3 block text-xs ${
                         selected ? "text-bone/70" : "text-ink/55"
                       }`}
                     >
-                      Minstesum — deler av materialene avklares ved befaring
+                      {s.materialExVat > 0
+                        ? "Delvis materialestimat — minstesum, deler av materialene må avklares"
+                        : "Materialpris må avklares"}
                     </span>
                   ) : null}
                 </button>
@@ -501,6 +512,9 @@ function EstimatePanel({
         <div className="mt-8 border-t border-ink pt-6">
           <p className="eyebrow mb-2 text-ink/60">
             Veiledende estimat · {active.label}
+            {totals.materialTier !== "none" && !active.materialEstimateComplete
+              ? " · delvis materialestimat"
+              : ""}
           </p>
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <span className="headline text-3xl md:text-5xl">
@@ -513,6 +527,13 @@ function EstimatePanel({
         </div>
 
         {/* Poster vi bevisst ikke priser */}
+        {estimate.hasPendingLabor ? (
+          <p className="mt-4 border-l-2 border-ink/25 pl-4 text-sm text-ink/70">
+            En eller flere poster kan ikke beregnes automatisk ennå og er
+            ikke med i summen. De er merket i lista over.
+          </p>
+        ) : null}
+
         {estimate.unpricedMaterials.length > 0 &&
         totals.materialTier !== "none" ? (
           <div className="mt-6 border border-dashed border-ink/20 p-4 text-sm text-ink/70">
@@ -861,6 +882,49 @@ function RowItem({
               ])}
             />
           </div>
+        ) : null}
+        {row.workItemKey === "ceilingWork" ? (
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            <RowSelect
+              label="Himlingstype"
+              value={row.ceilingType ?? "direct"}
+              onChange={(v) => updateRow(row.id, "ceilingType", v)}
+              options={CEILING_TYPE_ORDER.map((k) => [k, CEILING_TYPES[k].label])}
+            />
+          </div>
+        ) : null}
+        {row.workItemKey === "interiorPartitionWall" ? (
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            <RowSelect
+              label="Omfang"
+              value={row.partitionScope ?? "complete"}
+              onChange={(v) => updateRow(row.id, "partitionScope", v)}
+              options={PARTITION_SCOPE_ORDER.map((k) => [
+                k,
+                PARTITION_SCOPES[k].label
+              ])}
+            />
+          </div>
+        ) : null}
+        {row.workItemKey === "facadeComplete" ||
+        row.workItemKey === "exteriorInsulation" ? (
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            <RowSelect
+              label="Etterisolering"
+              value={
+                row.facadeInsulation ??
+                (row.workItemKey === "exteriorInsulation" ? "mm100" : "none")
+              }
+              onChange={(v) => updateRow(row.id, "facadeInsulation", v)}
+              options={INSULATION_OPTION_ORDER.map((k) => [
+                k,
+                INSULATION_OPTIONS[k].label
+              ])}
+            />
+          </div>
+        ) : null}
+        {laborLine?.laborPending && laborLine.pendingNote ? (
+          <p className="mt-2 text-xs text-ink/60">{laborLine.pendingNote}</p>
         ) : null}
       </div>
 

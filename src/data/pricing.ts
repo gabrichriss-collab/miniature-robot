@@ -440,17 +440,21 @@ export const PRICE_DB: PriceEntry[] = [
   // ── DIVERSE ───────────────────────────────────────────────────────
   {
     keywords: ["levegg", "le-vegg", "vindskjerm"],
-    unit: "lm",
-    price: 3500,
+    // Levegg regnes i m² (lengde × høyde) — ikke lm.
+    unit: "m²",
+    price: 0,
     name: "Levegg (tre)",
-    cat: "Diverse"
+    cat: "Diverse",
+    workItemKey: "privacyScreen"
   },
   {
     keywords: ["levegg glass", "glass levegg", "glassvindskjerm"],
-    unit: "lm",
-    price: 5500,
+    // Levegg regnes i m² (lengde × høyde). Timetallet for glassvariant
+    // er ikke fastsatt, så posten er ikke koblet til arbeidsmotoren.
+    unit: "m²",
+    price: 0,
     name: "Levegg m/ glass",
-    note: "Herdet glass",
+    note: "Herdet glass — beregnes ved befaring",
     cat: "Diverse"
   },
   {

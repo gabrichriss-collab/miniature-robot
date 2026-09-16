@@ -39,15 +39,20 @@ export const pricingSettings = {
   },
 
   /**
-   * Småforbruk — beslag, tape, bitte små festemidler og liknende som
-   * ikke står oppført som egne poster i oppskriftene. Andel av den
-   * prisede materialsummen.
+   * Generelt småforbrukstillegg. SATT TIL 0 MED VILJE.
    *
-   * MERK: materialpris-bufferen over dekker allerede «småforbruksvarer».
-   * Sett denne til 0 om du ikke vil ha begge deler. Verdien her er et
-   * konservativt utgangspunkt og skal bekreftes.
+   * Materialpris-bufferen på 10 % dekker allerede småforbruksvarer, små
+   * prisforskjeller og normal innkjøpsusikkerhet. Et eget prosenttillegg
+   * oppå den ville vært skjult dobbeltpolstring.
+   *
+   * Er et forbruksmateriale vesentlig nok til å telle — terrasseskruer,
+   * vindsperreteip, bestemte festemidler, membran — skal det ligge som en
+   * EGEN materialpost i oppskriften, ikke gjemmes i en prosentsats.
+   *
+   * Mekanismen står igjen slik at den kan slås på om reelle prosjekttall
+   * senere viser at vi trenger den.
    */
-  smallConsumablesRate: 0.05,
+  smallConsumablesRate: 0,
 
   /** Kundevendte summer avrundes til nærmeste hele beløp. */
   displayRoundingNok: 500

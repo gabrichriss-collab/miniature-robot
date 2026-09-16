@@ -17,7 +17,10 @@ import {
   type MaterialTier,
   type TerraceConstructionKey,
   type TerraceFasteningKey,
-  type TerraceFoundationKey
+  type TerraceFoundationKey,
+  type CeilingTypeKey,
+  type PartitionScopeKey,
+  type InsulationOptionKey
 } from "@/config/pricing";
 import {
   calcLaborLine,
@@ -48,6 +51,10 @@ export type EstimateRow = {
   terraceConstruction?: TerraceConstructionKey;
   terraceFastening?: TerraceFasteningKey;
   terraceFoundation?: TerraceFoundationKey;
+  /* ── Øvrige valg som endrer omfang ── */
+  ceilingType?: CeilingTypeKey;
+  partitionScope?: PartitionScopeKey;
+  facadeInsulation?: InsulationOptionKey;
 };
 
 export type EstimateInput = {
@@ -87,6 +94,8 @@ export type EstimateTotals = {
   materialSmallConsumablesExVat: number;
   /** True når materialsummen er et gulv fordi noe bevisst er upriset. */
   materialIsFloor: boolean;
+  /** False når kurven mangler et nødvendig materiale. */
+  materialEstimateComplete: boolean;
 
   /** Eldre rader uten arbeidsnøkkel. */
   legacyExVat: number;
@@ -112,7 +121,10 @@ function engineLines(rows: EstimateRow[]) {
       options: {
         terraceConstruction: r.terraceConstruction,
         terraceFastening: r.terraceFastening,
-        terraceFoundation: r.terraceFoundation
+        terraceFoundation: r.terraceFoundation,
+        ceilingType: r.ceilingType,
+        partitionScope: r.partitionScope,
+        facadeInsulation: r.facadeInsulation
       }
     }));
 }
@@ -177,6 +189,7 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
     materialSmallConsumablesExVat:
       active.materials.totalSmallConsumablesExVat,
     materialIsFloor: active.isFloor,
+    materialEstimateComplete: active.materialEstimateComplete,
     legacyExVat,
     range,
     estimate
@@ -185,7 +198,9 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
 
 /** Arbeidslinjer for detaljert beregning i UI og PDF. */
 export function laborLinesForRows(rows: EstimateRow[]) {
-  return engineLines(rows).map(calcLaborLine);
+  return engineLines(rows).map((l) =>
+    calcLaborLine({ ...l, options: l.options })
+  );
 }
 
 /** Materiallinjer for detaljert beregning i UI og PDF. */

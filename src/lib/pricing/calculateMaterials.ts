@@ -82,6 +82,12 @@ export type MaterialTotal = {
   unpriced: Array<{ workItemKey: string; label: string; note: string }>;
   /** True når minst én linje mangler komponenter. */
   hasFloorLines: boolean;
+  /**
+   * KRITISK: false når en oppskrift inneholder et nødvendig materiale
+   * uten pris. Da er summen IKKE en komplett materialpris, og UI-et skal
+   * aldri presentere den som «Arbeid + materialer».
+   */
+  materialEstimateComplete: boolean;
 };
 
 export type MaterialLineInput = {
@@ -292,8 +298,16 @@ export function calcMaterialTotal(inputs: MaterialLineInput[]): MaterialTotal {
         "Materialkostnad avklares ved gjennomgang eller befaring."
     }));
 
+  const relevant = lines.filter((l) => l.quantity > 0 && l.tier !== "none");
+  const materialEstimateComplete =
+    relevant.length > 0 &&
+    relevant.every(
+      (l) => l.pending.length === 0 && l.status !== "pending"
+    );
+
   return {
     lines,
+    materialEstimateComplete,
     totalMaterialExVat,
     totalWasteExVat,
     totalProtectionExVat,

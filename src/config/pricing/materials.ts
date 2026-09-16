@@ -31,6 +31,8 @@ export type MaterialCategory =
   | "Festemidler"
   | "Vindsperre"
   | "Isolasjon"
+  | "Gulvunderlag"
+  | "Listverk"
   | "Plater"
   | "Gulv";
 
@@ -59,6 +61,12 @@ export type MaterialInput = {
   sourceNotes: string;
   /** Kundevendt forklaring når prisen mangler. */
   pendingReason?: string;
+  /** Produktmetadata — internt, vises ikke som leverandørinfo for kunden. */
+  dimension?: string;
+  profile?: string;
+  orientation?: "vertical" | "horizontal";
+  /** Standardforbruk per m² der produktet har ett. */
+  consumptionLmPerM2?: number;
 };
 
 export type Material = Omit<MaterialInput, "wasteFactor" | "protectionFactor"> & {
@@ -176,31 +184,58 @@ const MATERIAL_LIST: Material[] = [
 
   defineMaterial({
     id: "terrace_hidden_fastening",
-    name: "Skjult innfesting (CAMO eller tilsvarende)",
+    name: "Skjult terrasseskrue (CAMO ProTech C4)",
     category: "Festemidler",
-    unit: "m²",
-    // CAMO_PRICE_PENDING — skal ikke prises med C4-skruepris.
-    referenceRetailPriceInclVat: null,
+    unit: "stk",
+    referenceRetailPriceInclVat: 1.7,
+    wasteFactor: 0.05,
     lastUpdated: PRICE_DATE,
     materialTier: "premium",
-    sourceNotes: "Ingen verifisert referansepris på klips og skruer lagt inn.",
-    pendingReason: "Materialpris beregnes etter valgt innfestingssystem."
+    sourceNotes: "Konservativ norsk referansepris, september 2026."
+    // Monteringsverktøy / Marksman-jigg er gjenbrukbart firmautstyr og
+    // belastes ALDRI kundens materialestimat.
   }),
 
   // ── KLEDNING ──────────────────────────────────────────────────────
   defineMaterial({
-    id: "cladding_19x148_standing",
-    name: "Stående kledning 19×148",
+    id: "cladding_19x148_rectangular",
+    name: "Stående kledning 19×148, grunnet gran",
     category: "Kledning",
     unit: "lm",
-    // CLADDING_PRICE_PENDING — forbruket er bestemt (7,7 lm/m²), men
-    // referanseprisen mangler fortsatt.
+    referenceRetailPriceInclVat: 50,
+    lastUpdated: PRICE_DATE,
+    materialTier: "standard",
+    dimension: "19x148",
+    profile: "rectangular",
+    orientation: "vertical",
+    consumptionLmPerM2: 8.13,
+    sourceNotes:
+      "Konservativ referanse, satt over normalt norsk utsalgsnivå for 19×148 rektangulær grunnet stående grankledning, september 2026."
+  }),
+  defineMaterial({
+    id: "cladding_fasteners",
+    name: "Kledningsspiker / festemidler",
+    category: "Festemidler",
+    unit: "m²",
+    // FASTENER_PRICE_PENDING
+    referenceRetailPriceInclVat: null,
+    wasteFactor: 0.05,
+    lastUpdated: PRICE_DATE,
+    materialTier: "standard",
+    sourceNotes: "Ingen verifisert referansepris lagt inn.",
+    pendingReason: "Festemidler prises etter valgt kledning og innfesting."
+  }),
+  defineMaterial({
+    id: "wind_barrier_tape",
+    name: "Vindsperreteip og tettemidler",
+    category: "Vindsperre",
+    unit: "m²",
+    // TAPE_PRICE_PENDING
     referenceRetailPriceInclVat: null,
     lastUpdated: PRICE_DATE,
     materialTier: "standard",
-    sourceNotes: "Referanseprofil valgt, men referansepris ikke lagt inn ennå.",
-    pendingReason:
-      "Materialpris avklares etter valgt kledningsprodukt og overflatebehandling."
+    sourceNotes: "Ingen verifisert referansepris lagt inn.",
+    pendingReason: "Teip og tettemidler prises etter valgt vindsperresystem."
   }),
 
   // ── VINDSPERRE ────────────────────────────────────────────────────
@@ -260,6 +295,42 @@ const MATERIAL_LIST: Material[] = [
     lastUpdated: PRICE_DATE,
     materialTier: "standard",
     sourceNotes: RETAIL_SOURCE
+  }),
+  defineMaterial({
+    id: "standard_underlay",
+    name: "Undergulv / standard underlag",
+    category: "Gulvunderlag",
+    unit: "m²",
+    // UNDERLAY_PRICE_PENDING
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "standard",
+    sourceNotes: "Ingen verifisert referansepris lagt inn.",
+    pendingReason: "Underlag/trinnlyd beregnes etter valgt gulv og underlag."
+  }),
+  defineMaterial({
+    id: "acoustic_underlay",
+    name: "Trinnlydsmatte",
+    category: "Gulvunderlag",
+    unit: "m²",
+    // UNDERLAY_PRICE_PENDING
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "premium",
+    sourceNotes: "Ingen verifisert referansepris lagt inn.",
+    pendingReason: "Underlag/trinnlyd beregnes etter valgt gulv og underlag."
+  }),
+  defineMaterial({
+    id: "trim_standard",
+    name: "Listverk, standard",
+    category: "Listverk",
+    unit: "lm",
+    // TRIM_PRICE_PENDING
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "standard",
+    sourceNotes: "Ingen verifisert referansepris lagt inn.",
+    pendingReason: "Materialpris avhenger av valgt list."
   }),
   defineMaterial({
     id: "oak_parquet_standard",
