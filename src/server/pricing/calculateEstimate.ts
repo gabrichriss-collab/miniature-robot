@@ -1,3 +1,8 @@
+import "server-only";
+// Denne modulen inneholder kommersiell prisintelligens og skal ALDRI
+// havne i nettleseren. `server-only` gjoer et slikt import til en
+// byggefeil i stedet for en stille lekkasje.
+
 /**
  * SAMLEMOTOREN.
  *
@@ -18,12 +23,12 @@ import {
   MATERIAL_TIER_LABELS,
   type DifficultyKey,
   type MaterialTier
-} from "../../config/pricing/settings";
+} from "./settings";
 import {
   availableTiers,
   getRecipe,
   type RecipeOptions
-} from "../../config/pricing/recipes";
+} from "./recipes";
 import {
   calcLaborTotal,
   round2,
@@ -35,7 +40,7 @@ import {
   recipeKeyFor,
   type MaterialTotal
 } from "./calculateMaterials";
-import { roundForDisplay } from "./format";
+import { roundForDisplay } from "../../lib/pricing/format";
 
 export type EstimateLine = {
   workItemKey?: string;

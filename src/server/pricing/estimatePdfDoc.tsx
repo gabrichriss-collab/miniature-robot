@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Server-side PDF document for prisestimat downloads. Rendered via
  * @react-pdf/renderer inside the /api/prisestimat/pdf route.
@@ -16,13 +18,13 @@ import {
   formatNok,
   laborLinesForRows,
   type EstimateInput
-} from "@/lib/estimateCalc";
-import { formatHours } from "@/lib/pricing/format";
+} from "./estimateCalc";
+import { formatHours } from "../../lib/pricing/format";
 import {
   ESTIMATE_DISCLAIMER,
   ESTIMATE_DISCLAIMER_CLOSING,
   MATERIAL_TIER_LABELS
-} from "@/config/pricing";
+} from "./index";
 
 const colors = {
   ink: "#0a0a0a",

@@ -1,3 +1,8 @@
+import "server-only";
+// Denne modulen inneholder kommersiell prisintelligens og skal ALDRI
+// havne i nettleseren. `server-only` gjoer et slikt import til en
+// byggefeil i stedet for en stille lekkasje.
+
 /**
  * ARBEIDSMOTOREN.
  *
@@ -12,12 +17,12 @@ import {
   DIFFICULTY_FACTORS,
   pricingSettings,
   type DifficultyKey
-} from "../../config/pricing/settings";
+} from "./settings";
 import {
   laborPendingNote,
   resolveLaborHoursPerUnit,
   type LaborOptions
-} from "../../config/pricing/labor";
+} from "./labor";
 
 export type LaborLineInput = {
   /** Referanse inn i WORK_ITEMS. Utelates for eldre fritekstrader. */

@@ -1,4 +1,4 @@
-import { PRICE_DB, type PriceEntry } from "../data/pricing";
+import type { CatalogueItem } from "./pricing/public";
 
 /**
  * Oppslag fra fritekst til en post i prislista.
@@ -115,14 +115,17 @@ function phraseIsContiguous(
   return false;
 }
 
-export function findBestMatch(input: string): PriceEntry | null {
+export function findBestMatch(
+  input: string,
+  catalogue: CatalogueItem[]
+): CatalogueItem | null {
   const queryWords = tokenize(input);
   if (queryWords.length === 0) return null;
 
-  let bestMatch: PriceEntry | null = null;
+  let bestMatch: CatalogueItem | null = null;
   let bestScore = 0;
 
-  for (const entry of PRICE_DB) {
+  for (const entry of catalogue) {
     let score = 0;
 
     for (const kw of entry.keywords) {

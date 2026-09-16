@@ -9,9 +9,9 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { pricingSettings, MATERIAL_TIER_LABELS } from "../../src/config/pricing/settings";
-import { WORK_ITEMS } from "../../src/config/pricing/labor";
-import { MATERIALS, getMaterial } from "../../src/config/pricing/materials";
+import { pricingSettings, MATERIAL_TIER_LABELS } from "../../src/server/pricing/settings";
+import { WORK_ITEMS } from "../../src/server/pricing/labor";
+import { MATERIALS, getMaterial } from "../../src/server/pricing/materials";
 import {
   MATERIAL_RECIPES,
   STRUCTURAL_ASSUMPTIONS,
@@ -20,8 +20,8 @@ import {
   RECIPE_VARIANTS,
   TERRACE_CONSTRUCTIONS,
   TERRACE_STRUCTURAL_CAVEAT
-} from "../../src/config/pricing/recipes";
-import { calcLaborLine, calcLaborTotal, toQty } from "../../src/lib/pricing/calculateLabor";
+} from "../../src/server/pricing/recipes";
+import { calcLaborLine, calcLaborTotal, toQty } from "../../src/server/pricing/calculateLabor";
 import {
   FASTENING_LABOR_FACTORS,
   resolveLaborHoursPerUnit,
@@ -29,14 +29,18 @@ import {
   PARTITION_SCOPES,
   INSULATION_OPTIONS,
   INSULATION_OPTION_ORDER
-} from "../../src/config/pricing/labor";
+} from "../../src/server/pricing/labor";
 import {
   calcMaterialLine,
   calcMaterialTotal
-} from "../../src/lib/pricing/calculateMaterials";
-import { calculateEstimate } from "../../src/lib/pricing/calculateEstimate";
+} from "../../src/server/pricing/calculateMaterials";
+import { calculateEstimate } from "../../src/server/pricing/calculateEstimate";
 import { findBestMatch, wordMatches } from "../../src/lib/fuzzyMatch";
-import { PRICE_DB } from "../../src/data/pricing";
+import { PRICE_DB } from "../../src/server/pricing/catalogue-source";
+import { buildPublicCatalogue } from "../../src/server/pricing/catalogue";
+
+const CATALOGUE = buildPublicCatalogue();
+const match = (q: string) => findBestMatch(q, CATALOGUE);
 import { roundForDisplay } from "../../src/lib/pricing/format";
 
 const near = (actual: number, expected: number, tol = 0.02) =>
@@ -721,7 +725,7 @@ test("SØK: vanlige norske søk treffer riktig post", () => {
     ["montering gulv", "Montering gulv"]
   ];
   for (const [q, expected] of cases) {
-    const m = findBestMatch(q);
+    const m = match(q);
     assert.equal(m?.name, expected, `"${q}" traff feil`);
   }
 });
@@ -729,19 +733,19 @@ test("SØK: vanlige norske søk treffer riktig post", () => {
 test("SØK: ingen vilkårlig delstrengmatching — ord matches på ordgrense", () => {
   // «tak» står inni «kontakt», «stakittgjerde» og «betakning».
   for (const q of ["kontakt", "kontakt meg", "ta kontakt om noe", "stakittgjerde", "betakning"]) {
-    const m = findBestMatch(q);
+    const m = match(q);
     assert.notEqual(m?.name, "Taktekking (takstein)", `"${q}" traff taktekking`);
   }
   // «ny» står inni «vinyl».
-  assert.notEqual(findBestMatch("ny terrasse")?.name, "Vinylgulv");
+  assert.notEqual(match("ny terrasse")?.name, "Vinylgulv");
   // «vindu» er ikke en bøying av «vindusrestaurering».
   assert.notEqual(
-    findBestMatch("vindu")?.name,
+    match("vindu")?.name,
     "Restaurering av originalt vindu"
   );
   // «dør» er ikke en bøyningsendelse — «terrasse» ≠ «terrassedør».
-  assert.equal(findBestMatch("terrasse")?.name, "Bygging av terrasse (standard)");
-  assert.equal(findBestMatch("terrassedør")?.name, "Montering terrassedør");
+  assert.equal(match("terrasse")?.name, "Bygging av terrasse (standard)");
+  assert.equal(match("terrassedør")?.name, "Montering terrassedør");
 });
 
 test("SØK: bøying og sammensatte ord treffer fortsatt", () => {
@@ -758,10 +762,10 @@ test("SØK: bøying og sammensatte ord treffer fortsatt", () => {
 });
 
 test("SØK: tomt og useriøst søk gir ingen match i stedet for feil match", () => {
-  assert.equal(findBestMatch(""), null);
-  assert.equal(findBestMatch("x"), null);
-  assert.equal(findBestMatch("qwerty zxcvb"), null);
-  assert.equal(findBestMatch("!!! ???"), null);
+  assert.equal(match(""), null);
+  assert.equal(match("x"), null);
+  assert.equal(match("qwerty zxcvb"), null);
+  assert.equal(match("!!! ???"), null);
 });
 
 test("SØK: kontrollerte aliaser for vanlige enkeltordsøk", () => {
@@ -775,7 +779,7 @@ test("SØK: kontrollerte aliaser for vanlige enkeltordsøk", () => {
     ["riving av kledning", "Riving av kledning"]
   ];
   for (const [q, expected] of cases) {
-    assert.equal(findBestMatch(q)?.name, expected, `"${q}" traff feil`);
+    assert.equal(match(q)?.name, expected, `"${q}" traff feil`);
   }
 });
 

@@ -1,3 +1,8 @@
+import "server-only";
+// Denne modulen inneholder kommersiell prisintelligens og skal ALDRI
+// havne i nettleseren. `server-only` gjoer et slikt import til en
+// byggefeil i stedet for en stille lekkasje.
+
 /**
  * MATERIALDATABASE — veiledende norske referansepriser.
  *
