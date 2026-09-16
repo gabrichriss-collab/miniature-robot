@@ -5,7 +5,7 @@ import PrisestimatBuilder from "@/components/PrisestimatBuilder";
 export const metadata: Metadata = {
   title: "Prisestimat",
   description:
-    "Bygg ditt eget prisestimat linje for linje. Priser er veiledende — endelig tilbud gis skriftlig etter befaring."
+    "Beregn arbeid og materialer for prosjektet ditt. Estimatet er veiledende — endelig pris fastsettes i et skriftlig tilbud."
 };
 
 export default function PrisestimatPage() {
@@ -14,7 +14,7 @@ export default function PrisestimatPage() {
       <PageHeader
         kicker="Prisestimat"
         title="Beregn selv."
-        lede="Skriv hva som skal gjøres — bordkledning, terrasse, nytt vindu — så foreslår vi enhet og pris fra prislista vår. Summen oppdaterer seg mens du skriver, og du kan laste ned hele estimatet som PDF når du er ferdig."
+        lede="Skriv hva som skal gjøres — terrasse, ny kledning, nytt vindu — så finner vi riktig post og beregner arbeidstiden. Velg om du vil se prisen for kun arbeid, eller arbeid med materialer. Hele estimatet kan lastes ned som PDF."
       />
       <PrisestimatBuilder />
     </>

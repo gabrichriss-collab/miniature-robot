@@ -5,7 +5,6 @@ export default function JsonLd() {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "GeneralContractor", "HomeAndConstructionBusiness"],
     name: site.legalName,
-    alternateName: "Tømrer Kawiche",
     url: site.url,
     email: site.email,
     telephone: site.phone,
