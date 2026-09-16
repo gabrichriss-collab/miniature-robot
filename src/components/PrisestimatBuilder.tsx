@@ -729,7 +729,11 @@ function EstimatePanel({
               ↓
             </span>
           </button>
-          <button type="button" onClick={onShowSummary} className="uline eyebrow">
+          <button
+            type="button"
+            onClick={onShowSummary}
+            className="uline eyebrow inline-flex min-h-[44px] items-center"
+          >
             Se sammendrag →
           </button>
         </div>
@@ -806,51 +810,53 @@ function RowItem({
 
   return (
     <div
-      className={`row-enter grid grid-cols-1 gap-2 py-5 md:grid-cols-[minmax(0,1fr)_4.5rem_5rem_6rem_7rem_2rem] md:items-center md:gap-3 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_7rem_8rem_2.5rem] lg:gap-4 ${
+      className={`row-enter grid grid-cols-1 gap-y-6 py-8 md:grid-cols-[minmax(0,1fr)_4.5rem_5rem_6rem_7rem_2rem] md:items-center md:gap-3 md:gap-y-2 md:py-5 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_7rem_8rem_2.5rem] lg:gap-4 ${
         index !== 0 ? "border-t border-ink/10" : ""
       }`}
     >
       <div className="min-w-0">
         <input
           ref={inputRef}
-          className="w-full border-b border-ink/20 bg-transparent py-2 text-lg text-ink placeholder:text-ink/40 focus:border-ink focus:outline-none"
+          className="min-h-[48px] w-full border-b border-ink/20 bg-transparent py-2 text-base text-ink placeholder:text-ink/40 focus:border-ink focus:outline-none md:text-lg"
           placeholder="Skriv hva som skal gjøres…"
           value={row.name}
           onChange={(e) => updateRow(row.id, "name", e.target.value)}
         />
         {row.matched && row.matchName ? (
-          <p className="match-badge mt-2 text-xs text-ink/60">
-            <span className="eyebrow mr-2 text-ink/80">Auto</span>
-            {row.matchName}
-            {laborLine ? (
-              <span className="text-ink/50">
-                {" "}· {laborLine.laborHoursPerUnit} h/{laborLine.unit}
-              </span>
-            ) : null}
-            {row.note ? ` · ${row.note}` : ""}
-          </p>
+          // Mobil: «Auto» står på egen linje, så beskrivelsen får hele
+          // bredden og brytes naturlig. Desktop beholder én linje.
+          <div className="match-badge mt-3 text-ink/60">
+            <span className="eyebrow block text-[0.6rem] text-ink/70 md:mr-2 md:inline md:text-[0.72rem]">
+              Auto
+            </span>
+            <p className="mt-1 text-sm leading-relaxed md:mt-0 md:inline md:text-xs">
+              {row.matchName}
+              {laborLine ? (
+                <span className="text-ink/50">
+                  {" · "}
+                  {formatHours(laborLine.laborHoursPerUnit)} t/{laborLine.unit}
+                </span>
+              ) : null}
+              {row.note ? (
+                <span className="text-ink/50">{` · ${row.note}`}</span>
+              ) : null}
+            </p>
+          </div>
         ) : null}
         {row.workItemKey ? (
-          <label className="mt-2 flex items-center gap-2 text-xs text-ink/60">
-            <span className="eyebrow text-ink/50">Tilkomst</span>
-            <select
+          <div className="mt-5 md:mt-2">
+            <RowSelect
+              label="Tilkomst"
               value={row.difficulty ?? "normal"}
-              onChange={(e) =>
-                updateRow(row.id, "difficulty", e.target.value as DifficultyKey)
-              }
-              className="min-h-[44px] border-b border-ink/20 bg-transparent py-2 text-xs focus:border-ink focus:outline-none"
-              aria-label="Tilkomst"
-            >
-              {(Object.keys(DIFFICULTY_LABELS) as DifficultyKey[]).map((k) => (
-                <option key={k} value={k}>
-                  {DIFFICULTY_LABELS[k]}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={(v) => updateRow(row.id, "difficulty", v)}
+              options={(Object.keys(DIFFICULTY_LABELS) as DifficultyKey[]).map(
+                (k) => [k, DIFFICULTY_LABELS[k]]
+              )}
+            />
+          </div>
         ) : null}
         {isTerraceItem ? (
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+          <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Konstruksjon"
               value={row.terraceConstruction ?? "standard"}
@@ -881,7 +887,7 @@ function RowItem({
           </div>
         ) : null}
         {row.workItemKey === "ceilingWork" ? (
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+          <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Himlingstype"
               value={row.ceilingType ?? "direct"}
@@ -891,7 +897,7 @@ function RowItem({
           </div>
         ) : null}
         {row.workItemKey === "interiorPartitionWall" ? (
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+          <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Omfang"
               value={row.partitionScope ?? "complete"}
@@ -905,7 +911,7 @@ function RowItem({
         ) : null}
         {row.workItemKey === "facadeComplete" ||
         row.workItemKey === "exteriorInsulation" ? (
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+          <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Etterisolering"
               value={
@@ -925,63 +931,111 @@ function RowItem({
         ) : null}
       </div>
 
-      <select
-        className="min-h-[44px] border border-ink/20 bg-transparent px-2 py-2 text-center text-sm focus:border-ink focus:outline-none"
-        value={row.unit}
-        onChange={(e) => updateRow(row.id, "unit", e.target.value)}
-        aria-label="Enhet"
-      >
-        {UNITS.map((u) => (
-          <option key={u} value={u}>
-            {u}
-          </option>
-        ))}
-      </select>
+      {/* Mengde og enhet hører sammen. På mobil vises de som ÉN gruppe med
+          felles etikett — tallet er hovedsaken, enheten står til høyre og
+          er visuelt underordnet. På md+ løses grupperingen opp (`contents`)
+          slik at feltene faller tilbake i rutenettet som før. */}
+      <div className="md:contents">
+        <span className="eyebrow mb-2 block text-ink/50 md:hidden">Mengde</span>
+        {/* flex-row-reverse: DOM-rekkefølgen beholdes for desktop-rutenettet,
+            mens tallet likevel står først visuelt på mobil. */}
+        <div className="flex flex-row-reverse md:contents">
+          <select
+            className="field-control field-select press w-24 shrink-0 border-l-0 text-center md:w-auto md:border md:border-ink/20 md:px-2 md:py-2 md:text-center"
+            value={row.unit}
+            onChange={(e) => updateRow(row.id, "unit", e.target.value)}
+            aria-label="Enhet"
+          >
+            {UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
 
-      <input
-        type="number"
-        inputMode="decimal"
-        step="any"
-        min="0"
-        className="min-h-[44px] border border-ink/20 bg-transparent px-3 py-2 text-right text-sm focus:border-ink focus:outline-none"
-        placeholder="0"
-        value={row.qty}
-        onChange={(e) => updateRow(row.id, "qty", e.target.value)}
-        aria-label="Mengde"
-      />
-
-      {laborLine ? (
-        <div
-          className="px-2 py-2 text-right text-sm text-ink/60"
-          title="Beregnet arbeidstid per enhet"
-        >
-          {formatHours(laborLine.laborHoursPerUnit)} t/{row.unit}
+          <input
+            type="number"
+            inputMode="decimal"
+            step="any"
+            min="0"
+            className="field-control press min-w-0 flex-1 text-left text-lg md:flex-none md:border md:border-ink/20 md:px-3 md:py-2 md:text-right md:text-[0.78rem]"
+            placeholder="0"
+            value={row.qty}
+            onChange={(e) => updateRow(row.id, "qty", e.target.value)}
+            aria-label="Mengde"
+          />
         </div>
-      ) : (
-        <input
-          type="number"
-          inputMode="decimal"
-          step="any"
-          min="0"
-          className="min-h-[44px] border-b border-ink/20 bg-transparent px-2 py-2 text-right text-sm focus:border-ink focus:outline-none"
-          placeholder="0"
-          value={row.price}
-          onChange={(e) => updateRow(row.id, "price", e.target.value)}
-          aria-label="Enhetspris"
-        />
-      )}
-
-      <div className="text-right text-base font-medium text-ink md:text-lg">
-        {rowTotal > 0 ? `${formatNok(rowTotal)} kr` : "—"}
       </div>
 
+      {laborLine ? (
+        <div className="md:contents">
+          <span className="eyebrow mb-1 block text-ink/50 md:hidden">
+            Estimert arbeidstid
+          </span>
+          <div
+            className="text-ink/70 md:px-2 md:py-2 md:text-right md:text-sm md:text-ink/60"
+            title="Beregnet arbeidstid per enhet"
+          >
+            {formatHours(laborLine.laborHoursPerUnit)} t/{row.unit}
+            {/* Totalen for raden er nyttig på mobil, men overflødig i
+                rutenettet på desktop der den har egen kolonne. */}
+            <span className="md:hidden">
+              {" · "}
+              {formatHours(laborLine.totalLaborHours)} timer
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="md:contents">
+          <span className="eyebrow mb-2 block text-ink/50 md:hidden">
+            Enhetspris
+          </span>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="any"
+            min="0"
+            className="field-control press text-right"
+            placeholder="0"
+            value={row.price}
+            onChange={(e) => updateRow(row.id, "price", e.target.value)}
+            aria-label="Enhetspris"
+          />
+        </div>
+      )}
+
+      <div className="md:contents">
+        <span className="eyebrow mb-1 block text-ink/50 md:hidden">
+          Estimert arbeid
+        </span>
+        <div className="text-right text-base font-medium text-ink md:text-lg">
+          <span className="float-left md:hidden">
+            {rowTotal > 0 ? (
+              <span className="text-xl">{formatNok(rowTotal)} kr</span>
+            ) : (
+              "—"
+            )}
+            <span className="ml-2 text-xs font-normal text-ink/55">
+              eks. mva
+            </span>
+          </span>
+          <span className="hidden md:inline">
+            {rowTotal > 0 ? `${formatNok(rowTotal)} kr` : "—"}
+          </span>
+        </div>
+      </div>
+
+      {/* Synlig ikon holdes lite, men trykkflaten er minst 44 px. */}
       <button
         type="button"
         onClick={() => deleteRow(row.id)}
         aria-label="Fjern post"
-        className="justify-self-end text-xl text-ink/40 transition-colors hover:text-ink"
+        className="press mt-1 flex min-h-[44px] min-w-[44px] items-center justify-end gap-2 self-end text-ink/45 transition-colors hover:text-ink md:mt-0 md:justify-self-end"
       >
-        ×
+        <span className="eyebrow text-[0.6rem] md:hidden">Fjern</span>
+        <span aria-hidden className="text-xl leading-none">
+          ×
+        </span>
       </button>
     </div>
   );
@@ -999,12 +1053,17 @@ function RowSelect({
   options: Array<[string, string]>;
 }) {
   return (
-    <label className="flex items-center gap-2 text-xs text-ink/60">
-      <span className="eyebrow text-ink/50">{label}</span>
+    // Mobil: etiketten står OVER feltet, og feltet får hele bredden.
+    // Lange norske verdier skal aldri klemmes inn ved siden av etiketten.
+    // md+: tilbake til den kompakte varianten på én linje.
+    <label className="block md:flex md:items-center md:gap-2 md:text-xs md:text-ink/60">
+      <span className="eyebrow mb-2 block text-ink/50 md:mb-0 md:inline">
+        {label}
+      </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[44px] max-w-[12rem] border-b border-ink/20 bg-transparent py-2 text-xs focus:border-ink focus:outline-none"
+        className="field-control field-select press"
         aria-label={label}
       >
         {options.map(([k, l]) => (
@@ -1042,7 +1101,7 @@ function Field({
         required={required}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full border-b border-ink/30 bg-transparent py-3 text-lg placeholder:text-ink/40 focus:border-ink focus:outline-none"
+        className="mt-2 min-h-[48px] w-full border-b border-ink/30 bg-transparent py-3 text-lg placeholder:text-ink/40 focus:border-ink focus:outline-none"
         placeholder={placeholder}
       />
     </label>

@@ -227,6 +227,69 @@ h3 {
     transition-duration: 260ms;
     transition-timing-function: cubic-bezier(0.7, 0, 0.2, 1);
   }
+
+  /*
+   * Skjemafelt i Prisestimat.
+   *
+   * MOBIL: full bredde, egen ramme og egen chevron. Vi slår av nettleserens
+   * innebygde pil (appearance: none) slik at vi selv styrer høyre padding —
+   * ellers legger lange norske verdier som «Eksisterende fundament / ikke
+   * nødvendig» seg under pila i iOS Safari.
+   *
+   * 16px skriftstørrelse er ikke en smakssak: alt under det får iOS Safari
+   * til å zoome inn automatisk når feltet får fokus.
+   *
+   * DESKTOP (md+): tilbake til den nette understrekede varianten som alt
+   * fantes, så desktop-designet er uendret.
+   */
+  .field-control {
+    width: 100%;
+    min-height: 48px;
+    font-size: 1rem;
+    line-height: 1.4;
+    background-color: transparent;
+    border: 1px solid rgb(10 10 10 / 0.22);
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    color: inherit;
+  }
+  .field-control:focus {
+    outline: none;
+    border-color: rgb(10 10 10 / 0.85);
+  }
+
+  .field-select {
+    appearance: none;
+    -webkit-appearance: none;
+    /* Plass til chevronen, slik at teksten aldri havner under den. */
+    padding-right: 2.75rem;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%230a0a0a' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 0.7rem auto;
+    text-overflow: ellipsis;
+  }
+
+  @media (min-width: 768px) {
+    .field-control {
+      width: auto;
+      min-height: 44px;
+      font-size: 0.78rem;
+      /* Ikke `border: 0` — det nullstiller også border-style, og da har
+         Tailwind-hjelpere som `md:border` ingen stil å tegne med. Vi
+         beholder `solid` og styrer bare bredden per side. */
+      border-style: solid;
+      border-width: 0 0 1px 0;
+      border-color: rgb(10 10 10 / 0.2);
+      padding: 0.5rem 0;
+    }
+    .field-select {
+      max-width: 12rem;
+      padding-right: 1.5rem;
+      background-position: right 0.25rem center;
+      background-size: 0.6rem auto;
+    }
+  }
 }
 
 @starting-style {
