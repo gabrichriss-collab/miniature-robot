@@ -51,6 +51,12 @@ export type PriceEntry = {
    * "beregnes ved befaring" i summeringen.
    */
   workItemKey?: string;
+  /**
+   * Peker mot en oppskrift i `MATERIAL_RECIPES` når posten deler
+   * arbeidstimer med en annen post, men har ANDRE materialer. Uten denne
+   * brukes `workItemKey` som oppskriftsnøkkel.
+   */
+  materialRecipeKey?: string;
 };
 
 export const PRICE_DB: PriceEntry[] = [
@@ -76,7 +82,8 @@ export const PRICE_DB: PriceEntry[] = [
     name: "Terrasse m/ skjult innfesting",
     note: "Camo/tilsvarende system",
     cat: "Terrasse",
-    workItemKey: "terraceComplete"
+    workItemKey: "terraceComplete",
+    materialRecipeKey: "terraceHiddenFastening"
   },
   {
     keywords: [
@@ -91,7 +98,8 @@ export const PRICE_DB: PriceEntry[] = [
     name: "Terrasse m/ termofuru",
     note: "Premium materialer",
     cat: "Terrasse",
-    workItemKey: "terraceComplete"
+    workItemKey: "terraceComplete",
+    materialRecipeKey: "terraceThermowood"
   },
   {
     keywords: [
@@ -1017,6 +1025,91 @@ export const PRICE_DB: PriceEntry[] = [
     name: "Restaurering av originaldør",
     note: "Bevaring, riksantikvarveiledning",
     cat: "Rehab"
+  },
+  // ── POSTER LAGT TIL SLIK AT HELE ARBEIDS-/MATERIALMOTOREN ER
+  //    TILGJENGELIG I GRENSESNITTET. Timetallene ligger i
+  //    src/config/pricing/labor.ts — `price` her er kun en visningsverdi
+  //    og brukes ikke i beregningen.
+  {
+    keywords: ["terrassebord", "bytte terrassebord", "nye terrassebord", "kun bord"],
+    unit: "m²",
+    price: 0,
+    name: "Terrassebord — kun montering",
+    note: "På eksisterende bjelkelag",
+    cat: "Terrasse",
+    workItemKey: "terraceDeckingOnly"
+  },
+  {
+    keywords: ["etterisolering fasade", "isolere fasade", "etterisolere vegg"],
+    unit: "m²",
+    price: 0,
+    name: "Etterisolering fasade",
+    note: "Påforing og isolasjon, uten ny kledning",
+    cat: "Kledning",
+    workItemKey: "exteriorInsulation"
+  },
+  {
+    keywords: ["himling", "innvendig tak", "taknedforing", "nedforet tak"],
+    unit: "m²",
+    price: 0,
+    name: "Himling",
+    note: "Underlag og plate",
+    cat: "Vegger",
+    workItemKey: "ceilingWork"
+  },
+  {
+    keywords: ["montering gulv", "legge gulv", "nytt gulv", "gulvlegging"],
+    unit: "m²",
+    price: 0,
+    name: "Montering gulv",
+    note: "Standard: laminat · Premium: eikeparkett",
+    cat: "Gulv",
+    workItemKey: "flooringInstallation"
+  },
+  {
+    keywords: ["listing", "listverk", "gulvlist", "taklist", "sette lister"],
+    unit: "lm",
+    price: 0,
+    name: "Listing",
+    note: "Gulv-, tak- og dørlist",
+    cat: "Vegger",
+    workItemKey: "trimInstallation"
+  },
+  {
+    keywords: ["lett rehabilitering", "enkel oppussing", "lett oppussing"],
+    unit: "m²",
+    price: 0,
+    name: "Lett rehabilitering",
+    note: "Overflater og mindre inngrep",
+    cat: "Rehab",
+    workItemKey: "rehabilitationLight"
+  },
+  {
+    keywords: ["rehabilitering", "middels rehabilitering", "oppussing", "renovering"],
+    unit: "m²",
+    price: 0,
+    name: "Middels rehabilitering",
+    note: "Deler av konstruksjonen åpnes",
+    cat: "Rehab",
+    workItemKey: "rehabilitationMedium"
+  },
+  {
+    keywords: ["omfattende rehabilitering", "total rehabilitering", "totalrenovering"],
+    unit: "m²",
+    price: 0,
+    name: "Omfattende rehabilitering",
+    note: "Konstruksjonen tas ned til bindingsverk",
+    cat: "Rehab",
+    workItemKey: "rehabilitationHeavy"
+  },
+  {
+    keywords: ["tilbygg", "påbygg", "utvidelse", "bygge på"],
+    unit: "m²",
+    price: 0,
+    name: "Tilbygg — tømrerarbeid",
+    note: "Tømrerdelen av tilbygget",
+    cat: "Diverse",
+    workItemKey: "extensionCarpentry"
   }
 ];
 

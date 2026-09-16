@@ -1,70 +1,37 @@
 /**
- * Sentral prisingskonfig for prisestimat-motoren.
+ * ARBEIDSPRODUKTIVITET — hvor mange timer som går med per enhet.
  *
- * SINGLE SOURCE OF TRUTH. Endre timerate, MVA, vanskelighetsfaktorer eller
- * arbeidsproduktivitet HER — kalkulasjonen og hele UI-en oppdateres.
+ * Dette er konfigurerbare startverdier. De skal ALDRI ligge inne i
+ * UI-komponenter. Juster tallene her, så følger hele estimatoren etter.
  *
- * Prinsipp:
- *   pris = mengde × timer_per_enhet × timerate × vanskelighetsfaktor
- *   MVA = pris × VAT_RATE
- *
- * Materialkostnader er BEVISST holdt separat fra denne fila. Legg til
- * `materialCostPerUnit` her når reelle materialtall er kartlagt.
+ *   arbeidstimer = mengde × laborHoursPerUnit × vanskelighetsfaktor
+ *   arbeidspris  = arbeidstimer × pricingSettings.hourlyRateExVat
  */
-
-/** Timerate eks. mva. Endre her → hele estimatoren følger etter. */
-export const HOURLY_RATE_EX_VAT = 850;
-
-/** Norsk MVA (25 %). */
-export const VAT_RATE = 0.25;
-
-/**
- * Vanskelighetsfaktorer justerer timeforbruket per rad. Standard er
- * 1.00 (normal jobb). Faktoren gjelder KUN arbeidstimer — materialkostnader
- * påvirkes ikke.
- */
-export const DIFFICULTY_FACTORS = {
-  normal: 1.0,
-  difficult: 1.15,
-  veryDifficult: 1.3
-} as const;
-
-export type DifficultyKey = keyof typeof DIFFICULTY_FACTORS;
-
-export const DIFFICULTY_LABELS: Record<DifficultyKey, string> = {
-  normal: "Normal tilkomst",
-  difficult: "Krevende tilkomst",
-  veryDifficult: "Svært krevende tilkomst"
-};
 
 export type WorkUnit = "m²" | "lm" | "stk" | "m";
 
-export type WorkItem = {
+export type WorkCategory =
+  | "Terrasse & uterom"
+  | "Fasade & kledning"
+  | "Vinduer & dører"
+  | "Innvendig"
+  | "Rehabilitering"
+  | "Tilbygg";
+
+export type LaborItem = {
   /** Kortlabel som vises i UI. */
   label: string;
   /** Enhet mengden legges inn i. */
   unit: WorkUnit;
   /** Antall arbeidstimer per enhet. */
   laborHoursPerUnit: number;
-  /**
-   * Valgfri materialkostnad per enhet, eks. mva. Foreløpig ikke fylt ut
-   * for de fleste postene — arkitekturen støtter det for framtiden.
-   */
-  materialCostPerUnit?: number;
   /** Kategori — brukes til gruppering i bla-modalen. */
-  category:
-    | "Terrasse & uterom"
-    | "Fasade & kledning"
-    | "Vinduer & dører"
-    | "Innvendig"
-    | "Rehabilitering"
-    | "Tilbygg";
+  category: WorkCategory;
 };
 
-/**
- * Arbeidsposter med kartlagt produktivitet. Nøkkelen brukes som stabil ID
- * i EstimateRow og i lenkinger mot fuzzy-match-databasen.
- */
+/** Bakoverkompatibelt alias. */
+export type WorkItem = LaborItem;
+
 export const WORK_ITEMS = {
   // ── TERRASSE & UTEROM ────────────────────────────────────────────
   terraceComplete: {
@@ -221,19 +188,25 @@ export const WORK_ITEMS = {
     laborHoursPerUnit: 8.5,
     category: "Tilbygg"
   }
-} as const satisfies Record<string, WorkItem>;
+} as const satisfies Record<string, LaborItem>;
 
 export type WorkItemKey = keyof typeof WORK_ITEMS;
+export type LaborItemKey = WorkItemKey;
 
-/** Alle kategorier i innsettingsrekkefølge. */
-export const WORK_CATEGORIES = [
+/** Alle kategorier i visningsrekkefølge. */
+export const WORK_CATEGORIES: WorkCategory[] = [
   "Terrasse & uterom",
   "Fasade & kledning",
   "Vinduer & dører",
   "Innvendig",
   "Rehabilitering",
   "Tilbygg"
-] as const;
+];
+
+/** Slå opp timeforbruk. `undefined` når nøkkelen ikke er kartlagt. */
+export function laborHoursForItem(key: string): number | undefined {
+  return (WORK_ITEMS as Record<string, LaborItem>)[key]?.laborHoursPerUnit;
+}
 
 /**
  * PRODUKTIVITETSFAKTOR IKKE KARTLAGT ENNÅ — arbeidsposter som fantes i

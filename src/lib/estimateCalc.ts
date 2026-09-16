@@ -1,31 +1,49 @@
+/**
+ * Bindeledd mellom Prisestimat-UI-et og prismotoren i `src/lib/pricing`.
+ *
+ * Forretningslogikken ligger IKKE her — den ligger i konfigurasjonen
+ * (`src/config/pricing`) og i de to motorene (arbeid og materialer).
+ * Denne fila oversetter bare mellom radene i skjemaet og motoren, og
+ * holder på eldre rader som fortsatt prises med kr/enhet.
+ */
+
 import type { PriceUnit } from "@/data/pricing";
 import {
-  HOURLY_RATE_EX_VAT,
-  VAT_RATE,
-  type DifficultyKey
+  pricingSettings,
+  laborHoursForItem,
+  getRecipe,
+  availableTiers,
+  type DifficultyKey,
+  type MaterialTier,
+  type TerraceConstructionKey
 } from "@/config/pricing";
 import {
   calcLaborLine,
-  calcLaborTotal,
-  estimateRangeAroundPoint,
-  laborHoursForItem,
-  formatNok as formatNokLabor
-} from "@/lib/laborCalc";
+  calcMaterialLine,
+  calculateEstimate,
+  formatNok as formatNokBase,
+  roundForDisplay,
+  type EstimateResult,
+  type MaterialLine
+} from "@/lib/pricing";
 
 export type EstimateRow = {
   id: number | string;
   name: string;
   unit: PriceUnit | string;
   qty: string | number;
-  /** Legacy fixed unit price. Ignored when `workItemKey` is set. */
+  /** Eldre fast enhetspris. Ignoreres når `workItemKey` er satt. */
   price: string | number;
   note?: string;
   matched?: boolean;
   matchName?: string;
-  /** Set when the row is priced via the labor engine. */
+  /** Satt når raden prises via arbeidstime-motoren. */
   workItemKey?: string;
-  /** Per-row difficulty. Defaults to "normal". */
+  /** Egen materialoppskrift når posten avviker fra arbeidspostens. */
+  materialRecipeKey?: string;
   difficulty?: DifficultyKey;
+  /** Kun relevant for terrasseposter. */
+  terraceConstruction?: TerraceConstructionKey;
 };
 
 export type EstimateInput = {
@@ -37,46 +55,72 @@ export type EstimateInput = {
   message?: string;
   rows: EstimateRow[];
   mvaRate: number;
-  /** Legacy påslag — kept for backwards compatibility, always 0 under the labor engine. */
+  /** Eldre påslag — alltid 0 under arbeids-/materialmotoren. */
   markup: number;
+  /** Kundens valg: kun arbeid, standard eller premium materialer. */
+  materialTier?: MaterialTier;
 };
 
 export type EstimateTotals = {
-  /** Sum of labor-engine + legacy row prices, ex VAT. */
+  /** Arbeid + materialer + eldre rader, eks. mva. */
   subtotal: number;
-  /** Reserved. The labor engine keeps materials separate, so this is 0. */
+  /** Reservert. Motoren bruker ikke påslag. */
   markupAmount: number;
   subWithMarkup: number;
   mvaAmount: number;
+  /** Valgt scenario, inkl. mva. */
   total: number;
-  /** Sub-breakdown from the labor engine. */
+
   laborHours: number;
   laborExVat: number;
   laborIncVat: number;
-  /** Sub-breakdown from legacy rows (no work item key). */
+
+  materialTier: MaterialTier;
+  materialExVat: number;
+  materialIncVat: number;
+  materialWasteExVat: number;
+  materialProtectionExVat: number;
+  /** True når materialsummen er et gulv fordi noe bevisst er upriset. */
+  materialIsFloor: boolean;
+
+  /** Eldre rader uten arbeidsnøkkel. */
   legacyExVat: number;
-  /** Low/high range around `total` — nearest 500 kr. */
+
   range: { low: number; high: number };
+  /** Hele motorresultatet — alle tre scenariene. */
+  estimate: EstimateResult;
 };
 
-export function calcTotals(input: EstimateInput): EstimateTotals {
-  // Split rows: labor-engine rows vs legacy free-typed rows.
-  const laborInputs = input.rows
-    .filter((r) => r.workItemKey && laborHoursForItem(String(r.workItemKey)) != null)
+/** Radene som faktisk går gjennom motoren. */
+function engineLines(rows: EstimateRow[]) {
+  return rows
+    .filter(
+      (r) => r.workItemKey && laborHoursForItem(String(r.workItemKey)) != null
+    )
     .map((r) => ({
-      workItemKey: r.workItemKey,
+      workItemKey: String(r.workItemKey),
+      materialRecipeKey: r.materialRecipeKey,
       label: r.matchName || r.name,
       unit: String(r.unit),
       quantity: r.qty,
       difficulty: r.difficulty
     }));
+}
+
+export function calcTotals(input: EstimateInput): EstimateTotals {
+  const tier: MaterialTier = input.materialTier ?? "none";
+  const estimate = calculateEstimate(engineLines(input.rows));
+
+  // Faller tilbake til "kun arbeid" om valgt nivå ikke er tilgjengelig,
+  // slik at vi aldri viser en materialpris vi ikke kan forsvare.
+  const activeTier: MaterialTier = estimate.scenarios[tier].available
+    ? tier
+    : "none";
+  const active = estimate.scenarios[activeTier];
 
   const legacyRows = input.rows.filter(
     (r) => !r.workItemKey || laborHoursForItem(String(r.workItemKey)) == null
   );
-
-  const labor = calcLaborTotal(laborInputs);
-
   const legacyExVat = legacyRows.reduce(
     (sum, r) =>
       sum + (parseFloat(String(r.qty)) || 0) * (parseFloat(String(r.price)) || 0),
@@ -84,9 +128,27 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
   );
   const legacyVat = legacyExVat * (input.mvaRate / 100);
 
-  const subtotal = labor.totalLaborExVat + legacyExVat;
-  const mvaAmount = labor.totalVat + legacyVat;
+  const subtotal = active.subtotalExVat + legacyExVat;
+  const mvaAmount = active.vat + legacyVat;
   const total = subtotal + mvaAmount;
+
+  const withVat = (n: number) => n * (1 + pricingSettings.vatRate);
+  const range = {
+    low: roundForDisplay(
+      withVat(
+        estimate.labor.totalLaborExVat * pricingSettings.estimateRange.low +
+          active.materialExVat +
+          legacyExVat
+      )
+    ),
+    high: roundForDisplay(
+      withVat(
+        estimate.labor.totalLaborExVat * pricingSettings.estimateRange.high +
+          active.materialExVat +
+          legacyExVat
+      )
+    )
+  };
 
   return {
     subtotal,
@@ -94,39 +156,57 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
     subWithMarkup: subtotal,
     mvaAmount,
     total,
-    laborHours: labor.totalLaborHours,
-    laborExVat: labor.totalLaborExVat,
-    laborIncVat: labor.totalLaborIncVat,
+    laborHours: estimate.labor.totalLaborHours,
+    laborExVat: estimate.labor.totalLaborExVat,
+    laborIncVat: estimate.labor.totalLaborIncVat,
+    materialTier: activeTier,
+    materialExVat: active.materialExVat,
+    materialIncVat: active.materials.totalMaterialIncVat,
+    materialWasteExVat: active.materials.totalWasteExVat,
+    materialProtectionExVat: active.materials.totalProtectionExVat,
+    materialIsFloor: active.isFloor,
     legacyExVat,
-    range: estimateRangeAroundPoint(total)
+    range,
+    estimate
   };
 }
 
-/**
- * Deprecated wrapper — prefer `EstimateTotals.range`. Kept so any external
- * callers (PDF, tests) don't break.
- */
-export function estimateRange(total: number): { low: number; high: number } {
-  return estimateRangeAroundPoint(total);
-}
-
-/** Norsk tallformat, "1 234 567". Re-eksportert fra labor-modulen. */
-export const formatNok = formatNokLabor;
-
-/** Re-eksporter for komponenter som fortsatt importerer disse via estimateCalc. */
-export { HOURLY_RATE_EX_VAT, VAT_RATE };
-
-/** Publiser labor-linjer for debug/detaljert breakdown i UI. */
+/** Arbeidslinjer for detaljert beregning i UI og PDF. */
 export function laborLinesForRows(rows: EstimateRow[]) {
-  return rows
-    .filter((r) => r.workItemKey && laborHoursForItem(String(r.workItemKey)) != null)
-    .map((r) =>
-      calcLaborLine({
-        workItemKey: r.workItemKey,
-        label: r.matchName || r.name,
-        unit: String(r.unit),
-        quantity: r.qty,
-        difficulty: r.difficulty
-      })
-    );
+  return engineLines(rows).map(calcLaborLine);
 }
+
+/** Materiallinjer for detaljert beregning i UI og PDF. */
+export function materialLinesForRows(
+  rows: EstimateRow[],
+  tier: MaterialTier
+): MaterialLine[] {
+  return engineLines(rows).map((l) => calcMaterialLine({ ...l, tier }));
+}
+
+/** Kan denne radsamlingen i det hele tatt tilby materialpriser? */
+export function tiersForRows(rows: EstimateRow[]) {
+  const keys = engineLines(rows).map(
+    (l) => l.materialRecipeKey ?? l.workItemKey
+  );
+  return {
+    standard: keys.some((k) => {
+      const r = getRecipe(k);
+      return r != null && r.status !== "pending" && r.status !== "none";
+    }),
+    premium: keys.some((k) => availableTiers(k).includes("premium"))
+  };
+}
+
+/** Eldre hjelper — beholdt for bakoverkompatibilitet. */
+export function estimateRange(total: number): { low: number; high: number } {
+  return {
+    low: roundForDisplay(total * pricingSettings.estimateRange.low),
+    high: roundForDisplay(total * pricingSettings.estimateRange.high)
+  };
+}
+
+export const formatNok = formatNokBase;
+
+export const HOURLY_RATE_EX_VAT = pricingSettings.hourlyRateExVat;
+export const VAT_RATE = pricingSettings.vatRate;

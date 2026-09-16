@@ -11,7 +11,18 @@ import {
   StyleSheet
 } from "@react-pdf/renderer";
 import { site } from "@/lib/site";
-import { calcTotals, formatNok, type EstimateInput } from "@/lib/estimateCalc";
+import {
+  calcTotals,
+  formatNok,
+  laborLinesForRows,
+  type EstimateInput
+} from "@/lib/estimateCalc";
+import { formatHours } from "@/lib/pricing/format";
+import {
+  ESTIMATE_DISCLAIMER,
+  ESTIMATE_DISCLAIMER_CLOSING,
+  MATERIAL_TIER_LABELS
+} from "@/config/pricing";
 
 const colors = {
   ink: "#0a0a0a",
@@ -139,6 +150,9 @@ const styles = StyleSheet.create({
 
 export function EstimatePdf({ input }: { input: EstimateInput }) {
   const t = calcTotals(input);
+  const laborByLabel = new Map(
+    laborLinesForRows(input.rows).map((l) => [l.label, l])
+  );
   const now = new Intl.DateTimeFormat("nb-NO", {
     day: "2-digit",
     month: "long",
@@ -188,12 +202,13 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
         <View style={styles.tableHeader}>
           <Text style={[styles.colName, styles.eyebrow]}>Beskrivelse</Text>
           <Text style={[styles.colQty, styles.eyebrow]}>Mengde</Text>
-          <Text style={[styles.colPrice, styles.eyebrow]}>Enh.pris</Text>
-          <Text style={[styles.colTotal, styles.eyebrow]}>Sum</Text>
+          <Text style={[styles.colPrice, styles.eyebrow]}>Timer</Text>
+          <Text style={[styles.colTotal, styles.eyebrow]}>Arbeid</Text>
         </View>
 
         {input.rows.map((r, i) => {
-          const rowTotal =
+          const l = laborByLabel.get(r.matchName || r.name);
+          const legacy =
             (parseFloat(String(r.qty)) || 0) *
             (parseFloat(String(r.price)) || 0);
           return (
@@ -206,10 +221,14 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
                 {r.qty || "—"} {r.unit}
               </Text>
               <Text style={styles.colPrice}>
-                {formatNok(Number(r.price) || 0)} kr
+                {l ? `${formatHours(l.totalLaborHours)} t` : "—"}
               </Text>
               <Text style={styles.colTotal}>
-                {r.qty ? `${formatNok(rowTotal)} kr` : "—"}
+                {l
+                  ? `${formatNok(l.laborPriceExVat)} kr`
+                  : legacy > 0
+                    ? `${formatNok(legacy)} kr`
+                    : "—"}
               </Text>
             </View>
           );
@@ -217,35 +236,54 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
 
         <View style={styles.totalsBlock}>
           <View style={styles.totalsRow}>
-            <Text>Sum arbeider (eks. mva)</Text>
+            <Text>
+              Arbeid — {formatHours(t.laborHours)} t ×{" "}
+              {formatNok(t.estimate.hourlyRateExVat)} kr/t (eks. mva)
+            </Text>
+            <Text>{formatNok(t.laborExVat + t.legacyExVat)} kr</Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text>Materialer — {MATERIAL_TIER_LABELS[t.materialTier]}</Text>
+            <Text>
+              {t.materialTier === "none"
+                ? "ikke medregnet"
+                : `${formatNok(t.materialExVat)} kr`}
+            </Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text>Sum eks. mva</Text>
             <Text>{formatNok(t.subtotal)} kr</Text>
-          </View>
-          <View style={styles.totalsRow}>
-            <Text>Påslag ({input.markup}%)</Text>
-            <Text>{formatNok(t.markupAmount)} kr</Text>
-          </View>
-          <View style={styles.totalsRow}>
-            <Text>Sum m/ påslag</Text>
-            <Text>{formatNok(t.subWithMarkup)} kr</Text>
           </View>
           <View style={styles.totalsRow}>
             <Text>MVA ({input.mvaRate}%)</Text>
             <Text>{formatNok(t.mvaAmount)} kr</Text>
           </View>
           <View style={styles.totalGrand}>
-            <Text style={styles.grandLabel}>Estimert totalt</Text>
+            <Text style={styles.grandLabel}>Estimert totalt (inkl. mva)</Text>
             <Text style={styles.grandValue}>{formatNok(t.total)} kr</Text>
+          </View>
+          <View style={styles.totalsRow}>
+            <Text>Veiledende spenn (inkl. mva)</Text>
+            <Text>
+              {formatNok(t.range.low)} – {formatNok(t.range.high)} kr
+            </Text>
           </View>
         </View>
 
+        {t.estimate.unpricedMaterials.length > 0 ? (
+          <View style={{ marginTop: 20 }}>
+            <Text style={styles.eyebrow}>Avklares separat</Text>
+            {t.estimate.unpricedMaterials.map((u) => (
+              <Text key={u.workItemKey} style={[styles.small, { marginTop: 4 }]}>
+                {u.label} — {u.note}
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
         <View style={styles.disclaimer}>
           <Text>
-            Dette er et prisestimat basert på det du har lagt inn, og er ikke
-            et bindende tilbud. Bindende tilbud gir vi skriftlig etter
-            befaring på stedet. Alle beløp er i norske kroner og inkluderer
-            25 % MVA. Estimatet dekker arbeidene som står i lista — vi tar
-            forbehold om skjulte forhold, endringer i omfang og
-            materialpriser.
+            {ESTIMATE_DISCLAIMER} {ESTIMATE_DISCLAIMER_CLOSING}
           </Text>
         </View>
 
