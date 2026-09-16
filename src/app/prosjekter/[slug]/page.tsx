@@ -98,7 +98,7 @@ export default function ProjectPage({ params }: Params) {
         <section className="mx-auto max-w-[var(--page-max)] px-6 py-20 md:px-10 md:py-28">
           <div className="grid gap-14 md:grid-cols-12">
             <div className="md:col-span-4">
-              <p className="eyebrow text-ink/60">01 — Utgangspunktet</p>
+              <p className="eyebrow text-ink/60">Utgangspunktet</p>
             </div>
             <p className="md:col-span-8 max-w-2xl text-lg text-ink/85">
               {project.challenge}
@@ -113,7 +113,7 @@ export default function ProjectPage({ params }: Params) {
         <section className="mx-auto max-w-[var(--page-max)] px-6 py-20 md:px-10 md:py-28">
           <div className="grid gap-14 md:grid-cols-12">
             <div className="md:col-span-4">
-              <p className="eyebrow text-ink/60">02 — Løsningen</p>
+              <p className="eyebrow text-ink/60">Løsningen</p>
             </div>
             <p className="md:col-span-8 max-w-2xl text-lg text-ink/85">
               {project.solution}
@@ -126,7 +126,7 @@ export default function ProjectPage({ params }: Params) {
         <section className="mx-auto max-w-[var(--page-max)] px-6 py-20 md:px-10 md:py-28">
           <div className="grid gap-14 md:grid-cols-12">
             <div className="md:col-span-4">
-              <p className="eyebrow text-ink/60">03 — Utførelsen</p>
+              <p className="eyebrow text-ink/60">Utførelsen</p>
             </div>
             <p className="md:col-span-8 max-w-2xl text-lg text-ink/85">
               {project.execution}
@@ -144,7 +144,7 @@ export default function ProjectPage({ params }: Params) {
           <div className="mx-auto max-w-[var(--page-max)] px-6 py-20 md:px-10 md:py-28">
             <div className="grid gap-14 md:grid-cols-12">
               <div className="md:col-span-4">
-                <p className="eyebrow text-bone/70">04 — Detaljene</p>
+                <p className="eyebrow text-bone/70">Detaljene</p>
               </div>
               <p className="md:col-span-8 max-w-2xl text-lg text-bone/85">
                 {project.details}

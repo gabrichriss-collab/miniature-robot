@@ -9,7 +9,6 @@ import { services } from "@/data/services";
  * - Cards ~80vw on mobile / ~40vw on desktop → peek of next card visible
  * - Pointer-drag with snap
  * - Side arrows below the track
- * - Index counter "01 — 06"
  */
 export default function ServicesSlider() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -155,13 +154,7 @@ export default function ServicesSlider() {
             />
 
             <div className="relative z-10 flex h-full flex-col justify-between p-6 md:p-8">
-              <div className="flex items-start justify-between">
-                <span className="eyebrow text-bone/70">{s.kicker}</span>
-                <span className="eyebrow text-bone/50">
-                  {String(i + 1).padStart(2, "0")}/
-                  {String(services.length).padStart(2, "0")}
-                </span>
-              </div>
+              <div />
 
               <div>
                 <h3 className="headline text-[clamp(1.75rem,4.2vw,2.75rem)] leading-[0.98]">
@@ -181,7 +174,7 @@ export default function ServicesSlider() {
       </div>
 
       {/* Controls */}
-      <div className="mx-auto mt-10 flex max-w-[var(--page-max)] items-center justify-between px-6 md:mt-14 md:px-10">
+      <div className="mx-auto mt-10 flex max-w-[var(--page-max)] items-center px-6 md:mt-14 md:px-10">
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -205,16 +198,6 @@ export default function ServicesSlider() {
               →
             </span>
           </button>
-        </div>
-
-        <div className="flex items-center gap-4 text-ink/60">
-          <span className="eyebrow">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-          <span className="h-px w-14 bg-ink/30" />
-          <span className="eyebrow">
-            {String(services.length).padStart(2, "0")}
-          </span>
         </div>
       </div>
     </div>

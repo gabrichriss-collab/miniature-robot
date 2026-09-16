@@ -10,22 +10,18 @@ export const metadata: Metadata = {
 
 const philosophy = [
   {
-    k: "01",
     t: "Forarbeidet",
     b: "Vi bruker tid på befaring, planlegging og materialvalg før første spiker treffer. Det gjør jobben roligere når den først går."
   },
   {
-    k: "02",
     t: "Utførelsen",
     b: "Ett prosjekt av gangen. Du snakker med samme håndverker fra befaring til overlevering — ingen mellomledd."
   },
   {
-    k: "03",
     t: "Detaljene",
     b: "Skjulte innfestinger, riktig lufting, tette overganger. De valgene som ikke synes når huset er ferdig, men som avgjør levetiden."
   },
   {
-    k: "04",
     t: "Materialene",
     b: "Vi jobber først og fremst i tre. Vi velger materialer som eldes riktig og som kan repareres seinere om det trengs."
   }
@@ -88,9 +84,8 @@ export default function OmOssPage() {
           <p className="eyebrow mb-16 text-bone/70">Filosofien</p>
           <div className="grid gap-14 md:grid-cols-2 lg:grid-cols-4">
             {philosophy.map((v) => (
-              <article key={v.k}>
-                <p className="eyebrow text-bone/50">{v.k}</p>
-                <h3 className="headline mt-4 text-3xl md:text-4xl">{v.t}</h3>
+              <article key={v.t}>
+                <h3 className="headline text-3xl md:text-4xl">{v.t}</h3>
                 <p className="mt-4 text-bone/75">{v.b}</p>
               </article>
             ))}

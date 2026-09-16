@@ -1,6 +1,5 @@
 export type Service = {
   slug: string;
-  kicker: string;
   /** Short label used in navigation, cards, and headings. */
   title: string;
   /** One-sentence customer-oriented summary. */
@@ -30,7 +29,6 @@ export type Service = {
 export const services: Service[] = [
   {
     slug: "rehabilitering",
-    kicker: "01 — Rehabilitering",
     title: "Rehabilitering",
     lede:
       "Oppussing, ombygging og oppgradering av eksisterende bolig — fra enkeltrom til helhetlig rehab.",
@@ -78,7 +76,6 @@ export const services: Service[] = [
   },
   {
     slug: "tilbygg",
-    kicker: "02 — Tilbygg",
     title: "Tilbygg",
     lede:
       "Utvidelser, tilbygg og mindre bygningsmessige påbygg — planlagt for å møte det eksisterende huset presist.",
@@ -126,7 +123,6 @@ export const services: Service[] = [
   },
   {
     slug: "terrasse-og-uterom",
-    kicker: "03 — Uterom",
     title: "Terrasse & uterom",
     lede:
       "Terrasser, pergolaer, levegger, trapper og rekkverk — bygget for å tåle vestlandsvær.",
@@ -174,7 +170,6 @@ export const services: Service[] = [
   },
   {
     slug: "fasade",
-    kicker: "04 — Fasade",
     title: "Fasade",
     lede:
       "Bytte av kledning, fasadeoppgradering og tilhørende detaljering — planlagt for lang levetid.",
@@ -222,7 +217,6 @@ export const services: Service[] = [
   },
   {
     slug: "vinduer-og-dorer",
-    kicker: "05 — Vindu & dør",
     title: "Vinduer & dører",
     lede:
       "Skifte og montering av vinduer og dører — med gode gerikter, foringer og tetting.",
@@ -270,7 +264,6 @@ export const services: Service[] = [
   },
   {
     slug: "innvendig",
-    kicker: "06 — Innvendig",
     title: "Innvendig",
     lede:
       "Vegger, tak, gulv, list- og gerikter og annen innvendig tømrer- og snekkerarbeid.",

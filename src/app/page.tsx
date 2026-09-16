@@ -5,27 +5,22 @@ import ServicesSlider from "@/components/ServicesSlider";
 
 const processSteps = [
   {
-    k: "01",
     t: "Forespørsel",
     b: "Du beskriver prosjektet — via kontaktskjema, telefon eller prisestimat-verktøyet."
   },
   {
-    k: "02",
     t: "Befaring",
     b: "Vi kommer på befaring, ser på eksisterende forhold og går gjennom praktiske løsninger og materialer."
   },
   {
-    k: "03",
     t: "Tilbud",
     b: "Du får et skriftlig tilbud med tydelig omfang, timepris og materialkostnader."
   },
   {
-    k: "04",
     t: "Utførelse",
     b: "Arbeidet utføres etter avtalt løsning og fremdrift. Du får jevnlige oppdateringer underveis."
   },
   {
-    k: "05",
     t: "Ferdigstillelse",
     b: "Vi går gjennom prosjektet sammen før overlevering og retter opp eventuelle merknader."
   }
@@ -64,26 +59,6 @@ export default function Home() {
             <br />
             For kommende generasjoner.
           </h1>
-          <div className="rise rise-4 mt-10 flex flex-wrap items-center gap-6">
-            <Link
-              href="/kontakt?type=tilbud"
-              className="group inline-flex items-center gap-3 border border-bone bg-bone px-7 py-4 eyebrow text-ink press hover:bg-transparent hover:text-bone"
-            >
-              Be om tilbud
-              <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
-                →
-              </span>
-            </Link>
-            <Link
-              href="/prisestimat"
-              className="group inline-flex items-center gap-3 eyebrow text-bone"
-            >
-              <span className="uline">Få prisestimat</span>
-              <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
-                →
-              </span>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -137,10 +112,7 @@ export default function Home() {
       {/* 3. VI BYGGER I TRE — brand section */}
       <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
         <div className="grid gap-14 md:grid-cols-12">
-          <div className="md:col-span-4">
-            <p className="eyebrow">01 — Håndverket</p>
-          </div>
-          <div className="md:col-span-8">
+          <div className="md:col-span-10 md:col-start-2">
             <h2 className="headline text-[clamp(2.25rem,5.5vw,4.75rem)]">
               Vi bygger i tre.
             </h2>
@@ -165,8 +137,7 @@ export default function Home() {
       <section className="py-28 md:py-40">
         <div className="mx-auto mb-14 flex max-w-[var(--page-max)] flex-col gap-8 px-6 md:mb-20 md:flex-row md:items-end md:justify-between md:px-10">
           <div>
-            <p className="eyebrow">02 — Tjenester</p>
-            <h2 className="headline mt-6 text-[clamp(2.25rem,5vw,4.25rem)]">
+            <h2 className="headline text-[clamp(2.25rem,5vw,4.25rem)]">
               Det vi gjør.
             </h2>
           </div>
@@ -182,8 +153,7 @@ export default function Home() {
         <div className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
           <div className="mb-16 flex items-end justify-between">
             <div>
-              <p className="eyebrow text-bone/70">03 — Prosjekter</p>
-              <h2 className="headline mt-6 text-[clamp(2.25rem,5vw,4.25rem)]">
+              <h2 className="headline text-[clamp(2.25rem,5vw,4.25rem)]">
                 Utvalgt arbeid.
               </h2>
             </div>
@@ -219,10 +189,7 @@ export default function Home() {
       {/* 6. PRICE ESTIMATOR CTA */}
       <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
         <div className="grid gap-14 md:grid-cols-12">
-          <div className="md:col-span-4">
-            <p className="eyebrow">04 — Prisestimat</p>
-          </div>
-          <div className="md:col-span-8">
+          <div className="md:col-span-10 md:col-start-2">
             <h2 className="headline text-[clamp(2rem,5vw,4.25rem)]">
               Lurer du på hva prosjektet kan koste?
             </h2>
@@ -249,16 +216,14 @@ export default function Home() {
         <div className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
           <div className="mb-14 flex flex-col gap-4 md:mb-20 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="eyebrow">05 — Prosess</p>
-              <h2 className="headline mt-6 text-[clamp(2.25rem,5vw,4.25rem)]">
+              <h2 className="headline text-[clamp(2.25rem,5vw,4.25rem)]">
                 Slik jobber vi.
               </h2>
             </div>
           </div>
           <ol className="grid gap-x-10 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
             {processSteps.map((s) => (
-              <li key={s.k}>
-                <p className="eyebrow text-ink/40">{s.k}</p>
+              <li key={s.t}>
                 <h3 className="headline mt-4 text-2xl md:text-3xl">{s.t}</h3>
                 <p className="mt-3 text-ink/75">{s.b}</p>
               </li>
@@ -272,8 +237,7 @@ export default function Home() {
         <div className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
           <div className="grid gap-14 md:grid-cols-12">
             <div className="md:col-span-4">
-              <p className="eyebrow text-bone/70">06 — Detaljer</p>
-              <h2 className="headline mt-6 text-[clamp(2rem,5vw,4.25rem)]">
+              <h2 className="headline text-[clamp(2rem,5vw,4.25rem)]">
                 Det som ikke vises.
               </h2>
               <p className="mt-8 max-w-md text-bone/75">
@@ -284,10 +248,7 @@ export default function Home() {
             <ul className="md:col-span-8 grid gap-10 md:grid-cols-2">
               {craftDetails.map((d, i) => (
                 <li key={d.k} className="border-t border-bone/15 pt-8">
-                  <p className="eyebrow text-bone/50">
-                    {String(i + 1).padStart(2, "0")}
-                  </p>
-                  <h3 className="headline mt-3 text-2xl md:text-3xl">{d.k}</h3>
+                  <h3 className="headline text-2xl md:text-3xl">{d.k}</h3>
                   <p className="mt-3 text-bone/80">{d.b}</p>
                 </li>
               ))}
@@ -300,10 +261,7 @@ export default function Home() {
       {/* 9. ABOUT PREVIEW */}
       <section className="mx-auto max-w-[var(--page-max)] px-6 py-28 md:px-10 md:py-40">
         <div className="grid gap-14 md:grid-cols-12">
-          <div className="md:col-span-4">
-            <p className="eyebrow">07 — Om oss</p>
-          </div>
-          <div className="md:col-span-8">
+          <div className="md:col-span-10 md:col-start-2">
             <h2 className="headline text-[clamp(2rem,5vw,4.25rem)]">
               Håndverket bak Tømrer Kawiche.
             </h2>
@@ -328,8 +286,7 @@ export default function Home() {
         <div className="mx-auto max-w-[var(--page-max)] px-6 py-24 md:px-10 md:py-32">
           <div className="mb-10 flex items-end justify-between">
             <div>
-              <p className="eyebrow">08 — Omtaler</p>
-              <h2 className="headline mt-6 text-[clamp(2rem,4.5vw,3.5rem)]">
+              <h2 className="headline text-[clamp(2rem,4.5vw,3.5rem)]">
                 Ord fra kundene.
               </h2>
             </div>

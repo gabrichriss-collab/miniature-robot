@@ -25,11 +25,8 @@ export default function TjenesterPage() {
             <li key={s.slug}>
               <Link
                 href={`/tjenester/${s.slug}`}
-                className="group grid grid-cols-[3rem_1fr] items-baseline gap-4 border-b border-ink/10 py-10 md:py-12"
+                className="group block border-b border-ink/10 py-10 md:py-12"
               >
-                <span className="eyebrow text-ink/40">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
                 <div>
                   <h2 className="headline text-3xl md:text-4xl">{s.title}</h2>
                   <p className="mt-3 max-w-lg text-ink/75">{s.lede}</p>
