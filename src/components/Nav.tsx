@@ -44,19 +44,56 @@ export default function Nav() {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-8 z-40 transition-colors duration-500 ease-swoop ${
+        className={`fixed inset-x-0 top-8 z-40 border-b transition-colors duration-500 ease-swoop ${
           scrolled && !open ? "bg-bone/85 backdrop-blur-md" : "bg-transparent"
-        }`}
+        } ${overDark ? "border-transparent" : "border-ink/15"}`}
       >
-        <div className="mx-auto flex h-24 max-w-[var(--page-max)] items-center justify-between px-6 md:px-10">
-          {/* Stacked serif wordmark (Kononenko-style) */}
+        {/*
+          Mobile (<lg): three-column grid — hamburger left, wordmark
+          centred, "Få prisestimat" CTA right (Connaught-style).
+          Desktop (lg+): flex row — wordmark left, inline nav right.
+          Hidden children are display:none so they drop out of the grid
+          entirely rather than wrapping to a second row.
+        */}
+        <div className="mx-auto grid h-24 max-w-[var(--page-max)] grid-cols-[auto_1fr_auto] items-center gap-2 px-6 sm:gap-4 lg:flex lg:justify-between lg:gap-0 lg:px-10">
+          {/* Hamburger — mobile + tablet only, left column */}
+          <button
+            aria-label={open ? "Lukk meny" : "Åpne meny"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="relative z-50 flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-[6px] lg:hidden"
+          >
+            <span
+              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
+                open ? "translate-y-[3.5px] rotate-45" : ""
+              }`}
+            />
+            <span
+              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
+                open ? "-translate-y-[3.5px] -rotate-45" : ""
+              }`}
+            />
+          </button>
+
+          {/* Stacked serif wordmark (Kononenko-style) — centred on mobile */}
           <Link
             href="/"
             aria-label="Tømrer Kawiche — Hjem"
-            className={`headline flex flex-col leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop ${textColor}`}
+            className={`headline flex flex-col justify-self-center text-center leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop lg:justify-self-start lg:text-left ${textColor}`}
           >
-            <span className="text-[1.75rem] md:text-[2.25rem]">Tømrer</span>
-            <span className="text-[1.75rem] md:text-[2.25rem]">Kawiche</span>
+            <span className="text-[1.6rem] md:text-[2.25rem]">Tømrer</span>
+            <span className="text-[1.6rem] md:text-[2.25rem]">Kawiche</span>
+          </Link>
+
+          {/* Mobile CTA — solid button, right column. Inverts over the dark hero. */}
+          <Link
+            href="/prisestimat"
+            className={`shrink-0 whitespace-nowrap px-4 py-3 text-[0.6rem] uppercase tracking-[0.14em] press transition-colors duration-500 ease-swoop lg:hidden ${
+              overDark ? "bg-bone text-ink" : "bg-ink text-bone"
+            }`}
+            style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
+          >
+            <span className="hidden min-[360px]:inline">Få </span>Prisestimat
           </Link>
 
           {/* Desktop inline nav (lg and up) */}
@@ -93,25 +130,6 @@ export default function Nav() {
               </span>
             </Link>
           </nav>
-
-          {/* Mobile + tablet hamburger (hidden on desktop) */}
-          <button
-            aria-label={open ? "Lukk meny" : "Åpne meny"}
-            aria-expanded={open}
-            onClick={() => setOpen((v) => !v)}
-            className="relative z-50 flex h-10 w-10 flex-col items-center justify-center gap-[6px] lg:hidden"
-          >
-            <span
-              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
-                open ? "translate-y-[3.5px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
-                open ? "-translate-y-[3.5px] -rotate-45" : ""
-              }`}
-            />
-          </button>
         </div>
       </header>
 
