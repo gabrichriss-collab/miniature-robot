@@ -37,9 +37,11 @@ export default function HamburgerOverlay({
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
+        // Origin tracks the hamburger button, which now sits top-LEFT
+        // (32px banner + 48px to the button's centre ≈ 5rem down).
         clipPath: open
-          ? "circle(150% at calc(100% - 2.75rem) 2.75rem)"
-          : "circle(0% at calc(100% - 2.75rem) 2.75rem)"
+          ? "circle(150% at 2.75rem 5rem)"
+          : "circle(0% at 2.75rem 5rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
