@@ -38,6 +38,17 @@ export const pricingSettings = {
     high: 1.15
   },
 
+  /**
+   * Småforbruk — beslag, tape, bitte små festemidler og liknende som
+   * ikke står oppført som egne poster i oppskriftene. Andel av den
+   * prisede materialsummen.
+   *
+   * MERK: materialpris-bufferen over dekker allerede «småforbruksvarer».
+   * Sett denne til 0 om du ikke vil ha begge deler. Verdien her er et
+   * konservativt utgangspunkt og skal bekreftes.
+   */
+  smallConsumablesRate: 0.05,
+
   /** Kundevendte summer avrundes til nærmeste hele beløp. */
   displayRoundingNok: 500
 } as const;

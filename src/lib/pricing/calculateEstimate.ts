@@ -19,7 +19,11 @@ import {
   type DifficultyKey,
   type MaterialTier
 } from "../../config/pricing/settings";
-import { availableTiers, getRecipe } from "../../config/pricing/recipes";
+import {
+  availableTiers,
+  getRecipe,
+  type RecipeOptions
+} from "../../config/pricing/recipes";
 import {
   calcLaborTotal,
   round2,
@@ -41,6 +45,8 @@ export type EstimateLine = {
   unit: string;
   quantity: number | string;
   difficulty?: DifficultyKey;
+  /** Valg på raden som påvirker materialoppskriften. */
+  options?: RecipeOptions;
 };
 
 export type EstimateScenario = {
@@ -128,6 +134,7 @@ export function calculateEstimate(lines: EstimateLine[]): EstimateResult {
         label: l.label,
         unit: l.unit,
         quantity: l.quantity,
+        options: l.options,
         tier
       }))
     );

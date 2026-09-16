@@ -32,10 +32,14 @@ import {
   MATERIALS_LAST_UPDATED,
   TERRACE_CONSTRUCTIONS,
   TERRACE_CONSTRUCTION_ORDER,
+  TERRACE_FASTENINGS,
+  TERRACE_FASTENING_ORDER,
+  TERRACE_FOUNDATIONS,
+  TERRACE_FOUNDATION_ORDER,
+  TERRACE_STRUCTURAL_CAVEAT,
   TERRACE_WORK_ITEMS,
   type DifficultyKey,
-  type MaterialTier,
-  type TerraceConstructionKey
+  type MaterialTier
 } from "@/config/pricing";
 
 /**
@@ -397,6 +401,12 @@ function EstimatePanel({
   const active = estimate.scenarios[totals.materialTier];
   const materialLines = materialLinesForRows(rows, totals.materialTier);
   const laborLines = laborLinesForRows(rows);
+  const hasTerraceLine = rows.some(
+    (r) =>
+      (TERRACE_WORK_ITEMS as readonly string[]).includes(
+        String(r.workItemKey)
+      ) && Number(r.qty) > 0
+  );
 
   return (
     <div className="mt-14 grid gap-10 md:grid-cols-12">
@@ -441,6 +451,10 @@ function EstimatePanel({
                     {s.label}
                   </span>
                   <span className="headline mt-4 block text-2xl md:text-3xl">
+                    {/* «Fra» når noe er upriset — summen er et minimum,
+                        ikke en total. Da kan den ikke leses som et
+                        ferdig sammenligningstall. */}
+                    {s.isFloor ? "Fra " : ""}
                     {formatNok(s.subtotalExVat)} kr
                   </span>
                   <span
@@ -451,6 +465,7 @@ function EstimatePanel({
                     eks. mva
                   </span>
                   <span className="mt-3 block text-base font-medium">
+                    {s.isFloor ? "Fra " : ""}
                     {formatNok(s.totalIncVat)} kr
                   </span>
                   <span
@@ -466,7 +481,7 @@ function EstimatePanel({
                         selected ? "text-bone/70" : "text-ink/55"
                       }`}
                     >
-                      Deler av materialene avklares ved befaring
+                      Minstesum — deler av materialene avklares ved befaring
                     </span>
                   ) : null}
                 </button>
@@ -596,11 +611,24 @@ function EstimatePanel({
                     left="Herav materialpris-buffer"
                     right={`${formatNok(totals.materialProtectionExVat)} kr`}
                   />
+                  {totals.materialSmallConsumablesExVat > 0 ? (
+                    <BreakdownRow
+                      left="Småforbruk"
+                      right={`${formatNok(
+                        totals.materialSmallConsumablesExVat
+                      )} kr`}
+                    />
+                  ) : null}
                   <BreakdownRow
                     emphasis
                     left="Sum materialer"
                     right={`${formatNok(totals.materialExVat)} kr eks. mva`}
                   />
+                  {hasTerraceLine ? (
+                    <p className="mt-3 text-xs text-ink/55">
+                      {TERRACE_STRUCTURAL_CAVEAT}
+                    </p>
+                  ) : null}
                   <p className="mt-3 text-xs text-ink/55">
                     Materialprisene er veiledende norske referansepriser per{" "}
                     {MATERIALS_LAST_UPDATED}, bevisst satt konservativt slik at
@@ -804,27 +832,35 @@ function RowItem({
           </label>
         ) : null}
         {isTerraceItem ? (
-          <label className="mt-2 flex items-center gap-2 text-xs text-ink/60">
-            <span className="eyebrow text-ink/50">Konstruksjon</span>
-            <select
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            <RowSelect
+              label="Konstruksjon"
               value={row.terraceConstruction ?? "standard"}
-              onChange={(e) =>
-                updateRow(
-                  row.id,
-                  "terraceConstruction",
-                  e.target.value as TerraceConstructionKey
-                )
-              }
-              className="border-b border-ink/20 bg-transparent py-1 text-xs focus:border-ink focus:outline-none"
-              aria-label="Terrassekonstruksjon"
-            >
-              {TERRACE_CONSTRUCTION_ORDER.map((k) => (
-                <option key={k} value={k}>
-                  {TERRACE_CONSTRUCTIONS[k].label}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={(v) => updateRow(row.id, "terraceConstruction", v)}
+              options={TERRACE_CONSTRUCTION_ORDER.map((k) => [
+                k,
+                TERRACE_CONSTRUCTIONS[k].label
+              ])}
+            />
+            <RowSelect
+              label="Innfesting"
+              value={row.terraceFastening ?? "visible"}
+              onChange={(v) => updateRow(row.id, "terraceFastening", v)}
+              options={TERRACE_FASTENING_ORDER.map((k) => [
+                k,
+                TERRACE_FASTENINGS[k].label
+              ])}
+            />
+            <RowSelect
+              label="Fundament"
+              value={row.terraceFoundation ?? "existing"}
+              onChange={(v) => updateRow(row.id, "terraceFoundation", v)}
+              options={TERRACE_FOUNDATION_ORDER.map((k) => [
+                k,
+                TERRACE_FOUNDATIONS[k].label
+              ])}
+            />
+          </div>
         ) : null}
       </div>
 
@@ -885,6 +921,36 @@ function RowItem({
         ×
       </button>
     </div>
+  );
+}
+
+function RowSelect({
+  label,
+  value,
+  onChange,
+  options
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: Array<[string, string]>;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-ink/60">
+      <span className="eyebrow text-ink/50">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="max-w-[12rem] border-b border-ink/20 bg-transparent py-1 text-xs focus:border-ink focus:outline-none"
+        aria-label={label}
+      >
+        {options.map(([k, l]) => (
+          <option key={k} value={k}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -1235,6 +1301,8 @@ function buildEnquiryPrefill({
       ).includes(String(r.workItemKey))
         ? ` [${
             TERRACE_CONSTRUCTIONS[r.terraceConstruction ?? "standard"].label
+          } · ${TERRACE_FASTENINGS[r.terraceFastening ?? "visible"].label} · ${
+            TERRACE_FOUNDATIONS[r.terraceFoundation ?? "existing"].label
           }]`
         : "";
       lines.push(

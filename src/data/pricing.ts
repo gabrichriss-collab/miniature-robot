@@ -57,6 +57,8 @@ export type PriceEntry = {
    * brukes `workItemKey` som oppskriftsnøkkel.
    */
   materialRecipeKey?: string;
+  /** Forhåndsvelger innfesting for terrasseposter. */
+  terraceFastening?: "visible" | "hidden";
 };
 
 export const PRICE_DB: PriceEntry[] = [
@@ -83,7 +85,7 @@ export const PRICE_DB: PriceEntry[] = [
     note: "Camo/tilsvarende system",
     cat: "Terrasse",
     workItemKey: "terraceComplete",
-    materialRecipeKey: "terraceHiddenFastening"
+    terraceFastening: "hidden"
   },
   {
     keywords: [

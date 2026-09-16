@@ -15,7 +15,9 @@ import {
   availableTiers,
   type DifficultyKey,
   type MaterialTier,
-  type TerraceConstructionKey
+  type TerraceConstructionKey,
+  type TerraceFasteningKey,
+  type TerraceFoundationKey
 } from "@/config/pricing";
 import {
   calcLaborLine,
@@ -42,8 +44,10 @@ export type EstimateRow = {
   /** Egen materialoppskrift når posten avviker fra arbeidspostens. */
   materialRecipeKey?: string;
   difficulty?: DifficultyKey;
-  /** Kun relevant for terrasseposter. */
+  /* ── Kun relevant for terrasseposter ── */
   terraceConstruction?: TerraceConstructionKey;
+  terraceFastening?: TerraceFasteningKey;
+  terraceFoundation?: TerraceFoundationKey;
 };
 
 export type EstimateInput = {
@@ -80,6 +84,7 @@ export type EstimateTotals = {
   materialIncVat: number;
   materialWasteExVat: number;
   materialProtectionExVat: number;
+  materialSmallConsumablesExVat: number;
   /** True når materialsummen er et gulv fordi noe bevisst er upriset. */
   materialIsFloor: boolean;
 
@@ -103,7 +108,12 @@ function engineLines(rows: EstimateRow[]) {
       label: r.matchName || r.name,
       unit: String(r.unit),
       quantity: r.qty,
-      difficulty: r.difficulty
+      difficulty: r.difficulty,
+      options: {
+        terraceConstruction: r.terraceConstruction,
+        terraceFastening: r.terraceFastening,
+        terraceFoundation: r.terraceFoundation
+      }
     }));
 }
 
@@ -164,6 +174,8 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
     materialIncVat: active.materials.totalMaterialIncVat,
     materialWasteExVat: active.materials.totalWasteExVat,
     materialProtectionExVat: active.materials.totalProtectionExVat,
+    materialSmallConsumablesExVat:
+      active.materials.totalSmallConsumablesExVat,
     materialIsFloor: active.isFloor,
     legacyExVat,
     range,

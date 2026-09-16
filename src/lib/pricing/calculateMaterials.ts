@@ -19,6 +19,7 @@ import {
   getRecipe,
   type MaterialRecipe,
   type PendingMaterialComponent,
+  type RecipeOptions,
   type RecipeStatus
 } from "../../config/pricing/recipes";
 import { round2, toQty } from "./calculateLabor";
@@ -59,6 +60,8 @@ export type MaterialLine = {
   wasteExVat: number;
   /** Sum prisbuffer i kroner, eks. mva. */
   protectionExVat: number;
+  /** Tillegg for småforbruk, eks. mva. */
+  smallConsumablesExVat: number;
   /** Sum materialer eks. mva, inkl. svinn og buffer. */
   materialExVat: number;
   vat: number;
@@ -72,6 +75,7 @@ export type MaterialTotal = {
   totalMaterialExVat: number;
   totalWasteExVat: number;
   totalProtectionExVat: number;
+  totalSmallConsumablesExVat: number;
   totalVat: number;
   totalMaterialIncVat: number;
   /** Arbeidsposter uten forsvarlig materialpris. */
@@ -92,6 +96,8 @@ export type MaterialLineInput = {
   unit: string;
   quantity: number | string;
   tier: MaterialTier;
+  /** Valgene kunden har gjort på raden (konstruksjon, innfesting, fundament). */
+  options?: RecipeOptions;
 };
 
 /** Hvilken oppskriftsnøkkel en linje faktisk skal slå opp. */
@@ -103,13 +109,25 @@ export function recipeKeyFor(input: {
 }
 
 /** Komponentene som gjelder for valgt materialnivå. */
-function componentsForTier(recipe: MaterialRecipe, tier: MaterialTier) {
-  if (tier === "none") return [];
+function componentsForTier(
+  recipe: MaterialRecipe,
+  tier: MaterialTier,
+  options: RecipeOptions
+) {
+  if (tier === "none") return { components: [], pending: [] };
   const tiered = recipe.tiers?.[tier];
   // Finnes ikke premium for denne posten, faller vi tilbake på standard
   // i stedet for å finne opp et premium-alternativ som ikke gir mening.
   const resolved = tiered ?? recipe.tiers?.standard ?? [];
-  return [...recipe.components, ...resolved];
+  const extra = recipe.dynamic?.(options);
+  return {
+    components: [
+      ...recipe.components,
+      ...resolved,
+      ...(extra?.components ?? [])
+    ],
+    pending: [...(recipe.pending ?? []), ...(extra?.pending ?? [])]
+  };
 }
 
 function priceComponent(
@@ -148,6 +166,8 @@ export function calcMaterialLine(input: MaterialLineInput): MaterialLine {
   const key = recipeKeyFor(input);
   const recipe = key ? getRecipe(key) : undefined;
 
+  const options: RecipeOptions = input.options ?? {};
+
   const empty = (status: RecipeStatus, note?: string): MaterialLine => ({
     workItemKey: input.workItemKey ?? "",
     label: input.label,
@@ -160,6 +180,7 @@ export function calcMaterialLine(input: MaterialLineInput): MaterialLine {
     customerNote: note,
     wasteExVat: 0,
     protectionExVat: 0,
+    smallConsumablesExVat: 0,
     materialExVat: 0,
     vat: 0,
     materialIncVat: 0,
@@ -177,13 +198,28 @@ export function calcMaterialLine(input: MaterialLineInput): MaterialLine {
     return empty(recipe.status, recipe.customerNote);
   }
 
-  const components = componentsForTier(recipe, input.tier)
-    .map((c) => {
-      const material = getMaterial(c.materialId);
-      if (!material) return null;
-      return priceComponent(material, quantity, c.quantityPerUnit, c.assumption);
-    })
-    .filter((c): c is MaterialLineComponent => c !== null);
+  const resolved = componentsForTier(recipe, input.tier, options);
+
+  const components: MaterialLineComponent[] = [];
+  const pending: PendingMaterialComponent[] = [...resolved.pending];
+
+  for (const c of resolved.components) {
+    const material = getMaterial(c.materialId);
+    if (!material) continue;
+    // Mangler verifisert pris? Da navngir vi posten i stedet for å gjette.
+    if (material.pricePending) {
+      pending.push({
+        label: material.name,
+        reason:
+          material.pendingReason ??
+          "Materialpris er ikke lagt inn ennå og avklares ved befaring."
+      });
+      continue;
+    }
+    components.push(
+      priceComponent(material, quantity, c.quantityPerUnit, c.assumption)
+    );
+  }
 
   const wasteExVat = round2(
     components.reduce((s, c) => s + c.wasteCostExVat, 0)
@@ -191,10 +227,22 @@ export function calcMaterialLine(input: MaterialLineInput): MaterialLine {
   const protectionExVat = round2(
     components.reduce((s, c) => s + c.protectionCostExVat, 0)
   );
-  const materialExVat = round2(
+  const pricedExVat = round2(
     components.reduce((s, c) => s + c.totalCostExVat, 0)
   );
+  const smallConsumablesExVat = round2(
+    pricedExVat * pricingSettings.smallConsumablesRate
+  );
+  const materialExVat = round2(pricedExVat + smallConsumablesExVat);
   const vat = round2(materialExVat * pricingSettings.vatRate);
+
+  // Ingen priset komponent i det hele tatt → vis tekst, ikke 0 kr.
+  const status: RecipeStatus =
+    components.length === 0
+      ? "pending"
+      : pending.length > 0
+        ? "partial"
+        : recipe.status;
 
   return {
     workItemKey: recipe.id,
@@ -202,16 +250,20 @@ export function calcMaterialLine(input: MaterialLineInput): MaterialLine {
     unit: input.unit,
     quantity,
     tier: input.tier,
-    status: recipe.status,
+    status,
     components,
-    pending: recipe.pending ?? [],
-    customerNote: recipe.customerNote,
+    pending,
+    customerNote:
+      status === "pending"
+        ? (pending[0]?.reason ?? recipe.customerNote)
+        : recipe.customerNote,
     wasteExVat,
     protectionExVat,
+    smallConsumablesExVat,
     materialExVat,
     vat,
     materialIncVat: round2(materialExVat + vat),
-    isFloor: recipe.status === "partial"
+    isFloor: status === "partial"
   };
 }
 
@@ -224,6 +276,9 @@ export function calcMaterialTotal(inputs: MaterialLineInput[]): MaterialTotal {
   const totalWasteExVat = round2(lines.reduce((s, l) => s + l.wasteExVat, 0));
   const totalProtectionExVat = round2(
     lines.reduce((s, l) => s + l.protectionExVat, 0)
+  );
+  const totalSmallConsumablesExVat = round2(
+    lines.reduce((s, l) => s + l.smallConsumablesExVat, 0)
   );
   const totalVat = round2(lines.reduce((s, l) => s + l.vat, 0));
 
@@ -242,6 +297,7 @@ export function calcMaterialTotal(inputs: MaterialLineInput[]): MaterialTotal {
     totalMaterialExVat,
     totalWasteExVat,
     totalProtectionExVat,
+    totalSmallConsumablesExVat,
     totalVat,
     totalMaterialIncVat: round2(totalMaterialExVat + totalVat),
     unpriced,

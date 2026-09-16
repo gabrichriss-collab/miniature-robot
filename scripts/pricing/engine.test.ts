@@ -17,7 +17,9 @@ import {
   STRUCTURAL_ASSUMPTIONS,
   availableTiers,
   pendingMaterialDecisions,
-  RECIPE_VARIANTS
+  RECIPE_VARIANTS,
+  TERRACE_CONSTRUCTIONS,
+  TERRACE_STRUCTURAL_CAVEAT
 } from "../../src/config/pricing/recipes";
 import { calcLaborLine, calcLaborTotal, toQty } from "../../src/lib/pricing/calculateLabor";
 import {
@@ -137,12 +139,12 @@ test("ARBEID: ukjent arbeidspost gir 0 timer i stedet for å kaste", () => {
 /* ══════════════════ MATERIALDATABASEN ══════════════════ */
 
 test("MATERIAL: inkl. mva → eks. mva konverteres med 1,25", () => {
-  const deck = getMaterial("decking_28x120_imp")!;
+  const deck = getMaterial("terrace_standard_impregnated")!;
   assert.equal(deck.referenceRetailPriceInclVat, 21);
   near(deck.referencePriceExVat, 21 / 1.25); // 16,80
   near(deck.referencePriceExVat, 16.8);
 
-  const royal = getMaterial("decking_28x120_royal")!;
+  const royal = getMaterial("terrace_royal")!;
   near(royal.referencePriceExVat, 34.4);
 
   const screws = getMaterial("terrace_screws_c4")!;
@@ -155,7 +157,14 @@ test("MATERIAL: alle materialer har dato, kilde og svinn/buffer", () => {
     assert.ok(m.sourceNotes.length > 0, `${m.id} mangler sourceNotes`);
     assert.ok(m.wasteFactor >= 0 && m.wasteFactor < 1, `${m.id} svinn`);
     assert.ok(m.protectionFactor >= 0 && m.protectionFactor < 1, `${m.id} buffer`);
-    assert.ok(m.referencePriceExVat > 0, `${m.id} pris`);
+    if (m.pricePending) {
+      // Mangler pris → skal ikke ha en påstått pris liggende.
+      assert.equal(m.referenceRetailPriceInclVat, null, `${m.id} pending`);
+      assert.equal(m.referencePriceExVat, 0, `${m.id} pending`);
+      assert.ok(m.pendingReason, `${m.id} mangler begrunnelse`);
+    } else {
+      assert.ok(m.referencePriceExVat > 0, `${m.id} pris`);
+    }
   }
 });
 
@@ -183,7 +192,7 @@ test("TERRASSEBORD: 36 m² × 8,4 lm/m² = 302,4 lm før svinn", () => {
     workItemKey: "terraceDeckingOnly",
     label: "Terrassebord", unit: "m²", quantity: 36, tier: "standard"
   });
-  const deck = line.components.find((c) => c.materialId === "decking_28x120_imp")!;
+  const deck = line.components.find((c) => c.materialId === "terrace_standard_impregnated")!;
   assert.equal(deck.netQuantity, 302.4);
   near(deck.grossQuantity, 332.64);          // + 10 % svinn
   near(deck.referencePriceExVat, 16.8);      // 21 / 1,25
@@ -194,11 +203,12 @@ test("TERRASSEBORD: 36 m² × 8,4 lm/m² = 302,4 lm før svinn", () => {
 
 test("TERRASSEBORD: skruforbruk følger av bjelkeavstand og skruer per kryss", () => {
   // 8,4 lm bord per m², kryss over bjelke hver 0,6 m, 2 skruer per kryss.
-  const perM2 = MATERIAL_RECIPES.terraceDeckingOnly.components.find(
-    (c) => c.materialId === "terrace_screws_c4"
-  )!.quantityPerUnit;
+  const perM2 = MATERIAL_RECIPES.terraceDeckingOnly
+    .dynamic!({ terraceFastening: "visible" })
+    .components!.find((c) => c.materialId === "terrace_screws_c4")!
+    .quantityPerUnit;
   assert.equal(perM2, 28);
-  assert.equal(STRUCTURAL_ASSUMPTIONS.joistSpacingM, 0.6);
+  assert.equal(STRUCTURAL_ASSUMPTIONS.referenceJoistSpacingMm, 600);
   assert.equal(STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing, 2);
   const line = calcMaterialLine({
     workItemKey: "terraceDeckingOnly",
@@ -216,8 +226,8 @@ test("TERRASSEBORD: standard vs premium bytter kun bordet", () => {
   const prem = calcMaterialLine({
     workItemKey: "terraceDeckingOnly", label: "T", unit: "m²", quantity: 36, tier: "premium"
   });
-  assert.ok(std.components.some((c) => c.materialId === "decking_28x120_imp"));
-  assert.ok(prem.components.some((c) => c.materialId === "decking_28x120_royal"));
+  assert.ok(std.components.some((c) => c.materialId === "terrace_standard_impregnated"));
+  assert.ok(prem.components.some((c) => c.materialId === "terrace_royal"));
   // Skruene er identiske i begge nivåene.
   const stdScrews = std.components.find((c) => c.materialId === "terrace_screws_c4")!;
   const premScrews = prem.components.find((c) => c.materialId === "terrace_screws_c4")!;
@@ -256,18 +266,145 @@ test("MANGLER: ukjent arbeidspost gir 0 kr materialer, ikke krasj", () => {
   assert.equal(line.materialExVat, 0);
 });
 
-test("MANGLER: komplett terrasse er 'partial' og navngir det som ikke er med", () => {
-  const recipe = MATERIAL_RECIPES.terraceComplete;
-  assert.equal(recipe.status, "partial");
-  const labels = (recipe.pending ?? []).map((p) => p.label);
-  assert.ok(labels.some((l) => /Bjelkelag/.test(l)));
-  assert.ok(labels.some((l) => /Fundamentering/.test(l)));
+test("TERRASSE: bæresystemet følger konstruksjonstypen, ikke ett universelt tall", () => {
+  const per = (k: "ground" | "standard" | "elevated") =>
+    calcMaterialLine({
+      workItemKey: "terraceComplete",
+      label: "T",
+      unit: "m²",
+      quantity: 36,
+      tier: "standard",
+      options: { terraceConstruction: k }
+    }).components.find((c) => c.materialId === "timber_48x148_imp")!;
+
+  assert.equal(per("ground").netQuantity, 36 * 3.0);
+  assert.equal(per("standard").netQuantity, 36 * 3.5);
+  assert.equal(per("elevated").netQuantity, 36 * 4.5);
+  // Høyere terrasse koster mer i virke, aldri mindre.
+  assert.ok(per("elevated").totalCostExVat > per("standard").totalCostExVat);
+  assert.ok(per("standard").totalCostExVat > per("ground").totalCostExVat);
+  assert.equal(TERRACE_CONSTRUCTIONS.standard.joistLmPerM2, 3.5);
+});
+
+test("TERRASSE: forbeholdet om at dette ikke er prosjektering følger med", () => {
+  assert.match(TERRACE_STRUCTURAL_CAVEAT, /ikke\s+prosjektering/);
+  assert.equal(
+    MATERIAL_RECIPES.terraceComplete.customerNote,
+    TERRACE_STRUCTURAL_CAVEAT
+  );
+});
+
+test("FUNDAMENT: ligger aldri gjemt i materialprisen per m²", () => {
+  const line = (k: "existing" | "simple" | "assess") =>
+    calcMaterialLine({
+      workItemKey: "terraceComplete",
+      label: "T",
+      unit: "m²",
+      quantity: 36,
+      tier: "standard",
+      options: { terraceFoundation: k }
+    });
+
+  // Ingen av valgene endrer materialsummen — fundamentet er en egen post.
+  const existing = line("existing");
+  assert.equal(existing.pending.length, 0);
+  for (const k of ["simple", "assess"] as const) {
+    const l = line(k);
+    assert.equal(l.materialExVat, existing.materialExVat);
+    assert.equal(l.pending.length, 1);
+  }
+  assert.match(line("assess").pending[0].reason, /grunnforhold/);
+  assert.match(line("simple").pending[0].reason, /egen post/);
+  // Ingen komponent later som om den kjenner antall fundamentpunkter.
+  assert.ok(
+    existing.components.every((c) => !/fundament/i.test(c.name)),
+    "fundament skal ikke ligge som materialkomponent"
+  );
+});
+
+test("INNFESTING: CAMO prises ikke med vanlig skruepris", () => {
+  const visible = calcMaterialLine({
+    workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36,
+    tier: "standard", options: { terraceFastening: "visible" }
+  });
+  const hidden = calcMaterialLine({
+    workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36,
+    tier: "standard", options: { terraceFastening: "hidden" }
+  });
+
+  assert.ok(visible.components.some((c) => c.materialId === "terrace_screws_c4"));
+  // Skjult innfesting har ingen verifisert pris → navngis, prises ikke.
+  assert.ok(hidden.components.every((c) => c.materialId !== "terrace_screws_c4"));
+  assert.ok(
+    hidden.pending.some((pnd) => /[Ss]kjult innfesting/.test(pnd.label))
+  );
+  assert.equal(hidden.status, "partial");
+  assert.ok(hidden.materialExVat < visible.materialExVat);
+  assert.ok(getMaterial("terrace_hidden_fastening")!.pricePending);
+});
+
+test("TERMOFURU: Royal-prisen brukes ikke som erstatning", () => {
+  const thermo = getMaterial("terrace_thermowood")!;
+  const royal = getMaterial("terrace_royal")!;
+  assert.ok(thermo.pricePending);
+  assert.equal(thermo.referencePriceExVat, 0);
+  assert.ok(royal.referencePriceExVat > 0);
 
   const line = calcMaterialLine({
-    workItemKey: "terraceComplete", label: "T", unit: "m²", quantity: 36, tier: "standard"
+    workItemKey: "terraceComplete",
+    materialRecipeKey: "terraceThermowood",
+    label: "Terrasse m/ termofuru",
+    unit: "m²",
+    quantity: 36,
+    tier: "premium"
   });
-  assert.equal(line.isFloor, true);
-  assert.equal(line.pending.length, 2);
+  // Bæresystem og skruer prises, bordet gjør det ikke.
+  assert.ok(line.components.some((c) => c.materialId === "timber_48x148_imp"));
+  assert.ok(line.components.every((c) => c.materialId !== "terrace_royal"));
+  assert.ok(line.pending.some((pnd) => /[Tt]ermofuru/.test(pnd.label)));
+  assert.match(
+    line.pending.find((pnd) => /[Tt]ermofuru/.test(pnd.label))!.reason,
+    /beregnes etter valgt produkt/
+  );
+});
+
+test("KLEDNING: 19×148 stående med 7,7 lm/m², men uten påstått pris", () => {
+  assert.equal(STRUCTURAL_ASSUMPTIONS.claddingLmPerM2, 7.7);
+  const cladding = getMaterial("cladding_19x148_standing")!;
+  assert.equal(cladding.name, "Stående kledning 19×148");
+  assert.ok(cladding.pricePending);
+
+  const line = calcMaterialLine({
+    workItemKey: "timberCladding", label: "Kledning", unit: "m²",
+    quantity: 100, tier: "standard"
+  });
+  assert.equal(line.status, "pending");
+  assert.equal(line.materialExVat, 0);
+
+  // På komplett fasade prises vindsperre og lekting, kledningen navngis.
+  const facade = calcMaterialLine({
+    workItemKey: "facadeComplete", label: "Fasade", unit: "m²",
+    quantity: 100, tier: "standard"
+  });
+  assert.equal(facade.status, "partial");
+  assert.ok(facade.materialExVat > 0);
+  assert.ok(facade.pending.some((pnd) => /[Kk]ledning/.test(pnd.label)));
+});
+
+test("SMÅFORBRUK: eget, konfigurerbart tillegg — ikke gjemt i bufferen", () => {
+  const line = calcMaterialLine({
+    workItemKey: "plasterboardSingleLayer", label: "Gips", unit: "m²",
+    quantity: 10, tier: "standard"
+  });
+  const priced = line.components.reduce((s, c) => s + c.totalCostExVat, 0);
+  near(
+    line.smallConsumablesExVat,
+    priced * pricingSettings.smallConsumablesRate
+  );
+  near(line.materialExVat, priced + line.smallConsumablesExVat);
+  // Svinn, buffer og småforbruk er tre atskilte tall.
+  assert.notEqual(line.wasteExVat, line.protectionExVat);
+  assert.notEqual(line.protectionExVat, line.smallConsumablesExVat);
 });
 
 test("MANGLER: riving har status 'none' og null materialkostnad", () => {
@@ -341,12 +478,19 @@ test("FLERE POSTER: materialer summeres uavhengig av arbeid", () => {
   const m = calcMaterialTotal(multiJob.map((l) => ({ ...l, tier: "standard" as const })));
   // Kun terrassen bidrar: rekkverk er pending, riving er none.
   const terrace = calcMaterialLine({ ...multiJob[0], tier: "standard" });
-  near(m.totalMaterialExVat, terrace.materialExVat);
+  near(m.totalMaterialExVat, terrace.materialExVat, 0.05);
+  assert.ok(m.totalSmallConsumablesExVat > 0);
   assert.ok(m.totalWasteExVat > 0);
   assert.ok(m.totalProtectionExVat > 0);
   assert.equal(m.unpriced.length, 1);
   assert.equal(m.unpriced[0].workItemKey, "terraceRailing");
-  assert.equal(m.hasFloorLines, true);
+  // Standardterrassen er nå fullt priset, så ingen linje er et gulv.
+  assert.equal(m.hasFloorLines, false);
+  // … men velger kunden fundament som må vurderes, blir den det.
+  const withFoundation = calcMaterialTotal([
+    { ...multiJob[0], tier: "standard", options: { terraceFoundation: "assess" } }
+  ]);
+  assert.equal(withFoundation.hasFloorLines, true);
 });
 
 test("FLERE POSTER: mva legges på først etter at eks. mva er summert", () => {
@@ -480,28 +624,17 @@ test("KARTLEGGING: kartlagte poster har samme enhet som arbeidsposten", () => {
   }
 });
 
-test("KARTLEGGING: terrassevarianter arver ikke standardterrassens materialer", () => {
+test("KARTLEGGING: terrassevariantene har egne materialer", () => {
   const hidden = PRICE_DB.find((e) => e.name === "Terrasse m/ skjult innfesting")!;
   const thermo = PRICE_DB.find((e) => e.name === "Terrasse m/ termofuru")!;
-  // Samme arbeidstimer …
+
+  // Samme arbeidstimer som en vanlig komplett terrasse …
   assert.equal(hidden.workItemKey, "terraceComplete");
   assert.equal(thermo.workItemKey, "terraceComplete");
-  // … men egne, foreløpig uprisede materialoppskrifter.
-  assert.equal(hidden.materialRecipeKey, "terraceHiddenFastening");
+  // … men skjult innfesting er et valg, og termofuru en egen oppskrift.
+  assert.equal(hidden.terraceFastening, "hidden");
   assert.equal(thermo.materialRecipeKey, "terraceThermowood");
 
-  const line = calcMaterialLine({
-    workItemKey: "terraceComplete",
-    materialRecipeKey: "terraceThermowood",
-    label: "Terrasse m/ termofuru",
-    unit: "m²",
-    quantity: 36,
-    tier: "premium"
-  });
-  assert.equal(line.status, "pending");
-  assert.equal(line.materialExVat, 0);
-
-  // Arbeidet regnes likevel som en vanlig komplett terrasse.
   const r = calculateEstimate([
     {
       workItemKey: "terraceComplete",
@@ -512,7 +645,8 @@ test("KARTLEGGING: terrassevarianter arver ikke standardterrassens materialer", 
     }
   ]);
   assert.equal(r.scenarios.none.laborExVat, 48960);
-  assert.equal(r.materialsAvailable, false);
+  // Bæresystemet kan prises, så materialer er tilgjengelig — men som gulv.
+  assert.equal(r.scenarios.standard.isFloor, true);
 });
 
 /* ══════════════════ SØKEMATCHING ══════════════════ */

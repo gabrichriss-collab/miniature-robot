@@ -30,7 +30,14 @@ import type { MaterialTier } from "./settings";
  * — de er standard norsk praksis, men de skal bekreftes før publisering.
  */
 export const STRUCTURAL_ASSUMPTIONS = {
-  /** Senteravstand bjelkelag under 28 mm terrassebord. */
+  /**
+   * REFERANSE-senteravstand for bjelkelag under 28 mm terrassebord.
+   * Dette er en beregningsforutsetning for estimatet — ikke en regel.
+   * Faktisk avstand avhenger av bordprodukt, tykkelse, spennvidde, last,
+   * leverandørens anvisning og konstruksjonen for øvrig.
+   */
+  referenceJoistSpacingMm: 600,
+  /** Samme verdi i meter — brukt i utregningene. */
   joistSpacingM: 0.6,
   /** Senteravstand stendere i innvendig bindingsverk. */
   studSpacingM: 0.6,
@@ -41,8 +48,22 @@ export const STRUCTURAL_ASSUMPTIONS = {
   /** Terrasseskruer per bordkryss over bjelke. */
   deckScrewsPerCrossing: 2,
   /** Løpemeter terrassebord per m² dekke, 28×120. Oppgitt av Gabriel. */
-  deckingLmPerM2: 8.4
+  deckingLmPerM2: 8.4,
+  /**
+   * Løpemeter stående kledning 19×148 per m² fasade, før svinn.
+   * Referanseprofil for standard fasadeestimat.
+   */
+  claddingLmPerM2: 7.7
 } as const;
+
+/**
+ * VIKTIG FORBEHOLD som skal følge terrasseberegningen hele veien ut til
+ * kunden. Mengdene under er estimatorreferanser, ikke prosjektering.
+ */
+export const TERRACE_STRUCTURAL_CAVEAT =
+  "Mengdene for bæresystem er veiledende estimatgrunnlag, ikke " +
+  "prosjektering. Faktiske dimensjoner og senteravstander bestemmes av " +
+  "spennvidde, last, opplegg og eksisterende konstruksjon.";
 
 /**
  * Avrunder avledede forbrukstall slik at flyttallsstøy ikke lekker ut i
@@ -62,6 +83,13 @@ const deckScrewsPerM2 = round(
     STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing,
   2
 );
+
+/** Valg kunden gjør på en enkelt terrasserad. */
+export type RecipeOptions = {
+  terraceConstruction?: TerraceConstructionKey;
+  terraceFastening?: TerraceFasteningKey;
+  terraceFoundation?: TerraceFoundationKey;
+};
 
 export type MaterialRecipeComponent = {
   materialId: string;
@@ -111,6 +139,14 @@ export type MaterialRecipe = {
   customerNote?: string;
   /** Intern notis til Gabriel. Vises aldri for kunden. */
   internalNote?: string;
+  /**
+   * Komponenter og forbehold som avhenger av valgene på raden
+   * (konstruksjonstype, innfesting, fundament).
+   */
+  dynamic?: (options: RecipeOptions) => {
+    components?: MaterialRecipeComponent[];
+    pending?: PendingMaterialComponent[];
+  };
 };
 
 const WINDOW_DOOR_NOTE =
@@ -124,80 +160,124 @@ const DEMOLITION_NOTE =
 const DESIGN_DEPENDENT_NOTE =
   "Materialkostnad avhenger av valgt utforming og avklares ved befaring.";
 
+
+/**
+ * Bæresystem, innfesting og fundament for en komplett terrasse.
+ * Mengden 48×148 følger konstruksjonstypen kunden har valgt — vi bruker
+ * ALDRI ett universelt tall for alle terrasser.
+ */
+function terraceStructure(options: RecipeOptions): {
+  components: MaterialRecipeComponent[];
+  pending: PendingMaterialComponent[];
+} {
+  const construction =
+    TERRACE_CONSTRUCTIONS[options.terraceConstruction ?? "standard"];
+  const fastening = options.terraceFastening ?? "visible";
+  const foundation = options.terraceFoundation ?? "existing";
+
+  const components: MaterialRecipeComponent[] = [
+    {
+      materialId: "timber_48x148_imp",
+      quantityPerUnit: construction.joistLmPerM2,
+      assumption: `${construction.label.toLowerCase()} — ${construction.joistLmPerM2} lm/m² 48×148, veiledende estimatgrunnlag`
+    }
+  ];
+
+  if (fastening === "visible") {
+    components.push({
+      materialId: "terrace_screws_c4",
+      quantityPerUnit: deckScrewsPerM2,
+      assumption: `referanse c/c ${STRUCTURAL_ASSUMPTIONS.referenceJoistSpacingMm} mm, ${STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing} skruer per bjelkekryss`
+    });
+  } else {
+    // CAMO_PRICE_PENDING — skal ikke prises med C4-skruepris.
+    components.push({
+      materialId: "terrace_hidden_fastening",
+      quantityPerUnit: 1,
+      assumption: "skjult innfesting, 1 sett per m² dekke"
+    });
+  }
+
+  const pending: PendingMaterialComponent[] = [];
+  const f = TERRACE_FOUNDATIONS[foundation];
+  if (f.note) pending.push({ label: f.label, reason: f.note });
+
+  return { components, pending };
+}
+
 export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
   // ══ TERRASSE & UTEROM ═══════════════════════════════════════════════
   terraceDeckingOnly: {
     id: "terraceDeckingOnly",
     unit: "m²",
     status: "assumed",
-    components: [
-      {
-        materialId: "terrace_screws_c4",
-        quantityPerUnit: deckScrewsPerM2,
-        assumption: `c/c ${STRUCTURAL_ASSUMPTIONS.joistSpacingM * 1000} mm bjelkeavstand, ${STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing} skruer per bjelkekryss`
-      }
-    ],
+    components: [],
     tiers: {
       standard: [
         {
-          materialId: "decking_28x120_imp",
+          materialId: "terrace_standard_impregnated",
           quantityPerUnit: STRUCTURAL_ASSUMPTIONS.deckingLmPerM2,
           assumption: "8,4 lm terrassebord 28×120 per m² dekke"
         }
       ],
       premium: [
         {
-          materialId: "decking_28x120_royal",
+          materialId: "terrace_royal",
           quantityPerUnit: STRUCTURAL_ASSUMPTIONS.deckingLmPerM2,
           assumption: "8,4 lm terrassebord 28×120 per m² dekke"
         }
       ]
     },
+    dynamic: (options) => {
+      const fastening = options.terraceFastening ?? "visible";
+      return {
+        components:
+          fastening === "visible"
+            ? [
+                {
+                  materialId: "terrace_screws_c4",
+                  quantityPerUnit: deckScrewsPerM2,
+                  assumption: `referanse c/c ${STRUCTURAL_ASSUMPTIONS.referenceJoistSpacingMm} mm, ${STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing} skruer per bjelkekryss`
+                }
+              ]
+            : [
+                {
+                  materialId: "terrace_hidden_fastening",
+                  quantityPerUnit: 1,
+                  assumption: "skjult innfesting, 1 sett per m² dekke"
+                }
+              ]
+      };
+    },
     internalNote:
-      "Gjelder montering på EKSISTERENDE bjelkelag. Bekreft skruforbruk 28 stk/m²."
+      "Gjelder montering på EKSISTERENDE bjelkelag — derfor ikke bæresystem."
   },
 
   terraceComplete: {
     id: "terraceComplete",
     unit: "m²",
-    status: "partial",
-    components: [
-      {
-        materialId: "terrace_screws_c4",
-        quantityPerUnit: deckScrewsPerM2,
-        assumption: `c/c ${STRUCTURAL_ASSUMPTIONS.joistSpacingM * 1000} mm bjelkeavstand, ${STRUCTURAL_ASSUMPTIONS.deckScrewsPerCrossing} skruer per bjelkekryss`
-      }
-    ],
+    status: "assumed",
+    components: [],
     tiers: {
       standard: [
         {
-          materialId: "decking_28x120_imp",
+          materialId: "terrace_standard_impregnated",
           quantityPerUnit: STRUCTURAL_ASSUMPTIONS.deckingLmPerM2,
           assumption: "8,4 lm terrassebord 28×120 per m² dekke"
         }
       ],
       premium: [
         {
-          materialId: "decking_28x120_royal",
+          materialId: "terrace_royal",
           quantityPerUnit: STRUCTURAL_ASSUMPTIONS.deckingLmPerM2,
           assumption: "8,4 lm terrassebord 28×120 per m² dekke"
         }
       ]
     },
-    pending: [
-      {
-        label: "Bjelkelag og bæresystem",
-        reason:
-          "Forbruk av 48×148 avhenger av spennvidde, konstruksjonstype og høyde."
-      },
-      {
-        label: "Fundamentering",
-        reason:
-          "Antall og type punkter avhenger av grunnforhold og terrassehøyde."
-      }
-    ],
+    dynamic: terraceStructure,
+    customerNote: TERRACE_STRUCTURAL_CAVEAT,
     internalNote:
-      "TRENGER BESLUTNING: lm 48×148 per m² for lav/normal/høy terrasse, samt fundamenteringsforutsetning."
+      "Bæresystem følger konstruksjonstype (3,0 / 3,5 / 4,5 lm/m²). Fundament, rekkverk, trapp og riving er egne poster."
   },
 
   /**
@@ -206,25 +286,21 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
    * oppskrift — vi finner ikke opp priser på Camo-klips, termofuru,
    * Kebony eller Accoya.
    */
-  terraceHiddenFastening: {
-    id: "terraceHiddenFastening",
-    unit: "m²",
-    status: "pending",
-    components: [],
-    customerNote:
-      "Materialpris avklares etter valgt innfestingssystem og bordtype.",
-    internalNote:
-      "TRENGER BESLUTNING: referansepris på Camo/skjult innfesting — klips og skruer per m²."
-  },
-
   terraceThermowood: {
     id: "terraceThermowood",
     unit: "m²",
-    status: "pending",
-    components: [],
-    customerNote: "Materialpris avklares etter valgt tresort og dimensjon.",
+    status: "assumed",
+    components: [
+      {
+        materialId: "terrace_thermowood",
+        quantityPerUnit: STRUCTURAL_ASSUMPTIONS.deckingLmPerM2,
+        assumption: "8,4 lm termofuru per m² dekke"
+      }
+    ],
+    dynamic: terraceStructure,
+    customerNote: TERRACE_STRUCTURAL_CAVEAT,
     internalNote:
-      "TRENGER BESLUTNING: referansepris per lm for termofuru / Kebony / Accoya."
+      "THERMOWOOD_PRICE_PENDING — Royal-pris skal ikke brukes som erstatning."
   },
 
   terraceDemolition: {
@@ -267,7 +343,7 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
   facadeComplete: {
     id: "facadeComplete",
     unit: "m²",
-    status: "partial",
+    status: "assumed",
     components: [
       {
         materialId: "wind_barrier",
@@ -278,17 +354,15 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
         materialId: "batten_36x48_imp",
         quantityPerUnit: lmPerM2(STRUCTURAL_ASSUMPTIONS.battenSpacingM),
         assumption: `c/c ${STRUCTURAL_ASSUMPTIONS.battenSpacingM * 1000} mm lekteavstand`
-      }
-    ],
-    pending: [
+      },
       {
-        label: "Ny trekledning",
-        reason:
-          "Materialpris avhenger av valgt kledningsprofil, dimensjon og overflatebehandling."
+        materialId: "cladding_19x148_standing",
+        quantityPerUnit: STRUCTURAL_ASSUMPTIONS.claddingLmPerM2,
+        assumption: "stående kledning 19×148, 7,7 lm per m² fasade før svinn"
       }
     ],
     internalNote:
-      "TRENGER BESLUTNING: hvilken kledningsprofil er standard? Referansepris per lm eller m²."
+      "CLADDING_PRICE_PENDING — vindsperre og lekting er priset, kledningen mangler referansepris."
   },
 
   facadeDemolition: {
@@ -328,12 +402,17 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
   timberCladding: {
     id: "timberCladding",
     unit: "m²",
-    status: "pending",
-    components: [],
-    customerNote:
-      "Materialpris avklares etter valgt kledningsprofil og overflatebehandling.",
+    status: "assumed",
+    components: [
+      {
+        materialId: "cladding_19x148_standing",
+        quantityPerUnit: STRUCTURAL_ASSUMPTIONS.claddingLmPerM2,
+        assumption:
+          "stående kledning 19×148, 7,7 lm per m² fasade før svinn"
+      }
+    ],
     internalNote:
-      "TRENGER BESLUTNING: standard kledningsprofil mangler i materialdatabasen."
+      "CLADDING_PRICE_PENDING — forbruket er bestemt, referanseprisen mangler."
   },
 
   exteriorInsulation: {
@@ -509,7 +588,6 @@ export const MATERIAL_RECIPES: Record<string, MaterialRecipe> = {
  * av en. Brukes av testen som sjekker at enheter stemmer overens.
  */
 export const RECIPE_VARIANTS: Record<string, string> = {
-  terraceHiddenFastening: "terraceComplete",
   terraceThermowood: "terraceComplete"
 };
 
@@ -542,12 +620,13 @@ export type TerraceConstruction = {
   description: string;
   /** Multiplikator på arbeidstimer. 1.0 til vi har grunnlag for noe annet. */
   laborFactor: number;
-  /** lm 48×148 per m². `null` = ikke fastsatt ennå. */
-  joistLmPerM2: number | null;
-  /** lm bæredrager per m². `null` = ikke fastsatt ennå. */
-  beamLmPerM2: number | null;
-  /** Fundamentpunkter per m². `null` = ikke fastsatt ennå. */
-  foundationPointsPerM2: number | null;
+  /**
+   * Løpemeter 48×148 trykkimpregnert C24 per m², før svinn.
+   * ESTIMATORREFERANSE — inkluderer et konservativt tillegg for bjelker,
+   * kantbjelker og kubbing, og for normal variasjon i oppbygging.
+   * Ikke prosjektering. Se TERRACE_STRUCTURAL_CAVEAT.
+   */
+  joistLmPerM2: number;
 };
 
 export const TERRACE_CONSTRUCTIONS: Record<
@@ -559,29 +638,93 @@ export const TERRACE_CONSTRUCTIONS: Record<
     label: "Lav / markterrasse",
     description: "Ligger tett på bakken, ingen eller svært lav understøtting.",
     laborFactor: 1,
-    joistLmPerM2: null,
-    beamLmPerM2: null,
-    foundationPointsPerM2: null
+    joistLmPerM2: 3.0
   },
   standard: {
     key: "standard",
     label: "Normal terrasse",
     description: "Vanlig høyde med bjelkelag på punktfundament.",
     laborFactor: 1,
-    joistLmPerM2: null,
-    beamLmPerM2: null,
-    foundationPointsPerM2: null
+    joistLmPerM2: 3.5
   },
   elevated: {
     key: "elevated",
     label: "Høy / bærende terrasse",
     description: "Stor høyde over terreng, søyler og bæredragere.",
     laborFactor: 1,
-    joistLmPerM2: null,
-    beamLmPerM2: null,
-    foundationPointsPerM2: null
+    joistLmPerM2: 4.5
   }
 };
+
+/* ── INNFESTING ──────────────────────────────────────────────────── */
+
+export type TerraceFasteningKey = "visible" | "hidden";
+
+export const TERRACE_FASTENINGS: Record<
+  TerraceFasteningKey,
+  { key: TerraceFasteningKey; label: string; description: string }
+> = {
+  visible: {
+    key: "visible",
+    label: "Standard synlig innfesting",
+    description: "Terrasseskruer gjennom bordet."
+  },
+  hidden: {
+    key: "hidden",
+    label: "Skjult innfesting / CAMO",
+    description: "Klips eller skråskruing, ingen synlige skruehoder."
+  }
+};
+
+export const TERRACE_FASTENING_ORDER: TerraceFasteningKey[] = [
+  "visible",
+  "hidden"
+];
+
+/* ── FUNDAMENT ───────────────────────────────────────────────────── */
+
+/**
+ * Fundamentering skal ALDRI ligge skjult inne i en universell
+ * materialpris per m². Kalkulatoren kjenner ikke grunnforholdene.
+ */
+export type TerraceFoundationKey = "existing" | "simple" | "assess";
+
+export const TERRACE_FOUNDATIONS: Record<
+  TerraceFoundationKey,
+  {
+    key: TerraceFoundationKey;
+    label: string;
+    /** Navn på den separate posten, når den utløser en. */
+    separateItem?: string;
+    /** Kundevendt forklaring. */
+    note?: string;
+  }
+> = {
+  existing: {
+    key: "existing",
+    label: "Eksisterende fundament / ikke nødvendig"
+  },
+  simple: {
+    key: "simple",
+    label: "Enkelt fundament",
+    separateItem: "Enkelt fundament",
+    note:
+      "Fundamentet prises som egen post — antall og type punkter " +
+      "fastsettes ved befaring."
+  },
+  assess: {
+    key: "assess",
+    label: "Fundament må vurderes",
+    note:
+      "Fundamentering må vurderes etter grunnforhold, høyde og konstruksjon."
+  }
+};
+
+export const TERRACE_FOUNDATION_ORDER: TerraceFoundationKey[] = [
+  "existing",
+  "simple",
+  "assess"
+];
 
 export const TERRACE_CONSTRUCTION_ORDER: TerraceConstructionKey[] = [
   "ground",

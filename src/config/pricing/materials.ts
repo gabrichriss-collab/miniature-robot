@@ -26,6 +26,7 @@ export type MaterialUnit = "lm" | "m²" | "stk" | "kg" | "pk";
 
 export type MaterialCategory =
   | "Terrassebord"
+  | "Kledning"
   | "Konstruksjonsvirke"
   | "Festemidler"
   | "Vindsperre"
@@ -41,8 +42,13 @@ export type MaterialInput = {
   name: string;
   category: MaterialCategory;
   unit: MaterialUnit;
-  /** Veiledende utsalgspris inkl. mva, per `unit`. */
-  referenceRetailPriceInclVat: number;
+  /**
+   * Veiledende utsalgspris inkl. mva, per `unit`.
+   * `null` betyr at vi IKKE har en verifisert pris ennå. Da regnes
+   * materialet aldri inn i en sum — det vises som en navngitt post som
+   * avklares. Vi gjetter ikke.
+   */
+  referenceRetailPriceInclVat: number | null;
   /** Andel svinn (0.10 = 10 %). Faller tilbake på global standard. */
   wasteFactor?: number;
   /** Andel prisbuffer (0.10 = 10 %). Faller tilbake på global standard. */
@@ -51,25 +57,31 @@ export type MaterialInput = {
   lastUpdated: string;
   materialTier: MaterialQuality;
   sourceNotes: string;
+  /** Kundevendt forklaring når prisen mangler. */
+  pendingReason?: string;
 };
 
 export type Material = Omit<MaterialInput, "wasteFactor" | "protectionFactor"> & {
-  /** Avledet: referanseprisen normalisert til eks. mva. */
+  /** Avledet: referanseprisen normalisert til eks. mva. 0 når pris mangler. */
   referencePriceExVat: number;
   wasteFactor: number;
   protectionFactor: number;
+  /** True når vi mangler verifisert pris og derfor ikke kan prise posten. */
+  pricePending: boolean;
 };
 
 /** Normaliserer til eks. mva og fyller inn globale standardverdier. */
 function defineMaterial(m: MaterialInput): Material {
   const { wasteFactor, protectionFactor, ...rest } = m;
+  const price = m.referenceRetailPriceInclVat;
   return {
     ...rest,
     referencePriceExVat:
-      m.referenceRetailPriceInclVat / (1 + pricingSettings.vatRate),
+      price == null ? 0 : price / (1 + pricingSettings.vatRate),
     wasteFactor: wasteFactor ?? pricingSettings.defaultMaterialWaste,
     protectionFactor:
-      protectionFactor ?? pricingSettings.defaultMaterialProtection
+      protectionFactor ?? pricingSettings.defaultMaterialProtection,
+    pricePending: price == null
   };
 }
 
@@ -81,7 +93,7 @@ const PRICE_DATE = "2026-09-16";
 const MATERIAL_LIST: Material[] = [
   // ── TERRASSEBORD ──────────────────────────────────────────────────
   defineMaterial({
-    id: "decking_28x120_imp",
+    id: "terrace_standard_impregnated",
     name: "Terrassebord 28×120 trykkimpregnert",
     category: "Terrassebord",
     unit: "lm",
@@ -91,7 +103,7 @@ const MATERIAL_LIST: Material[] = [
     sourceNotes: RETAIL_SOURCE
   }),
   defineMaterial({
-    id: "decking_28x120_royal",
+    id: "terrace_royal",
     name: "Terrassebord 28×120 Royal",
     category: "Terrassebord",
     unit: "lm",
@@ -99,6 +111,20 @@ const MATERIAL_LIST: Material[] = [
     lastUpdated: PRICE_DATE,
     materialTier: "premium",
     sourceNotes: RETAIL_SOURCE
+  }),
+  defineMaterial({
+    id: "terrace_thermowood",
+    name: "Terrassebord termofuru",
+    category: "Terrassebord",
+    unit: "lm",
+    // THERMOWOOD_PRICE_PENDING — ingen verifisert norsk referansepris.
+    // Royal-prisen skal IKKE brukes som erstatning.
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "premium",
+    sourceNotes:
+      "Ingen verifisert referansepris lagt inn. Gjelder også Kebony og Accoya.",
+    pendingReason: "Materialpris beregnes etter valgt produkt."
   }),
 
   // ── KONSTRUKSJONSVIRKE ────────────────────────────────────────────
@@ -146,6 +172,35 @@ const MATERIAL_LIST: Material[] = [
     materialTier: "standard",
     sourceNotes:
       "330 kr per 1000 skruer inkl. mva. Konservativ norsk referansepris."
+  }),
+
+  defineMaterial({
+    id: "terrace_hidden_fastening",
+    name: "Skjult innfesting (CAMO eller tilsvarende)",
+    category: "Festemidler",
+    unit: "m²",
+    // CAMO_PRICE_PENDING — skal ikke prises med C4-skruepris.
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "premium",
+    sourceNotes: "Ingen verifisert referansepris på klips og skruer lagt inn.",
+    pendingReason: "Materialpris beregnes etter valgt innfestingssystem."
+  }),
+
+  // ── KLEDNING ──────────────────────────────────────────────────────
+  defineMaterial({
+    id: "cladding_19x148_standing",
+    name: "Stående kledning 19×148",
+    category: "Kledning",
+    unit: "lm",
+    // CLADDING_PRICE_PENDING — forbruket er bestemt (7,7 lm/m²), men
+    // referanseprisen mangler fortsatt.
+    referenceRetailPriceInclVat: null,
+    lastUpdated: PRICE_DATE,
+    materialTier: "standard",
+    sourceNotes: "Referanseprofil valgt, men referansepris ikke lagt inn ennå.",
+    pendingReason:
+      "Materialpris avklares etter valgt kledningsprodukt og overflatebehandling."
   }),
 
   // ── VINDSPERRE ────────────────────────────────────────────────────
