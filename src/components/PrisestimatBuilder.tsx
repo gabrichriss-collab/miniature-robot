@@ -1,177 +1,232 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  PRICE_DB,
-  UNITS,
-  NEEDS_SURVEY,
-  VAT_PERCENT,
-  DEFAULT_MARKUP_PERCENT,
-  type PriceEntry
-} from "@/data/pricing";
-import { findBestMatch } from "@/lib/fuzzyMatch";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { findBestMatch } from "@/lib/fuzzyMatch";
+import { formatNok, formatQty } from "@/lib/pricing/format";
 import {
-  calcTotals,
-  formatNok,
-  laborLinesForRows,
-  materialLinesForRows,
-  HOURLY_RATE_EX_VAT,
-  VAT_RATE,
-  type EstimateRow,
-  type EstimateInput,
-  type EstimateTotals
-} from "@/lib/estimateCalc";
-import { formatHours, formatQty } from "@/lib/pricing/format";
-import { laborHoursForItem } from "@/config/pricing";
-import {
+  CEILING_TYPE_LABELS,
+  CEILING_TYPE_ORDER,
+  CEILING_WORK_ITEM,
   DIFFICULTY_LABELS,
+  DIFFICULTY_ORDER,
   ESTIMATE_DISCLAIMER,
   ESTIMATE_DISCLAIMER_CLOSING,
-  MATERIAL_TIER_LABELS,
-  MATERIALS_LAST_UPDATED,
-  TERRACE_CONSTRUCTIONS,
-  TERRACE_CONSTRUCTION_ORDER,
-  TERRACE_FASTENINGS,
-  TERRACE_FASTENING_ORDER,
-  TERRACE_FOUNDATIONS,
-  TERRACE_FOUNDATION_ORDER,
-  TERRACE_STRUCTURAL_CAVEAT,
-  TERRACE_WORK_ITEMS,
-  CEILING_TYPES,
-  CEILING_TYPE_ORDER,
-  PARTITION_SCOPES,
-  PARTITION_SCOPE_ORDER,
-  INSULATION_OPTIONS,
+  INSULATION_OPTION_LABELS,
   INSULATION_OPTION_ORDER,
+  MATERIAL_TIER_LABELS,
+  PARTITION_SCOPE_LABELS,
+  PARTITION_SCOPE_ORDER,
+  TERRACE_CONSTRUCTION_LABELS,
+  TERRACE_CONSTRUCTION_ORDER,
+  TERRACE_FASTENING_LABELS,
+  TERRACE_FASTENING_ORDER,
+  TERRACE_FOUNDATION_LABELS,
+  TERRACE_FOUNDATION_ORDER,
+  UNITS,
+  VAT_PERCENT_DISPLAY,
+  type CatalogueItem,
+  type CeilingTypeKey,
   type DifficultyKey,
-  type MaterialTier
-} from "@/config/pricing";
+  type InsulationOptionKey,
+  type MaterialTier,
+  type PartitionScopeKey,
+  type TerraceConstructionKey,
+  type TerraceFasteningKey,
+  type TerraceFoundationKey
+} from "@/lib/pricing/public";
+import type {
+  CustomerEstimateLine,
+  CustomerEstimateSummary,
+  EstimateRequest,
+  EstimateRequestLine,
+  EstimateResponse
+} from "@/lib/pricing/contract";
 
 /**
- * Prisestimat-bygger — line-item verktøy i tråd med hvordan norske
- * håndverkere bygger tilbud i Svenn/Cordel/EG SmartKalk. Utseendet matcher
- * TØMRER KAWICHE sitt design (bone, ink, Sorts Mill Goudy).
+ * Prisestimat-byggeren.
+ *
+ * VIKTIG ARKITEKTURVALG: denne komponenten kjenner INGEN priser. Den
+ * samler kundens valg, sender dem til /api/estimate og viser svaret.
+ * Timerate, produktivitet, materialpriser, oppskrifter, svinn og
+ * prisbuffer ligger bak `import "server-only"` i src/server/pricing og
+ * havner aldri i nettleserpakka.
+ *
+ * Katalogen komponenten får inn er allerede vasket: navn, enhet,
+ * kategori, søkeord og to boolske flagg. Ingen kroner, ingen timer.
  */
-export default function PrisestimatBuilder() {
-  const [rows, setRows] = useState<EstimateRow[]>([]);
+
+/** Hvilke valggrupper en post bruker. Avledet av ID, ikke av priser. */
+const TERRACE_IDS_HINT = ["terrasse", "platting", "terrassebord"];
+
+type Row = {
+  id: string;
+  /** Fritekst kunden har skrevet. */
+  name: string;
+  /** Valgt katalogpost, når vi har truffet en. */
+  catalogueId?: string;
+  matchName?: string;
+  note?: string;
+  unit: string;
+  qty: string;
+  optionGroups: string[];
+  difficulty?: DifficultyKey;
+  terraceConstruction?: TerraceConstructionKey;
+  terraceFastening?: TerraceFasteningKey;
+  terraceFoundation?: TerraceFoundationKey;
+  ceilingType?: CeilingTypeKey;
+  partitionScope?: PartitionScopeKey;
+  facadeInsulation?: InsulationOptionKey;
+};
+
+const TIER_ORDER: MaterialTier[] = ["none", "standard", "premium"];
+
+/** Bygger API-forespørselen. Sender valg — aldri priser. */
+function toRequest(rows: Row[], materialTier: MaterialTier): EstimateRequest {
+  const lines: EstimateRequestLine[] = rows
+    .filter((r) => r.catalogueId || r.name)
+    .map((r) => ({
+      id: r.id,
+      catalogueId: r.catalogueId,
+      description: r.name || undefined,
+      quantity: Number(String(r.qty).replace(",", ".")) || 0,
+      unit: r.unit,
+      difficulty: r.difficulty,
+      terraceConstruction: r.terraceConstruction,
+      terraceFastening: r.terraceFastening,
+      terraceFoundation: r.terraceFoundation,
+      ceilingType: r.ceilingType,
+      partitionScope: r.partitionScope,
+      facadeInsulation: r.facadeInsulation
+    }));
+  return { lines, materialTier };
+}
+
+export default function PrisestimatBuilder({
+  catalogue
+}: {
+  catalogue: CatalogueItem[];
+}) {
+  const [rows, setRows] = useState<Row[]>([]);
   const [projectName, setProjectName] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerPostal, setCustomerPostal] = useState("");
   const [message, setMessage] = useState("");
-  const [mvaRate] = useState(VAT_PERCENT);
-  const [markup] = useState(DEFAULT_MARKUP_PERCENT);
   const [materialTier, setMaterialTier] = useState<MaterialTier>("none");
+  const [estimate, setEstimate] = useState<CustomerEstimateSummary | null>(null);
+  const [calcError, setCalcError] = useState("");
   const [showSummary, setShowSummary] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
   const [sending, setSending] = useState(false);
-  const [feedback, setFeedback] = useState<string>("");
+  const [feedback, setFeedback] = useState("");
 
-  const addEmptyRow = useCallback(() => {
-    setRows((prev) => [
-      ...prev,
-      {
-        id: Date.now() + Math.random(),
-        name: "",
-        unit: "m²",
-        qty: "",
-        price: "",
-        note: "",
-        matched: false,
-        matchName: ""
+  const request = useMemo(
+    () => toRequest(rows, materialTier),
+    [rows, materialTier]
+  );
+
+  /**
+   * Henter estimatet fra serveren. Debouncet, så vi ikke fyrer av et kall
+   * per tastetrykk — både for ytelse og for å holde takstgrensa i API-et
+   * godt klar av en vanlig kunde.
+   */
+  useEffect(() => {
+    if (request.lines.length === 0) {
+      setEstimate(null);
+      setCalcError("");
+      return;
+    }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const res = await fetch("/api/estimate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(request),
+          signal: controller.signal
+        });
+        const data: EstimateResponse = await res.json();
+        if (data.ok) {
+          setEstimate(data.estimate);
+          setCalcError("");
+        } else {
+          setCalcError(data.error);
+        }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          setCalcError("Kunne ikke hente estimatet akkurat nå.");
+        }
       }
-    ]);
-  }, []);
+    }, 350);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [request]);
 
-  const addFromDB = useCallback((entry: PriceEntry) => {
+  const addRow = useCallback((item?: CatalogueItem) => {
     setRows((prev) => [
       ...prev,
       {
-        id: Date.now() + Math.random(),
-        name: entry.name,
-        unit: entry.unit,
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: item?.name ?? "",
+        catalogueId: item?.id,
+        matchName: item?.name,
+        note: item?.note,
+        unit: item?.unit ?? "m²",
         qty: "",
-        price: entry.price,
-        note: entry.note ?? "",
-        matched: true,
-        matchName: entry.name,
-        workItemKey: entry.workItemKey,
-        materialRecipeKey: entry.materialRecipeKey,
-        difficulty: "normal"
+        optionGroups: item?.optionGroups ?? [],
+        difficulty: item ? "normal" : undefined
       }
     ]);
     setShowBrowse(false);
   }, []);
 
   const updateRow = useCallback(
-    (id: EstimateRow["id"], field: keyof EstimateRow, value: string) => {
+    (id: string, field: keyof Row, value: string) => {
       setRows((prev) =>
         prev.map((r) => {
           if (r.id !== id) return r;
-          const updated: EstimateRow = { ...r, [field]: value };
+          const next: Row = { ...r, [field]: value } as Row;
           if (field === "name") {
             if (value.length >= 2) {
-              const match = findBestMatch(value);
+              const match = findBestMatch(value, catalogue);
               if (match && match.name !== r.matchName) {
-                updated.price = match.price;
-                updated.unit = match.unit;
-                updated.note = match.note ?? "";
-                updated.matched = true;
-                updated.matchName = match.name;
-                updated.workItemKey = match.workItemKey;
-                updated.materialRecipeKey = match.materialRecipeKey;
-                updated.difficulty = updated.difficulty ?? "normal";
+                next.catalogueId = match.id;
+                next.matchName = match.name;
+                next.unit = match.unit;
+                next.note = match.note;
+                next.optionGroups = match.optionGroups;
+                next.difficulty = next.difficulty ?? "normal";
               }
             } else {
-              updated.matched = false;
-              updated.matchName = "";
-              updated.workItemKey = undefined;
-              updated.materialRecipeKey = undefined;
+              next.catalogueId = undefined;
+              next.matchName = undefined;
+              next.note = undefined;
+              next.optionGroups = [];
             }
           }
-          return updated;
+          return next;
         })
       );
     },
-    []
+    [catalogue]
   );
 
-  const deleteRow = useCallback((id: EstimateRow["id"]) => {
+  const deleteRow = useCallback((id: string) => {
     setRows((prev) => prev.filter((r) => r.id !== id));
   }, []);
 
-  const input: EstimateInput = useMemo(
-    () => ({
-      projectName,
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerPostal,
-      message,
-      rows,
-      mvaRate,
-      markup,
-      materialTier
-    }),
-    [
-      projectName,
-      customerName,
-      customerEmail,
-      customerPhone,
-      customerPostal,
-      message,
-      rows,
-      mvaRate,
-      markup,
-      materialTier
-    ]
-  );
+  const lineById = useMemo(() => {
+    const m = new Map<string, CustomerEstimateLine>();
+    estimate?.lines.forEach((l) => m.set(l.id, l));
+    return m;
+  }, [estimate]);
 
-  const totals = useMemo(() => calcTotals(input), [input]);
-
-  const canSubmit = rows.length > 0 && customerName && customerEmail;
+  const canSubmit = rows.length > 0 && customerName !== "" && customerEmail !== "";
 
   const downloadPdf = useCallback(async () => {
     setSending(true);
@@ -180,35 +235,49 @@ export default function PrisestimatBuilder() {
       const res = await fetch("/api/prisestimat/pdf", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(input)
+        body: JSON.stringify({
+          projectName,
+          customerName,
+          customerEmail,
+          customerPhone,
+          customerPostal,
+          message,
+          estimateRequest: request
+        })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error(String(res.status));
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const safeName = (projectName || "prisestimat")
+      a.download = `prisestimat-${(projectName || "prisestimat")
         .replace(/[^a-z0-9æøå\-_ ]/gi, "")
         .replace(/\s+/g, "-")
-        .toLowerCase();
-      a.download = `prisestimat-${safeName}.pdf`;
+        .toLowerCase()}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
       setFeedback("PDF lastet ned. Vi har også fått en kopi.");
-    } catch (err) {
+    } catch {
       setFeedback("Kunne ikke generere PDF. Prøv igjen eller ta kontakt direkte.");
     } finally {
       setSending(false);
     }
-  }, [input, projectName]);
+  }, [
+    request,
+    projectName,
+    customerName,
+    customerEmail,
+    customerPhone,
+    customerPostal,
+    message
+  ]);
 
   return (
     <div className="mx-auto max-w-[var(--page-max)] px-6 pb-40 md:px-10">
       <div className="rule mb-14" />
 
-      {/* Customer + project block */}
       <div className="grid gap-10 md:grid-cols-12">
         <div className="md:col-span-4">
           <p className="eyebrow text-ink/60">Prosjekt</p>
@@ -225,51 +294,16 @@ export default function PrisestimatBuilder() {
 
         <div className="md:col-span-8">
           <div className="grid gap-6 md:grid-cols-2">
-            <Field
-              label="Prosjektnavn"
-              placeholder="F.eks. Tilbygg Uglåsvegen"
-              value={projectName}
-              onChange={setProjectName}
-            />
-            <Field
-              label="Navn *"
-              placeholder="Ditt navn"
-              value={customerName}
-              onChange={setCustomerName}
-              required
-            />
-            <Field
-              label="E-post *"
-              type="email"
-              placeholder="deg@epost.no"
-              value={customerEmail}
-              onChange={setCustomerEmail}
-              required
-            />
-            <Field
-              label="Telefon"
-              type="tel"
-              placeholder="+47 ..."
-              value={customerPhone}
-              onChange={setCustomerPhone}
-            />
-            <Field
-              label="Postnummer"
-              placeholder="5957"
-              value={customerPostal}
-              onChange={setCustomerPostal}
-            />
-            <Field
-              label="Litt om prosjektet"
-              placeholder="Beskrivelse, plassering, tidsplan"
-              value={message}
-              onChange={setMessage}
-            />
+            <Field label="Prosjektnavn" placeholder="F.eks. Tilbygg Uglåsvegen" value={projectName} onChange={setProjectName} />
+            <Field label="Navn *" placeholder="Ditt navn" value={customerName} onChange={setCustomerName} required />
+            <Field label="E-post *" type="email" placeholder="deg@epost.no" value={customerEmail} onChange={setCustomerEmail} required />
+            <Field label="Telefon" type="tel" placeholder="+47 ..." value={customerPhone} onChange={setCustomerPhone} />
+            <Field label="Postnummer" placeholder="5957" value={customerPostal} onChange={setCustomerPostal} />
+            <Field label="Litt om prosjektet" placeholder="Beskrivelse, plassering, tidsplan" value={message} onChange={setMessage} />
           </div>
         </div>
       </div>
 
-      {/* Actions bar */}
       <div className="mt-16 flex flex-wrap items-center justify-between gap-4">
         <p className="eyebrow text-ink/60">
           {rows.length === 0
@@ -286,7 +320,7 @@ export default function PrisestimatBuilder() {
           </button>
           <button
             type="button"
-            onClick={addEmptyRow}
+            onClick={() => addRow()}
             className="eyebrow border border-ink px-5 py-3 transition-colors hover:bg-ink hover:text-bone"
           >
             + Ny post
@@ -294,26 +328,21 @@ export default function PrisestimatBuilder() {
         </div>
       </div>
 
-      {/* Rows table */}
       {rows.length === 0 ? (
         <div className="mt-10 border-y border-ink/10 py-20 text-center">
-          <p className="headline text-3xl md:text-4xl">
-            Bare begynn å skrive.
-          </p>
-          <p className="mt-4 max-w-md mx-auto text-ink/70">
+          <p className="headline text-3xl md:text-4xl">Bare begynn å skrive.</p>
+          <p className="mx-auto mt-4 max-w-md text-ink/70">
             Skriv en beskrivelse i første post — <em>«terrasse 36 m²»</em>,{" "}
             <em>«nytt vindu»</em>, <em>«ny kledning»</em> — så tar vi resten.
           </p>
         </div>
       ) : (
         <div className="mt-10 border-y border-ink/15">
-          {/* Table header */}
-          <div className="hidden md:grid grid-cols-[minmax(0,1fr)_4.5rem_5rem_6rem_7rem_2rem] items-center gap-3 border-b border-ink/10 py-3 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_7rem_8rem_2.5rem] lg:gap-4">
+          <div className="hidden md:grid grid-cols-[minmax(0,1fr)_4.5rem_5rem_7rem_2rem] items-center gap-3 border-b border-ink/10 py-3 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_8rem_2.5rem] lg:gap-4">
             <span className="eyebrow text-ink/50">Hva skal gjøres</span>
-            <span className="eyebrow text-ink/50 text-center">Enhet</span>
-            <span className="eyebrow text-ink/50 text-right">Mengde</span>
-            <span className="eyebrow text-ink/50 text-right">Timer</span>
-            <span className="eyebrow text-ink/50 text-right">Arbeid</span>
+            <span className="eyebrow text-center text-ink/50">Enhet</span>
+            <span className="eyebrow text-right text-ink/50">Mengde</span>
+            <span className="eyebrow text-right text-ink/50">Arbeid</span>
             <span aria-hidden />
           </div>
 
@@ -322,6 +351,7 @@ export default function PrisestimatBuilder() {
               key={row.id}
               row={row}
               index={i}
+              line={lineById.get(row.id)}
               updateRow={updateRow}
               deleteRow={deleteRow}
             />
@@ -329,16 +359,17 @@ export default function PrisestimatBuilder() {
         </div>
       )}
 
-      {/* Prisestimat — arbeid vs. arbeid + materialer */}
       {rows.length > 0 && (
         <EstimatePanel
           rows={rows}
-          input={input}
-          totals={totals}
+          estimate={estimate}
+          calcError={calcError}
           materialTier={materialTier}
           onSelectTier={setMaterialTier}
           projectName={projectName}
-          canSubmit={Boolean(canSubmit)}
+          message={message}
+          customerPostal={customerPostal}
+          canSubmit={canSubmit}
           sending={sending}
           feedback={feedback}
           onDownload={downloadPdf}
@@ -346,17 +377,20 @@ export default function PrisestimatBuilder() {
         />
       )}
 
-      {/* Modals */}
       {showBrowse && (
         <BrowseModal
-          onSelect={addFromDB}
+          catalogue={catalogue}
+          onSelect={addRow}
           onClose={() => setShowBrowse(false)}
         />
       )}
       {showSummary && (
         <SummaryModal
-          input={input}
-          totals={totals}
+          projectName={projectName}
+          customerName={customerName}
+          customerEmail={customerEmail}
+          rows={rows}
+          estimate={estimate}
           onClose={() => setShowSummary(false)}
         />
       )}
@@ -364,79 +398,72 @@ export default function PrisestimatBuilder() {
   );
 }
 
-
 /* ─────────────────── Prisestimat-panel ─────────────────── */
 
-const TIER_ORDER: MaterialTier[] = ["none", "standard", "premium"];
-
-/**
- * Sammenligningen kunden faktisk leser: KUN ARBEID mot ARBEID +
- * MATERIALER. Kortene ER velgeren — man trykker på det nivået man vil se,
- * i stedet for å måtte forholde seg til både radioknapper og en tabell.
- * Stables i én kolonne på mobil.
- */
 function EstimatePanel({
   rows,
-  input,
-  totals,
+  estimate,
+  calcError,
   materialTier,
   onSelectTier,
   projectName,
+  message,
+  customerPostal,
   canSubmit,
   sending,
   feedback,
   onDownload,
   onShowSummary
 }: {
-  rows: EstimateRow[];
-  input: EstimateInput;
-  totals: EstimateTotals;
+  rows: Row[];
+  estimate: CustomerEstimateSummary | null;
+  calcError: string;
   materialTier: MaterialTier;
   onSelectTier: (t: MaterialTier) => void;
   projectName: string;
+  message: string;
+  customerPostal: string;
   canSubmit: boolean;
   sending: boolean;
   feedback: string;
   onDownload: () => void;
   onShowSummary: () => void;
 }) {
-  const { estimate } = totals;
-  const visibleTiers = TIER_ORDER.filter(
-    (t) => estimate.scenarios[t].available
-  );
-  const active = estimate.scenarios[totals.materialTier];
-  const materialLines = materialLinesForRows(rows, totals.materialTier);
-  const laborLines = laborLinesForRows(rows);
-  const hasTerraceLine = rows.some(
-    (r) =>
-      (TERRACE_WORK_ITEMS as readonly string[]).includes(
-        String(r.workItemKey)
-      ) && Number(r.qty) > 0
-  );
+  if (calcError) {
+    return (
+      <p className="mt-14 border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
+        {calcError}
+      </p>
+    );
+  }
+  if (!estimate) {
+    return (
+      <p className="mt-14 eyebrow text-ink/50">Beregner …</p>
+    );
+  }
+
+  const visibleTiers = TIER_ORDER.filter((t) => estimate.scenarios[t].available);
+  const active = estimate.scenarios[estimate.selectedTier];
 
   return (
     <div className="mt-14 grid gap-10 md:grid-cols-12">
       <div className="md:col-span-4">
         <p className="eyebrow text-ink/60">Ditt prisestimat</p>
-        <h2 className="headline mt-4 text-3xl md:text-4xl">
-          Hva vil det koste?
-        </h2>
+        <h2 className="headline mt-4 text-3xl md:text-4xl">Hva vil det koste?</h2>
         <p className="mt-6 max-w-sm text-sm text-ink/70">
-          Arbeidet er regnet ut fra{" "}
-          {formatHours(totals.laborHours)} arbeidstimer ×{" "}
-          {formatNok(HOURLY_RATE_EX_VAT)} kr/time eks. mva. Materialene
-          regnes hver for seg, med veiledende norske referansepriser.
+          Arbeidet er beregnet ut fra prosjektets størrelse og valgt
+          utførelse. Materialene regnes hver for seg, med veiledende norske
+          referansepriser.
         </p>
       </div>
 
       <div className="md:col-span-8">
-        {/* Materialvalg — kortene er velgeren */}
         <fieldset>
           <legend className="eyebrow mb-4 text-ink/60">Materialer</legend>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {visibleTiers.map((tier) => {
               const s = estimate.scenarios[tier];
-              const selected = tier === totals.materialTier;
+              const selected = tier === estimate.selectedTier;
               const incomplete = tier !== "none" && !s.materialEstimateComplete;
               return (
                 <button
@@ -450,43 +477,22 @@ function EstimatePanel({
                       : "border-ink/20 text-ink hover:border-ink/50"
                   }`}
                 >
-                  <span
-                    className={`eyebrow block ${
-                      selected ? "text-bone/70" : "text-ink/60"
-                    }`}
-                  >
+                  <span className={`eyebrow block ${selected ? "text-bone/70" : "text-ink/60"}`}>
                     {s.label}
                   </span>
-                  {/* Privatkunder betaler inkl. mva, så det tallet står
-                      størst. «Fra» når noe er upriset — summen er et
-                      minimum, ikke et ferdig sammenligningstall. */}
                   <span className="headline mt-4 block text-2xl md:text-3xl">
                     {incomplete ? "Fra " : ""}
                     {formatNok(s.totalIncVat)} kr
                   </span>
-                  <span
-                    className={`mt-1 block text-xs ${
-                      selected ? "text-bone/70" : "text-ink/60"
-                    }`}
-                  >
+                  <span className={`mt-1 block text-xs ${selected ? "text-bone/70" : "text-ink/60"}`}>
                     inkl. mva
                   </span>
-                  <span
-                    className={`mt-3 block text-sm ${
-                      selected ? "text-bone/85" : "text-ink/75"
-                    }`}
-                  >
+                  <span className={`mt-3 block text-sm ${selected ? "text-bone/85" : "text-ink/75"}`}>
                     {incomplete ? "Fra " : ""}
                     {formatNok(s.subtotalExVat)} kr eks. mva
                   </span>
-                  {/* REGEL: en ufullstendig materialkurv skal aldri kunne
-                      leses som en ferdig materialpris. */}
-                  {tier !== "none" && !s.materialEstimateComplete ? (
-                    <span
-                      className={`mt-3 block text-xs ${
-                        selected ? "text-bone/70" : "text-ink/55"
-                      }`}
-                    >
+                  {incomplete ? (
+                    <span className={`mt-3 block text-xs ${selected ? "text-bone/70" : "text-ink/55"}`}>
                       {s.materialExVat > 0
                         ? "Delvis materialestimat — minstesum, deler av materialene må avklares"
                         : "Materialpris må avklares"}
@@ -505,178 +511,130 @@ function EstimatePanel({
           </p>
         ) : null}
 
-        {/* Veiledende spenn for valgt nivå */}
         <div className="mt-8 border-t border-ink pt-6">
           <p className="eyebrow mb-2 text-ink/60">
             Veiledende estimat · {active.label}
-            {totals.materialTier !== "none" && !active.materialEstimateComplete
+            {estimate.selectedTier !== "none" && !active.materialEstimateComplete
               ? " · delvis materialestimat"
               : ""}
           </p>
           <div className="flex flex-wrap items-baseline justify-between gap-4">
             <span className="headline text-3xl md:text-5xl">
-              {formatNok(totals.range.low)}
+              {formatNok(active.range.low)}
               <span className="text-ink/40"> – </span>
-              {formatNok(totals.range.high)} kr
+              {formatNok(active.range.high)} kr
             </span>
             <span className="text-sm text-ink/60">inkl. mva</span>
           </div>
         </div>
 
-        {/* Poster vi bevisst ikke priser */}
         {estimate.hasPendingLabor ? (
           <p className="mt-4 border-l-2 border-ink/25 pl-4 text-sm text-ink/70">
-            En eller flere poster kan ikke beregnes automatisk ennå og er
-            ikke med i summen. De er merket i lista over.
+            En eller flere poster kan ikke beregnes automatisk ennå og er ikke
+            med i summen. De er merket i lista over.
           </p>
         ) : null}
 
-        {estimate.unpricedMaterials.length > 0 &&
-        totals.materialTier !== "none" ? (
+        {estimate.unpriced.length > 0 && estimate.selectedTier !== "none" ? (
           <div className="mt-6 border border-dashed border-ink/20 p-4 text-sm text-ink/70">
             <p className="eyebrow mb-2 text-ink/60">Avklares separat</p>
             <ul className="space-y-1">
-              {estimate.unpricedMaterials.map((u) => (
-                <li key={u.workItemKey}>
-                  <span className="font-medium text-ink/85">{u.label}</span> —{" "}
-                  {u.note}
+              {estimate.unpriced.map((u) => (
+                <li key={u.label}>
+                  <span className="font-medium text-ink/85">{u.label}</span> — {u.note}
                 </li>
               ))}
             </ul>
           </div>
         ) : null}
 
-        {/* Detaljert beregning */}
-        {totals.laborHours > 0 && (
-          <details className="mt-8 border border-ink/15">
-            <summary className="cursor-pointer px-4 py-3 eyebrow text-ink/70">
-              Se beregning
-            </summary>
-            <div className="space-y-8 border-t border-ink/10 p-4 text-sm text-ink/75 md:p-6">
-              {/* ARBEID */}
+        {/* Detaljert beregning.
+            Viser HVA som inngår og hva hver del koster — ikke formelen bak.
+            Timeforbruk, enhetspriser, forbruksmengder, svinn og prisbuffer
+            forlater aldri serveren. */}
+        <details className="mt-8 border border-ink/15">
+          <summary className="cursor-pointer px-4 py-3 eyebrow text-ink/70">
+            Se beregning
+          </summary>
+          <div className="space-y-8 border-t border-ink/10 p-4 text-sm text-ink/75 md:p-6">
+            <section>
+              <p className="eyebrow mb-3 text-ink/60">Arbeid</p>
+              {estimate.lines.map((l) => (
+                <BreakdownRow
+                  key={`labor-${l.id}`}
+                  left={
+                    <>
+                      {l.label}
+                      <span className="block text-xs text-ink/55">
+                        {formatQty(l.quantity)} {l.unit}
+                        {l.chosenOptions.length > 0
+                          ? ` · ${l.chosenOptions.join(" · ")}`
+                          : ""}
+                      </span>
+                    </>
+                  }
+                  right={`${formatNok(l.laborExVat)} kr`}
+                />
+              ))}
+              <BreakdownRow
+                emphasis
+                left="Sum arbeid"
+                right={`${formatNok(active.laborExVat)} kr eks. mva`}
+              />
+            </section>
+
+            {estimate.selectedTier !== "none" ? (
               <section>
-                <p className="eyebrow mb-3 text-ink/60">Arbeid</p>
-                {laborLines.map((l) => (
-                  <BreakdownRow
-                    key={`labor-${l.workItemKey}-${l.label}`}
-                    left={
-                      <>
-                        {l.label}
-                        <span className="block text-xs text-ink/55">
-                          {formatQty(l.quantity)} {l.unit} ×{" "}
-                          {formatHours(l.laborHoursPerUnit)} t/{l.unit}
-                          {l.difficultyFactor !== 1
-                            ? ` × ${l.difficultyFactor} (${DIFFICULTY_LABELS[l.difficulty]})`
-                            : ""}{" "}
-                          = {formatHours(l.totalLaborHours)} timer
-                        </span>
-                      </>
-                    }
-                    right={`${formatNok(l.laborPriceExVat)} kr`}
-                  />
+                <p className="eyebrow mb-3 text-ink/60">Materialer</p>
+                {estimate.lines.map((l) => (
+                  <div key={`mat-${l.id}`} className="mb-3">
+                    <BreakdownRow
+                      left={l.label}
+                      right={
+                        l.materialExVat > 0
+                          ? `${formatNok(l.materialExVat)} kr`
+                          : "avklares"
+                      }
+                    />
+                    {l.notIncluded.length > 0 ? (
+                      <p className="mt-1 text-xs text-ink/55">
+                        Ikke medregnet: {l.notIncluded.join(", ")} — avklares ved
+                        befaring.
+                      </p>
+                    ) : null}
+                  </div>
                 ))}
                 <BreakdownRow
                   emphasis
-                  left={`${formatHours(totals.laborHours)} timer × ${formatNok(
-                    HOURLY_RATE_EX_VAT
-                  )} kr/time`}
-                  right={`${formatNok(totals.laborExVat)} kr eks. mva`}
+                  left="Sum materialer"
+                  right={`${formatNok(active.materialExVat)} kr eks. mva`}
                 />
+                <p className="mt-3 text-xs text-ink/55">
+                  Materialprisene er veiledende norske referansepriser, bevisst
+                  satt konservativt slik at estimatet ikke havner for lavt.
+                  Svinn og prisreserve er regnet med.
+                </p>
               </section>
+            ) : null}
 
-              {/* MATERIALER */}
-              {totals.materialTier !== "none" ? (
-                <section>
-                  <p className="eyebrow mb-3 text-ink/60">Materialer</p>
-                  {materialLines
-                    .filter((m) => m.components.length > 0)
-                    .map((m) => (
-                      <div key={`mat-${m.workItemKey}`} className="mb-4">
-                        <p className="text-ink/85">{m.label}</p>
-                        {m.components.map((c) => (
-                          <BreakdownRow
-                            key={`${m.workItemKey}-${c.materialId}`}
-                            left={
-                              <>
-                                {c.name}
-                                <span className="block text-xs text-ink/55">
-                                  {formatQty(c.grossQuantity)} {c.unit} ×{" "}
-                                  {c.referencePriceExVat.toLocaleString("nb-NO", {
-                                    maximumFractionDigits: 2
-                                  })}{" "}
-                                  kr/{c.unit} eks. mva
-                                  {c.assumption ? ` · ${c.assumption}` : ""}
-                                </span>
-                              </>
-                            }
-                            right={`${formatNok(c.totalCostExVat)} kr`}
-                          />
-                        ))}
-                        {m.pending.length > 0 ? (
-                          <p className="mt-2 text-xs text-ink/55">
-                            Ikke medregnet:{" "}
-                            {m.pending.map((p) => p.label).join(", ")} —
-                            avklares ved befaring.
-                          </p>
-                        ) : null}
-                      </div>
-                    ))}
-                  <BreakdownRow
-                    left="Herav materialsvinn"
-                    right={`${formatNok(totals.materialWasteExVat)} kr`}
-                  />
-                  <BreakdownRow
-                    left="Herav materialpris-buffer"
-                    right={`${formatNok(totals.materialProtectionExVat)} kr`}
-                  />
-                  {totals.materialSmallConsumablesExVat > 0 ? (
-                    <BreakdownRow
-                      left="Småforbruk"
-                      right={`${formatNok(
-                        totals.materialSmallConsumablesExVat
-                      )} kr`}
-                    />
-                  ) : null}
-                  <BreakdownRow
-                    emphasis
-                    left="Sum materialer"
-                    right={`${formatNok(totals.materialExVat)} kr eks. mva`}
-                  />
-                  {hasTerraceLine ? (
-                    <p className="mt-3 text-xs text-ink/55">
-                      {TERRACE_STRUCTURAL_CAVEAT}
-                    </p>
-                  ) : null}
-                  <p className="mt-3 text-xs text-ink/55">
-                    Materialprisene er veiledende norske referansepriser per{" "}
-                    {MATERIALS_LAST_UPDATED}, bevisst satt konservativt slik at
-                    estimatet ikke havner for lavt. Svinn og prisreserve er
-                    regnet med.
-                  </p>
-                </section>
-              ) : null}
+            <section className="border-t border-ink/20 pt-4">
+              <BreakdownRow
+                left="Sum eks. mva"
+                right={`${formatNok(active.subtotalExVat)} kr`}
+              />
+              <BreakdownRow
+                left={`MVA (${estimate.vatPercent} %)`}
+                right={`${formatNok(active.vat)} kr`}
+              />
+              <BreakdownRow
+                emphasis
+                left="Totalt inkl. mva"
+                right={`${formatNok(active.totalIncVat)} kr`}
+              />
+            </section>
+          </div>
+        </details>
 
-              {/* TOTALT */}
-              <section className="border-t border-ink/20 pt-4">
-                <BreakdownRow
-                  left="Sum eks. mva"
-                  right={`${formatNok(totals.subtotal)} kr`}
-                />
-                <BreakdownRow
-                  left={`MVA (${Math.round(VAT_RATE * 100)} %)`}
-                  right={`${formatNok(totals.mvaAmount)} kr`}
-                />
-                <BreakdownRow
-                  emphasis
-                  left="Totalt inkl. mva"
-                  right={`${formatNok(totals.total)} kr`}
-                />
-              </section>
-            </div>
-          </details>
-        )}
-
-        {/* Forbehold */}
         <p className="mt-8 max-w-2xl border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
           <strong className="font-semibold">
             Veiledende prisestimat — ikke bindende tilbud.
@@ -684,7 +642,6 @@ function EstimatePanel({
           {ESTIMATE_DISCLAIMER} {ESTIMATE_DISCLAIMER_CLOSING}
         </p>
 
-        {/* Videre til henvendelse — alt regnestykket sendes med */}
         <div className="mt-10 border border-ink/20 p-6 md:p-8">
           <p className="eyebrow mb-3 text-ink/60">Neste steg</p>
           <p className="headline text-2xl md:text-3xl">
@@ -699,21 +656,17 @@ function EstimatePanel({
             href={`/kontakt?type=tilbud&tjeneste=${encodeURIComponent(
               projectName || "Prisestimat"
             )}&melding=${encodeURIComponent(
-              buildEnquiryPrefill({ input, totals })
+              buildEnquiryPrefill({ rows, estimate, projectName, message, customerPostal })
             )}`}
             className="group mt-6 inline-flex items-center gap-3 border border-ink bg-ink px-7 py-4 eyebrow text-bone press hover:bg-transparent hover:text-ink"
           >
             Be om befaring
-            <span
-              aria-hidden
-              className="transition-transform duration-500 ease-swoop group-hover:translate-x-1"
-            >
+            <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
               →
             </span>
           </Link>
         </div>
 
-        {/* Last ned / sammendrag */}
         <div className="mt-10 flex flex-wrap items-center gap-6">
           <button
             type="button"
@@ -722,10 +675,7 @@ function EstimatePanel({
             className="group inline-flex items-center gap-4 border border-ink bg-ink px-8 py-5 eyebrow text-bone press hover:bg-transparent hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bone"
           >
             {sending ? "Genererer PDF…" : "Last ned prisestimat"}
-            <span
-              aria-hidden
-              className="transition-transform group-hover:translate-x-1"
-            >
+            <span aria-hidden className="transition-transform group-hover:translate-x-1">
               ↓
             </span>
           </button>
@@ -773,35 +723,23 @@ function BreakdownRow({
   );
 }
 
-/* ─────────────────────────── Row ─────────────────────────── */
+/* ─────────────────────────── Rad ─────────────────────────── */
 
 function RowItem({
   row,
   index,
+  line,
   updateRow,
   deleteRow
 }: {
-  row: EstimateRow;
+  row: Row;
   index: number;
-  updateRow: (id: EstimateRow["id"], field: keyof EstimateRow, value: string) => void;
-  deleteRow: (id: EstimateRow["id"]) => void;
+  line?: CustomerEstimateLine;
+  updateRow: (id: string, field: keyof Row, value: string) => void;
+  deleteRow: (id: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Labor-engine rows compute rowTotal from hours × rate × difficulty;
-  // legacy rows still fall back to qty × price.
-  const laborLine = row.workItemKey
-    ? laborLinesForRows([row])[0]
-    : undefined;
-  const rowTotal = laborLine
-    ? laborLine.laborPriceExVat
-    : (parseFloat(String(row.qty)) || 0) * (parseFloat(String(row.price)) || 0);
-
-  // Bæresystem og fundamentering avhenger av terrassetype, så valget
-  // følger med til befaringen selv om vi ikke priser det ennå.
-  const isTerraceItem = (TERRACE_WORK_ITEMS as readonly string[]).includes(
-    String(row.workItemKey)
-  );
+  const groups = row.optionGroups;
 
   useEffect(() => {
     if (!row.name && inputRef.current) inputRef.current.focus();
@@ -810,7 +748,7 @@ function RowItem({
 
   return (
     <div
-      className={`row-enter grid grid-cols-1 gap-y-6 py-8 md:grid-cols-[minmax(0,1fr)_4.5rem_5rem_6rem_7rem_2rem] md:items-center md:gap-3 md:gap-y-2 md:py-5 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_7rem_8rem_2.5rem] lg:gap-4 ${
+      className={`row-enter grid grid-cols-1 gap-y-6 py-8 md:grid-cols-[minmax(0,1fr)_4.5rem_5rem_7rem_2rem] md:items-center md:gap-3 md:gap-y-2 md:py-5 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_8rem_2.5rem] lg:gap-4 ${
         index !== 0 ? "border-t border-ink/10" : ""
       }`}
     >
@@ -822,123 +760,94 @@ function RowItem({
           value={row.name}
           onChange={(e) => updateRow(row.id, "name", e.target.value)}
         />
-        {row.matched && row.matchName ? (
-          // Mobil: «Auto» står på egen linje, så beskrivelsen får hele
-          // bredden og brytes naturlig. Desktop beholder én linje.
+        {row.matchName ? (
           <div className="match-badge mt-3 text-ink/60">
             <span className="eyebrow block text-[0.6rem] text-ink/70 md:mr-2 md:inline md:text-[0.72rem]">
               Auto
             </span>
             <p className="mt-1 text-sm leading-relaxed md:mt-0 md:inline md:text-xs">
               {row.matchName}
-              {laborLine ? (
-                <span className="text-ink/50">
-                  {" · "}
-                  {formatHours(laborLine.laborHoursPerUnit)} t/{laborLine.unit}
-                </span>
-              ) : null}
               {row.note ? (
                 <span className="text-ink/50">{` · ${row.note}`}</span>
               ) : null}
             </p>
           </div>
         ) : null}
-        {row.workItemKey ? (
+
+        {groups.includes("difficulty") ? (
           <div className="mt-5 md:mt-2">
             <RowSelect
               label="Tilkomst"
               value={row.difficulty ?? "normal"}
               onChange={(v) => updateRow(row.id, "difficulty", v)}
-              options={(Object.keys(DIFFICULTY_LABELS) as DifficultyKey[]).map(
-                (k) => [k, DIFFICULTY_LABELS[k]]
-              )}
+              options={DIFFICULTY_ORDER.map((k) => [k, DIFFICULTY_LABELS[k]])}
             />
           </div>
         ) : null}
-        {isTerraceItem ? (
+
+        {groups.includes("terrace") ? (
           <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Konstruksjon"
               value={row.terraceConstruction ?? "standard"}
               onChange={(v) => updateRow(row.id, "terraceConstruction", v)}
-              options={TERRACE_CONSTRUCTION_ORDER.map((k) => [
-                k,
-                TERRACE_CONSTRUCTIONS[k].label
-              ])}
+              options={TERRACE_CONSTRUCTION_ORDER.map((k) => [k, TERRACE_CONSTRUCTION_LABELS[k]])}
             />
             <RowSelect
               label="Innfesting"
               value={row.terraceFastening ?? "visible"}
               onChange={(v) => updateRow(row.id, "terraceFastening", v)}
-              options={TERRACE_FASTENING_ORDER.map((k) => [
-                k,
-                TERRACE_FASTENINGS[k].label
-              ])}
+              options={TERRACE_FASTENING_ORDER.map((k) => [k, TERRACE_FASTENING_LABELS[k]])}
             />
             <RowSelect
               label="Fundament"
               value={row.terraceFoundation ?? "existing"}
               onChange={(v) => updateRow(row.id, "terraceFoundation", v)}
-              options={TERRACE_FOUNDATION_ORDER.map((k) => [
-                k,
-                TERRACE_FOUNDATIONS[k].label
-              ])}
+              options={TERRACE_FOUNDATION_ORDER.map((k) => [k, TERRACE_FOUNDATION_LABELS[k]])}
             />
           </div>
         ) : null}
-        {row.workItemKey === "ceilingWork" ? (
+
+        {groups.includes("ceiling") ? (
           <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Himlingstype"
               value={row.ceilingType ?? "direct"}
               onChange={(v) => updateRow(row.id, "ceilingType", v)}
-              options={CEILING_TYPE_ORDER.map((k) => [k, CEILING_TYPES[k].label])}
+              options={CEILING_TYPE_ORDER.map((k) => [k, CEILING_TYPE_LABELS[k]])}
             />
           </div>
         ) : null}
-        {row.workItemKey === "interiorPartitionWall" ? (
+
+        {groups.includes("partition") ? (
           <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Omfang"
               value={row.partitionScope ?? "complete"}
               onChange={(v) => updateRow(row.id, "partitionScope", v)}
-              options={PARTITION_SCOPE_ORDER.map((k) => [
-                k,
-                PARTITION_SCOPES[k].label
-              ])}
+              options={PARTITION_SCOPE_ORDER.map((k) => [k, PARTITION_SCOPE_LABELS[k]])}
             />
           </div>
         ) : null}
-        {row.workItemKey === "facadeComplete" ||
-        row.workItemKey === "exteriorInsulation" ? (
+
+        {groups.includes("insulation") ? (
           <div className="mt-5 grid gap-5 md:mt-2 md:flex md:flex-wrap md:gap-x-5 md:gap-y-2">
             <RowSelect
               label="Etterisolering"
-              value={
-                row.facadeInsulation ??
-                (row.workItemKey === "exteriorInsulation" ? "mm100" : "none")
-              }
+              value={row.facadeInsulation ?? "none"}
               onChange={(v) => updateRow(row.id, "facadeInsulation", v)}
-              options={INSULATION_OPTION_ORDER.map((k) => [
-                k,
-                INSULATION_OPTIONS[k].label
-              ])}
+              options={INSULATION_OPTION_ORDER.map((k) => [k, INSULATION_OPTION_LABELS[k]])}
             />
           </div>
         ) : null}
-        {laborLine?.laborPending && laborLine.pendingNote ? (
-          <p className="mt-2 text-xs text-ink/60">{laborLine.pendingNote}</p>
+
+        {line?.laborPending && line.pendingNote ? (
+          <p className="mt-2 text-xs text-ink/60">{line.pendingNote}</p>
         ) : null}
       </div>
 
-      {/* Mengde og enhet hører sammen. På mobil vises de som ÉN gruppe med
-          felles etikett — tallet er hovedsaken, enheten står til høyre og
-          er visuelt underordnet. På md+ løses grupperingen opp (`contents`)
-          slik at feltene faller tilbake i rutenettet som før. */}
       <div className="md:contents">
         <span className="eyebrow mb-2 block text-ink/50 md:hidden">Mengde</span>
-        {/* flex-row-reverse: DOM-rekkefølgen beholdes for desktop-rutenettet,
-            mens tallet likevel står først visuelt på mobil. */}
         <div className="flex flex-row-reverse md:contents">
           <select
             className="field-control field-select press w-24 shrink-0 border-l-0 text-center md:w-auto md:border md:border-ink/20 md:px-2 md:py-2 md:text-center"
@@ -952,7 +861,6 @@ function RowItem({
               </option>
             ))}
           </select>
-
           <input
             type="number"
             inputMode="decimal"
@@ -967,65 +875,25 @@ function RowItem({
         </div>
       </div>
 
-      {laborLine ? (
-        <div className="md:contents">
-          <span className="eyebrow mb-1 block text-ink/50 md:hidden">
-            Estimert arbeidstid
-          </span>
-          <div
-            className="text-ink/70 md:px-2 md:py-2 md:text-right md:text-sm md:text-ink/60"
-            title="Beregnet arbeidstid per enhet"
-          >
-            {formatHours(laborLine.laborHoursPerUnit)} t/{row.unit}
-            {/* Totalen for raden er nyttig på mobil, men overflødig i
-                rutenettet på desktop der den har egen kolonne. */}
-            <span className="md:hidden">
-              {" · "}
-              {formatHours(laborLine.totalLaborHours)} timer
-            </span>
-          </div>
-        </div>
-      ) : (
-        <div className="md:contents">
-          <span className="eyebrow mb-2 block text-ink/50 md:hidden">
-            Enhetspris
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            step="any"
-            min="0"
-            className="field-control press text-right"
-            placeholder="0"
-            value={row.price}
-            onChange={(e) => updateRow(row.id, "price", e.target.value)}
-            aria-label="Enhetspris"
-          />
-        </div>
-      )}
-
       <div className="md:contents">
         <span className="eyebrow mb-1 block text-ink/50 md:hidden">
           Estimert arbeid
         </span>
         <div className="text-right text-base font-medium text-ink md:text-lg">
           <span className="float-left md:hidden">
-            {rowTotal > 0 ? (
-              <span className="text-xl">{formatNok(rowTotal)} kr</span>
+            {line && line.laborExVat > 0 ? (
+              <span className="text-xl">{formatNok(line.laborExVat)} kr</span>
             ) : (
               "—"
             )}
-            <span className="ml-2 text-xs font-normal text-ink/55">
-              eks. mva
-            </span>
+            <span className="ml-2 text-xs font-normal text-ink/55">eks. mva</span>
           </span>
           <span className="hidden md:inline">
-            {rowTotal > 0 ? `${formatNok(rowTotal)} kr` : "—"}
+            {line && line.laborExVat > 0 ? `${formatNok(line.laborExVat)} kr` : "—"}
           </span>
         </div>
       </div>
 
-      {/* Synlig ikon holdes lite, men trykkflaten er minst 44 px. */}
       <button
         type="button"
         onClick={() => deleteRow(row.id)}
@@ -1053,9 +921,6 @@ function RowSelect({
   options: Array<[string, string]>;
 }) {
   return (
-    // Mobil: etiketten står OVER feltet, og feltet får hele bredden.
-    // Lange norske verdier skal aldri klemmes inn ved siden av etiketten.
-    // md+: tilbake til den kompakte varianten på én linje.
     <label className="block md:flex md:items-center md:gap-2 md:text-xs md:text-ink/60">
       <span className="eyebrow mb-2 block text-ink/50 md:mb-0 md:inline">
         {label}
@@ -1075,8 +940,6 @@ function RowSelect({
     </label>
   );
 }
-
-/* ─────────────────────────── Fields ─────────────────────────── */
 
 function Field({
   label,
@@ -1108,16 +971,7 @@ function Field({
   );
 }
 
-function TotalLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between py-1">
-      <dt className="text-ink/70">{label}</dt>
-      <dd className="font-medium">{value}</dd>
-    </div>
-  );
-}
-
-/* ─────────────────────────── Modals ─────────────────────────── */
+/* ─────────────────────────── Modaler ─────────────────────────── */
 
 function ModalShell({
   onClose,
@@ -1129,7 +983,6 @@ function ModalShell({
   children: React.ReactNode;
 }) {
   const [state, setState] = useState<"open" | "closed">("open");
-
   const requestClose = useCallback(() => {
     setState("closed");
     window.setTimeout(onClose, 240);
@@ -1154,7 +1007,7 @@ function ModalShell({
             type="button"
             onClick={requestClose}
             aria-label="Lukk"
-            className="text-2xl text-ink/50 hover:text-ink"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-end text-2xl text-ink/50 hover:text-ink"
           >
             ×
           </button>
@@ -1166,29 +1019,33 @@ function ModalShell({
 }
 
 function BrowseModal({
+  catalogue,
   onSelect,
   onClose
 }: {
-  onSelect: (entry: PriceEntry) => void;
+  catalogue: CatalogueItem[];
+  onSelect: (item: CatalogueItem) => void;
   onClose: () => void;
 }) {
   const [search, setSearch] = useState("");
-  const catsMap = useMemo(() => {
-    const map: Record<string, PriceEntry[]> = {};
-    PRICE_DB.forEach((e) => {
-      (map[e.cat] ??= []).push(e);
+
+  const priceable = useMemo(() => catalogue.filter((c) => c.priceable), [catalogue]);
+  const bySurvey = useMemo(() => catalogue.filter((c) => !c.priceable), [catalogue]);
+
+  const cats = useMemo(() => {
+    const map: Record<string, CatalogueItem[]> = {};
+    priceable.forEach((e) => {
+      (map[e.category] ??= []).push(e);
     });
     return map;
-  }, []);
+  }, [priceable]);
 
   const filtered =
     search.length >= 2
-      ? PRICE_DB.filter(
+      ? priceable.filter(
           (e) =>
             e.name.toLowerCase().includes(search.toLowerCase()) ||
-            e.keywords.some((k) =>
-              k.toLowerCase().includes(search.toLowerCase())
-            )
+            e.keywords.some((k) => k.toLowerCase().includes(search.toLowerCase()))
         )
       : null;
 
@@ -1198,8 +1055,8 @@ function BrowseModal({
         autoFocus
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Søk i prisliste — f.eks. «vindu», «terrasse», «tak»…"
-        className="w-full border-b border-ink/30 bg-transparent py-3 text-lg focus:border-ink focus:outline-none"
+        placeholder="Søk — f.eks. «vindu», «terrasse», «kledning»…"
+        className="min-h-[48px] w-full border-b border-ink/30 bg-transparent py-3 text-base focus:border-ink focus:outline-none md:text-lg"
       />
 
       <div className="mt-8 space-y-10">
@@ -1209,42 +1066,35 @@ function BrowseModal({
           ) : (
             <ul className="grid gap-3">
               {filtered.map((e) => (
-                <PriceRow key={e.name} entry={e} onSelect={onSelect} />
+                <CatalogueRow key={e.id} item={e} onSelect={onSelect} />
               ))}
             </ul>
           )
         ) : (
-          Object.entries(catsMap).map(([cat, entries]) => (
+          Object.entries(cats).map(([cat, entries]) => (
             <section key={cat}>
-              <h3 className="headline text-2xl mb-4">{cat}</h3>
+              <h3 className="headline mb-4 text-2xl">{cat}</h3>
               <ul className="grid gap-3">
                 {entries.map((e) => (
-                  <PriceRow key={e.name} entry={e} onSelect={onSelect} />
+                  <CatalogueRow key={e.id} item={e} onSelect={onSelect} />
                 ))}
               </ul>
             </section>
           ))
         )}
 
-        {/* Needs-survey placeholder cards */}
         <section>
-          <h3 className="headline text-2xl mb-4">Etter befaring</h3>
+          <h3 className="headline mb-4 text-2xl">Etter befaring</h3>
           <ul className="grid gap-3">
-            {NEEDS_SURVEY.map((n) => (
-              <li
-                key={n.label}
-                className="border-l-2 border-ink/30 py-3 pl-4 text-ink/80"
-              >
+            {bySurvey.map((n) => (
+              <li key={n.id} className="border-l-2 border-ink/30 py-3 pl-4 text-ink/80">
                 <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-medium">{n.label}</span>
-                  <a
-                    className="uline eyebrow text-xs"
-                    href="/kontakt"
-                  >
+                  <span className="font-medium">{n.name}</span>
+                  <a className="uline eyebrow text-xs" href="/kontakt">
                     Book befaring →
                   </a>
                 </div>
-                <p className="mt-1 text-sm text-ink/60">{n.note}</p>
+                {n.note ? <p className="mt-1 text-sm text-ink/60">{n.note}</p> : null}
               </li>
             ))}
           </ul>
@@ -1254,35 +1104,33 @@ function BrowseModal({
   );
 }
 
-function PriceRow({
-  entry,
+/**
+ * Katalograden viser navn, enhet og hva som inngår — bevisst ingen
+ * kroner og ingen timer. Prisen får kunden når posten er lagt inn med
+ * en mengde, og den kommer fra serveren.
+ */
+function CatalogueRow({
+  item,
   onSelect
 }: {
-  entry: PriceEntry;
-  onSelect: (e: PriceEntry) => void;
+  item: CatalogueItem;
+  onSelect: (e: CatalogueItem) => void;
 }) {
-  // Den gamle kr/enhet-prisen brukes ikke i beregningen — vi viser
-  // arbeidstimene motoren faktisk regner med.
-  const hours = entry.workItemKey
-    ? laborHoursForItem(entry.workItemKey)
-    : undefined;
   return (
     <li>
       <button
         type="button"
-        onClick={() => onSelect(entry)}
-        className="flex w-full items-baseline justify-between gap-4 border-b border-ink/10 py-3 text-left transition-colors hover:bg-ink/[0.03]"
+        onClick={() => onSelect(item)}
+        className="flex min-h-[44px] w-full items-baseline justify-between gap-4 border-b border-ink/10 py-3 text-left transition-colors hover:bg-ink/[0.03]"
       >
         <span>
-          <span className="text-base font-medium text-ink">{entry.name}</span>
-          {entry.note ? (
-            <span className="ml-3 text-sm text-ink/60">{entry.note}</span>
+          <span className="text-base font-medium text-ink">{item.name}</span>
+          {item.note ? (
+            <span className="ml-3 text-sm text-ink/60">{item.note}</span>
           ) : null}
         </span>
-        <span className="eyebrow whitespace-nowrap text-ink/80">
-          {hours != null
-            ? `${formatHours(hours)} t / ${entry.unit}`
-            : "Ved befaring"}
+        <span className="eyebrow whitespace-nowrap text-ink/70">
+          per {item.unit}
         </span>
       </button>
     </li>
@@ -1290,30 +1138,33 @@ function PriceRow({
 }
 
 function SummaryModal({
-  input,
-  totals,
+  projectName,
+  customerName,
+  customerEmail,
+  rows,
+  estimate,
   onClose
 }: {
-  input: EstimateInput;
-  totals: ReturnType<typeof calcTotals>;
+  projectName: string;
+  customerName: string;
+  customerEmail: string;
+  rows: Row[];
+  estimate: CustomerEstimateSummary | null;
   onClose: () => void;
 }) {
-  const summaryLabor = new Map(
-    laborLinesForRows(input.rows).map((l) => [l.label, l])
-  );
+  const byId = new Map(estimate?.lines.map((l) => [l.id, l]) ?? []);
+  const active = estimate?.scenarios[estimate.selectedTier];
+
   return (
-    <ModalShell
-      onClose={onClose}
-      title={`Sammendrag · ${input.projectName || "Uten navn"}`}
-    >
-      {input.customerName ? (
+    <ModalShell onClose={onClose} title={`Sammendrag · ${projectName || "Uten navn"}`}>
+      {customerName ? (
         <p className="mb-6 text-sm text-ink/70">
-          Kunde: <span className="font-medium">{input.customerName}</span>
-          {input.customerEmail ? ` · ${input.customerEmail}` : ""}
+          Kunde: <span className="font-medium">{customerName}</span>
+          {customerEmail ? ` · ${customerEmail}` : ""}
         </p>
       ) : null}
 
-      {input.rows.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="py-8 text-center text-ink/60">Ingen poster.</p>
       ) : (
         <table className="w-full border-collapse">
@@ -1321,20 +1172,16 @@ function SummaryModal({
             <tr className="border-b border-ink/20">
               <th className="eyebrow py-3 text-left text-ink/60">Beskrivelse</th>
               <th className="eyebrow py-3 text-right text-ink/60">Mengde</th>
-              <th className="eyebrow py-3 text-right text-ink/60">Timer</th>
               <th className="eyebrow py-3 text-right text-ink/60">Arbeid</th>
             </tr>
           </thead>
           <tbody>
-            {input.rows.map((r) => {
-              const l = summaryLabor.get(r.matchName || r.name);
-              const legacy =
-                (parseFloat(String(r.qty)) || 0) *
-                (parseFloat(String(r.price)) || 0);
+            {rows.map((r) => {
+              const l = byId.get(r.id);
               return (
                 <tr key={r.id} className="border-b border-ink/10">
                   <td className="py-3">
-                    <div className="font-medium">{r.name || "—"}</div>
+                    <div className="font-medium">{r.matchName || r.name || "—"}</div>
                     {r.note ? (
                       <div className="text-xs text-ink/60">{r.note}</div>
                     ) : null}
@@ -1342,15 +1189,8 @@ function SummaryModal({
                   <td className="py-3 text-right text-sm text-ink/70">
                     {r.qty || "—"} {r.unit}
                   </td>
-                  <td className="py-3 text-right text-sm text-ink/70">
-                    {l ? `${formatHours(l.totalLaborHours)} t` : "—"}
-                  </td>
                   <td className="py-3 text-right font-medium">
-                    {l
-                      ? `${formatNok(l.laborPriceExVat)} kr`
-                      : legacy > 0
-                        ? `${formatNok(legacy)} kr`
-                        : "—"}
+                    {l && l.laborExVat > 0 ? `${formatNok(l.laborExVat)} kr` : "—"}
                   </td>
                 </tr>
               );
@@ -1359,136 +1199,110 @@ function SummaryModal({
         </table>
       )}
 
-      <div className="mt-8 grid gap-2 border-t border-ink/20 pt-6">
-        <TotalLine
-          label="Arbeid (eks. mva)"
-          value={`${formatNok(totals.laborExVat + totals.legacyExVat)} kr`}
-        />
-        <TotalLine
-          label={`Materialer — ${MATERIAL_TIER_LABELS[totals.materialTier]}`}
-          value={
-            totals.materialTier === "none"
-              ? "ikke medregnet"
-              : `${formatNok(totals.materialExVat)} kr`
-          }
-        />
-        <TotalLine
-          label={`MVA (${input.mvaRate}%)`}
-          value={`${formatNok(totals.mvaAmount)} kr`}
-        />
-        <div className="mt-4 flex items-baseline justify-between border-t border-ink pt-4">
-          <span className="eyebrow">Totalt</span>
-          <span className="headline text-3xl md:text-4xl">
-            {formatNok(totals.total)} kr
-          </span>
+      {active ? (
+        <div className="mt-8 grid gap-2 border-t border-ink/20 pt-6">
+          <TotalLine label="Arbeid (eks. mva)" value={`${formatNok(active.laborExVat)} kr`} />
+          <TotalLine
+            label={`Materialer — ${MATERIAL_TIER_LABELS[estimate!.selectedTier]}`}
+            value={
+              estimate!.selectedTier === "none"
+                ? "ikke medregnet"
+                : `${formatNok(active.materialExVat)} kr`
+            }
+          />
+          <TotalLine
+            label={`MVA (${estimate!.vatPercent} %)`}
+            value={`${formatNok(active.vat)} kr`}
+          />
+          <div className="mt-4 flex items-baseline justify-between border-t border-ink pt-4">
+            <span className="eyebrow">Totalt</span>
+            <span className="headline text-3xl md:text-4xl">
+              {formatNok(active.totalIncVat)} kr
+            </span>
+          </div>
         </div>
-      </div>
+      ) : null}
     </ModalShell>
   );
 }
 
+function TotalLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between py-1">
+      <dt className="text-ink/70">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  );
+}
+
 /**
- * Bygger meldingsteksten som sendes videre til kontaktskjemaet, slik at
- * kunden aldri må skrive inn det samme to ganger. Alt som er valgt i
- * kalkulatoren følger med: poster, mengder, enheter, tilkomst,
- * terrassekonstruksjon, materialvalg, arbeid, materialer, mva og totalen.
+ * Meldingsteksten som følger kunden videre til kontaktskjemaet.
+ * Inneholder valg og priser — aldri timeforbruk eller enhetspriser.
  */
 function buildEnquiryPrefill({
-  input,
-  totals
+  rows,
+  estimate,
+  projectName,
+  message,
+  customerPostal
 }: {
-  input: EstimateInput;
-  totals: EstimateTotals;
+  rows: Row[];
+  estimate: CustomerEstimateSummary | null;
+  projectName: string;
+  message: string;
+  customerPostal: string;
 }): string {
   const lines: string[] = [];
-  if (input.projectName) lines.push(`Prosjekt: ${input.projectName}`);
-  if (input.customerPostal) lines.push(`Postnummer: ${input.customerPostal}`);
+  if (projectName) lines.push(`Prosjekt: ${projectName}`);
+  if (customerPostal) lines.push(`Postnummer: ${customerPostal}`);
   lines.push("");
-
   lines.push("Poster fra prisestimatet:");
-  const labor = laborLinesForRows(input.rows);
-  const laborByLabel = new Map(labor.map((l) => [l.label, l]));
-  for (const r of input.rows) {
-    if (!r.name) continue;
-    const qty = String(r.qty || "");
+
+  const byId = new Map(estimate?.lines.map((l) => [l.id, l]) ?? []);
+  for (const r of rows) {
+    if (!r.name && !r.matchName) continue;
+    const l = byId.get(r.id);
     const label = r.matchName || r.name;
-    const l = laborByLabel.get(label);
-    if (l) {
-      const diff =
-        r.difficulty && r.difficulty !== "normal"
-          ? ` (${DIFFICULTY_LABELS[r.difficulty as DifficultyKey]})`
-          : "";
-      const construction = (
-        TERRACE_WORK_ITEMS as readonly string[]
-      ).includes(String(r.workItemKey))
-        ? ` [${
-            TERRACE_CONSTRUCTIONS[r.terraceConstruction ?? "standard"].label
-          } · ${TERRACE_FASTENINGS[r.terraceFastening ?? "visible"].label} · ${
-            TERRACE_FOUNDATIONS[r.terraceFoundation ?? "existing"].label
-          }]`
-        : "";
-      lines.push(
-        `• ${label}${diff}${construction} — ${qty} ${r.unit} × ${formatHours(
-          l.laborHoursPerUnit
-        )} t/${r.unit} = ${formatHours(l.totalLaborHours)} t`
-      );
-    } else {
-      const price = String(r.price || "");
-      lines.push(
-        `• ${r.name}${qty ? ` — ${qty} ${r.unit}` : ""}${
-          price ? ` @ ${price} kr/${r.unit}` : ""
-        }`
-      );
-    }
+    const opts = l && l.chosenOptions.length > 0 ? ` [${l.chosenOptions.join(" · ")}]` : "";
+    lines.push(`• ${label}${opts} — ${r.qty || "?"} ${r.unit}`);
   }
-  lines.push("");
 
-  lines.push(`Materialvalg: ${MATERIAL_TIER_LABELS[totals.materialTier]}`);
-  if (totals.estimate.hasPendingLabor) {
-    lines.push(
-      "MERK: én eller flere poster kunne ikke beregnes automatisk og er " +
-        "ikke med i summen."
-    );
-  }
-  if (totals.laborHours > 0) {
-    lines.push(`Sum arbeidstimer: ${formatHours(totals.laborHours)} t`);
-  }
-  lines.push(
-    `Arbeid: ${formatNok(totals.laborExVat + totals.legacyExVat)} kr eks. mva`
-  );
-  if (totals.materialTier !== "none") {
-    lines.push(`Materialer: ${formatNok(totals.materialExVat)} kr eks. mva`);
-    if (!totals.materialEstimateComplete) {
-      lines.push(
-        "  MERK: delvis materialestimat — deler av materialene er ikke " +
-          "medregnet og avklares ved befaring."
-      );
-    }
-  }
-  lines.push(`Sum eks. mva: ${formatNok(totals.subtotal)} kr`);
-  lines.push(
-    `MVA (${Math.round(VAT_RATE * 100)} %): ${formatNok(totals.mvaAmount)} kr`
-  );
-  lines.push(`Totalt inkl. mva: ${formatNok(totals.total)} kr`);
-  lines.push(
-    `Veiledende spenn: ${formatNok(totals.range.low)} – ${formatNok(
-      totals.range.high
-    )} kr inkl. mva`
-  );
-
-  const unpriced = totals.estimate.unpricedMaterials;
-  if (unpriced.length > 0) {
+  if (estimate) {
+    const active = estimate.scenarios[estimate.selectedTier];
     lines.push("");
-    lines.push("Avklares separat:");
-    for (const u of unpriced) lines.push(`• ${u.label} — ${u.note}`);
+    lines.push(`Materialvalg: ${MATERIAL_TIER_LABELS[estimate.selectedTier]}`);
+    if (estimate.hasPendingLabor) {
+      lines.push(
+        "MERK: én eller flere poster kunne ikke beregnes automatisk og er ikke med i summen."
+      );
+    }
+    lines.push(`Arbeid: ${formatNok(active.laborExVat)} kr eks. mva`);
+    if (estimate.selectedTier !== "none") {
+      lines.push(`Materialer: ${formatNok(active.materialExVat)} kr eks. mva`);
+      if (!active.materialEstimateComplete) {
+        lines.push(
+          "  MERK: delvis materialestimat — deler av materialene avklares ved befaring."
+        );
+      }
+    }
+    lines.push(`Sum eks. mva: ${formatNok(active.subtotalExVat)} kr`);
+    lines.push(`MVA (${estimate.vatPercent} %): ${formatNok(active.vat)} kr`);
+    lines.push(`Totalt inkl. mva: ${formatNok(active.totalIncVat)} kr`);
+    lines.push(
+      `Veiledende spenn: ${formatNok(active.range.low)} – ${formatNok(active.range.high)} kr inkl. mva`
+    );
+    if (estimate.unpriced.length > 0) {
+      lines.push("");
+      lines.push("Avklares separat:");
+      for (const u of estimate.unpriced) lines.push(`• ${u.label} — ${u.note}`);
+    }
   }
 
   lines.push("");
   lines.push(ESTIMATE_DISCLAIMER_CLOSING);
-
-  if (input.message) {
+  if (message) {
     lines.push("");
-    lines.push(input.message);
+    lines.push(message);
   }
   return lines.join("\n");
 }

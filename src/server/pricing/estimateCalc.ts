@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Bindeledd mellom Prisestimat-UI-et og prismotoren i `src/lib/pricing`.
  *
@@ -7,7 +9,7 @@
  * holder på eldre rader som fortsatt prises med kr/enhet.
  */
 
-import type { PriceUnit } from "@/data/pricing";
+import type { PriceUnit } from "./catalogue-source";
 import {
   pricingSettings,
   laborHoursForItem,
@@ -21,16 +23,18 @@ import {
   type CeilingTypeKey,
   type PartitionScopeKey,
   type InsulationOptionKey
-} from "@/config/pricing";
+} from "./index";
+import {
+  formatNok as formatNokBase,
+  roundForDisplay
+} from "../../lib/pricing/format";
 import {
   calcLaborLine,
   calcMaterialLine,
   calculateEstimate,
-  formatNok as formatNokBase,
-  roundForDisplay,
   type EstimateResult,
   type MaterialLine
-} from "@/lib/pricing";
+} from "./index";
 
 export type EstimateRow = {
   id: number | string;

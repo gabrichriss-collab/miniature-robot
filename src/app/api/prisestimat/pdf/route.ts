@@ -1,7 +1,8 @@
 import { renderToBuffer } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
-import { EstimatePdf } from "@/lib/estimatePdfDoc";
-import { calcTotals, formatNok, type EstimateInput } from "@/lib/estimateCalc";
+import { EstimatePdf } from "@/server/pricing/estimatePdfDoc";
+import { calcTotals, formatNok, type EstimateInput } from "@/server/pricing/estimateCalc";
+import { resolveCatalogueId } from "@/server/pricing/catalogue";
 import { notifyLead } from "@/lib/notifyLead";
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -9,15 +10,85 @@ import path from "node:path";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * Bygger den interne kalkyle-inputen fra kundens VALG.
+ *
+ * Klienten sender katalog-ID, mengde og valg — aldri timer, satser eller
+ * summer. Arbeidsnøkkel, oppskrift og alle tall slås opp her, på serveren,
+ * akkurat som i /api/estimate.
+ */
+function buildInput(raw: unknown): EstimateInput | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const b = raw as Record<string, unknown>;
+  const req = b.estimateRequest as
+    | { lines?: unknown[]; materialTier?: unknown }
+    | undefined;
+  if (!req || !Array.isArray(req.lines)) return null;
+
+  const tier = ["none", "standard", "premium"].includes(String(req.materialTier))
+    ? (req.materialTier as EstimateInput["materialTier"])
+    : "none";
+
+  const rows = req.lines.flatMap((rawLine) => {
+    if (typeof rawLine !== "object" || rawLine === null) return [];
+    const l = rawLine as Record<string, unknown>;
+    const entry =
+      typeof l.catalogueId === "string" ? resolveCatalogueId(l.catalogueId) : undefined;
+    const qty = Number(l.quantity);
+    if (!Number.isFinite(qty) || qty < 0 || qty > 100_000) return [];
+    return [
+      {
+        id: String(l.id ?? "").slice(0, 64),
+        name: entry?.name ?? String(l.description ?? "").slice(0, 200),
+        matchName: entry?.name,
+        note: entry?.note,
+        unit: entry?.unit ?? String(l.unit ?? "m²").slice(0, 8),
+        qty,
+        price: 0,
+        workItemKey: entry?.workItemKey,
+        materialRecipeKey: entry?.materialRecipeKey,
+        difficulty: l.difficulty as EstimateInput["rows"][number]["difficulty"],
+        terraceConstruction:
+          l.terraceConstruction as EstimateInput["rows"][number]["terraceConstruction"],
+        terraceFastening: (l.terraceFastening ??
+          entry?.terraceFastening) as EstimateInput["rows"][number]["terraceFastening"],
+        terraceFoundation:
+          l.terraceFoundation as EstimateInput["rows"][number]["terraceFoundation"],
+        ceilingType: l.ceilingType as EstimateInput["rows"][number]["ceilingType"],
+        partitionScope:
+          l.partitionScope as EstimateInput["rows"][number]["partitionScope"],
+        facadeInsulation:
+          l.facadeInsulation as EstimateInput["rows"][number]["facadeInsulation"]
+      }
+    ];
+  });
+
+  return {
+    projectName: String(b.projectName ?? "").slice(0, 200),
+    customerName: String(b.customerName ?? "").slice(0, 200),
+    customerEmail: String(b.customerEmail ?? "").slice(0, 200),
+    customerPhone: String(b.customerPhone ?? "").slice(0, 60),
+    customerPostal: String(b.customerPostal ?? "").slice(0, 20),
+    message: String(b.message ?? "").slice(0, 4000),
+    rows,
+    mvaRate: 25,
+    markup: 0,
+    materialTier: tier
+  };
+}
+
 export async function POST(req: Request) {
-  let body: EstimateInput;
+  let body: EstimateInput | null;
   try {
-    body = (await req.json()) as EstimateInput;
+    body = buildInput(await req.json());
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
 
-  if (!body.rows || body.rows.length === 0) {
+  if (!body) {
+    return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
+  }
+  if (body.rows.length === 0) {
     return NextResponse.json({ error: "Estimatet har ingen poster." }, { status: 422 });
   }
   if (!body.customerName || !body.customerEmail) {

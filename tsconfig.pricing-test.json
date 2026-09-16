@@ -14,13 +14,18 @@
     "esModuleInterop": true,
     "types": [
       "node"
-    ]
+    ],
+    "paths": {
+      "server-only": [
+        "./scripts/pricing/server-only-stub.ts"
+      ]
+    },
+    "baseUrl": "."
   },
   "include": [
-    "src/config/pricing/**/*.ts",
+    "src/server/pricing/**/*.ts",
     "src/lib/pricing/**/*.ts",
     "src/lib/fuzzyMatch.ts",
-    "src/data/pricing.ts",
     "scripts/pricing/**/*.ts"
   ]
 }

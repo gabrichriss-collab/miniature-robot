@@ -1,3 +1,8 @@
+import "server-only";
+// Denne modulen inneholder kommersiell prisintelligens og skal ALDRI
+// havne i nettleseren. `server-only` gjoer et slikt import til en
+// byggefeil i stedet for en stille lekkasje.
+
 /**
  * MATERIALMOTOREN — helt adskilt fra arbeidsmotoren.
  *
@@ -13,15 +18,15 @@
  * det går med flere terrassebord.
  */
 
-import { pricingSettings, type MaterialTier } from "../../config/pricing/settings";
-import { getMaterial, type Material } from "../../config/pricing/materials";
+import { pricingSettings, type MaterialTier } from "./settings";
+import { getMaterial, type Material } from "./materials";
 import {
   getRecipe,
   type MaterialRecipe,
   type PendingMaterialComponent,
   type RecipeOptions,
   type RecipeStatus
-} from "../../config/pricing/recipes";
+} from "./recipes";
 import { round2, toQty } from "./calculateLabor";
 
 export type MaterialLineComponent = {
