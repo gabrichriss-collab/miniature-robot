@@ -46,7 +46,9 @@ export default function Home() {
           className="kenburns absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              "url(/images/hero.jpg), linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
+              // Legg hero.jpg i /public/images/ og sett tilbake
+              // "url(/images/hero.jpg), " foran gradienten.
+              "linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
           }}
         />
         <div

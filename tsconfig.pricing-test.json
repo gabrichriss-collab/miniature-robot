@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "esnext"
+    ],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": ".test-out",
+    "rootDir": ".",
+    "noEmit": false,
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/config/pricing/**/*.ts",
+    "src/lib/pricing/**/*.ts",
+    "src/lib/fuzzyMatch.ts",
+    "src/data/pricing.ts",
+    "scripts/pricing/**/*.ts"
+  ]
+}

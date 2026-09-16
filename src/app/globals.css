@@ -8,6 +8,11 @@
  * A serif fallback is loaded from Google Fonts in layout.tsx so the site remains
  * on-tone before the licensed font is in place.
  */
+/* SLÅTT AV TIL FILENE ER LASTET OPP.
+   Uten filene ber nettleseren om dem på hver sidevisning og får 404.
+   Legg .woff2-filene i /public/fonts/ og fjern kommentaren under —
+   --font-body nedenfor plukker dem opp automatisk.
+
 @font-face {
   font-family: "Penumbra Std";
   src: url("/fonts/PenumbraStd-Regular.woff2") format("woff2");
@@ -22,6 +27,7 @@
   font-style: normal;
   font-display: swap;
 }
+*/
 
 :root {
   /* --font-display is injected by next/font (Sorts_Mill_Goudy).

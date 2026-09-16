@@ -19,13 +19,12 @@ export default function UnderConstructionBanner() {
         aria-hidden
         className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-bone/80"
       />
-      {/* Tracking tightens on small screens so the line never clips —
-          the eyebrow's default 0.32em is far too wide for a phone. */}
-      <p className="eyebrow whitespace-nowrap text-[0.55rem] tracking-[0.14em] text-bone/80 sm:text-[0.62rem] sm:tracking-[0.24em] md:text-[0.68rem] md:tracking-[0.32em]">
-        <span className="sm:hidden">Nettsiden er under utvikling</span>
-        <span className="hidden sm:inline">
-          Nettsiden er under utvikling — innhold og bilder oppdateres fortløpende
-        </span>
+      {/* ÉN setning, ikke to varianter bak CSS. To spans lot teksten bli
+          lest dobbelt av skjermlesere, søkemotorer og ved kopiering.
+          Sporingen strammes inn på små skjermer så linja aldri klippes. */}
+      <p className="eyebrow truncate text-[0.55rem] tracking-[0.1em] text-bone/80 sm:text-[0.62rem] sm:tracking-[0.24em] md:text-[0.68rem] md:tracking-[0.32em]">
+        Nettsiden er under utvikling — innhold og bilder oppdateres
+        fortløpende.
       </p>
     </div>
   );

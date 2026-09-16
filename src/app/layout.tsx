@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import { site } from "@/lib/site";
 import MobileActionBar from "@/components/MobileActionBar";
 import UnderConstructionBanner from "@/components/UnderConstructionBanner";
 
@@ -45,9 +46,9 @@ export const metadata: Metadata = {
     "tømrer Alver",
     "tømrer Åsane"
   ],
-  authors: [{ name: "Tømrer Kawiche AS" }],
-  creator: "Tømrer Kawiche AS",
-  publisher: "Tømrer Kawiche AS",
+  authors: [{ name: site.legalName }],
+  creator: site.legalName,
+  publisher: site.legalName,
   alternates: {
     canonical: "/",
     languages: { "nb-NO": "/" }

@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test scripts/verify-labor-calc.mjs"
+    "test": "tsc -p tsconfig.pricing-test.json && node --test .test-out/scripts/pricing/engine.test.js scripts/verify-labor-calc.mjs",
+    "test:pricing": "tsc -p tsconfig.pricing-test.json && node --test .test-out/scripts/pricing/engine.test.js"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
