@@ -1055,7 +1055,7 @@ export const PRICE_DB: PriceEntry[] = [
     workItemKey: "exteriorInsulation"
   },
   {
-    keywords: ["himling", "innvendig tak", "taknedforing", "nedforet tak"],
+    keywords: ["himling", "innvendig tak", "taknedforing", "nedforet tak", "himlinger"],
     unit: "m²",
     price: 0,
     name: "Himling",
@@ -1064,7 +1064,7 @@ export const PRICE_DB: PriceEntry[] = [
     workItemKey: "ceilingWork"
   },
   {
-    keywords: ["montering gulv", "legge gulv", "nytt gulv", "gulvlegging"],
+    keywords: ["montering gulv", "legge gulv", "nytt gulv", "gulvlegging", "gulv"],
     unit: "m²",
     price: 0,
     name: "Montering gulv",
@@ -1073,7 +1073,7 @@ export const PRICE_DB: PriceEntry[] = [
     workItemKey: "flooringInstallation"
   },
   {
-    keywords: ["listing", "listverk", "gulvlist", "taklist", "sette lister"],
+    keywords: ["listing", "listverk", "listeverk", "lister", "gulvlist", "taklist", "sette lister"],
     unit: "lm",
     price: 0,
     name: "Listing",

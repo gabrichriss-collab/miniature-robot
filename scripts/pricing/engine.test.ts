@@ -35,7 +35,7 @@ import {
   calcMaterialTotal
 } from "../../src/lib/pricing/calculateMaterials";
 import { calculateEstimate } from "../../src/lib/pricing/calculateEstimate";
-import { findBestMatch } from "../../src/lib/fuzzyMatch";
+import { findBestMatch, wordMatches } from "../../src/lib/fuzzyMatch";
 import { PRICE_DB } from "../../src/data/pricing";
 import { roundForDisplay } from "../../src/lib/pricing/format";
 
@@ -726,13 +726,69 @@ test("SØK: vanlige norske søk treffer riktig post", () => {
   }
 });
 
-test("SØK: korte ord treffer ikke tilfeldige delstrenger", () => {
-  // "ny" skal ikke treffe "vinyl", og "vindu" ikke "vindusrestaurering".
+test("SØK: ingen vilkårlig delstrengmatching — ord matches på ordgrense", () => {
+  // «tak» står inni «kontakt», «stakittgjerde» og «betakning».
+  for (const q of ["kontakt", "kontakt meg", "ta kontakt om noe", "stakittgjerde", "betakning"]) {
+    const m = findBestMatch(q);
+    assert.notEqual(m?.name, "Taktekking (takstein)", `"${q}" traff taktekking`);
+  }
+  // «ny» står inni «vinyl».
   assert.notEqual(findBestMatch("ny terrasse")?.name, "Vinylgulv");
-  assert.notEqual(findBestMatch("vindu")?.name, "Restaurering av originalt vindu");
+  // «vindu» er ikke en bøying av «vindusrestaurering».
+  assert.notEqual(
+    findBestMatch("vindu")?.name,
+    "Restaurering av originalt vindu"
+  );
+  // «dør» er ikke en bøyningsendelse — «terrasse» ≠ «terrassedør».
+  assert.equal(findBestMatch("terrasse")?.name, "Bygging av terrasse (standard)");
+  assert.equal(findBestMatch("terrassedør")?.name, "Montering terrassedør");
+});
+
+test("SØK: bøying og sammensatte ord treffer fortsatt", () => {
+  assert.equal(wordMatches("vindu", "vinduer"), true);
+  assert.equal(wordMatches("terrassen", "terrasse"), true);
+  assert.equal(wordMatches("bordkledning", "kledning"), true); // sammensatt
+  assert.equal(wordMatches("parkettgulv", "parkett"), true);
+  // Korte ord kan ikke bli ledd i sammensetninger.
+  assert.equal(wordMatches("kontakt", "tak"), false);
+  assert.equal(wordMatches("vinyl", "ny"), false);
+  // «dør» er ingen endelse.
+  assert.equal(wordMatches("terrassedør", "terrasse"), true); // sammensatt, ok
+  assert.equal(wordMatches("terrasse", "terrassedør"), false);
+});
+
+test("SØK: tomt og useriøst søk gir ingen match i stedet for feil match", () => {
   assert.equal(findBestMatch(""), null);
   assert.equal(findBestMatch("x"), null);
   assert.equal(findBestMatch("qwerty zxcvb"), null);
+  assert.equal(findBestMatch("!!! ???"), null);
+});
+
+test("SØK: kontrollerte aliaser for vanlige enkeltordsøk", () => {
+  const cases: Array<[string, string]> = [
+    ["gulv", "Montering gulv"],
+    ["lister", "Listing"],
+    ["listeverk", "Listing"],
+    ["himling", "Himling"],
+    ["camo", "Terrasse m/ skjult innfesting"],
+    ["skyvedør", "Montering skyvedør"],
+    ["riving av kledning", "Riving av kledning"]
+  ];
+  for (const [q, expected] of cases) {
+    assert.equal(findBestMatch(q)?.name, expected, `"${q}" traff feil`);
+  }
+});
+
+test("KARTLEGGING: ingen foreldreløse arbeidsposter", () => {
+  const selectable = new Set(
+    PRICE_DB.filter((e) => e.workItemKey).map((e) => e.workItemKey!)
+  );
+  const orphans = Object.keys(WORK_ITEMS).filter((k) => !selectable.has(k));
+  assert.deepEqual(
+    orphans,
+    [],
+    `arbeidsposter uten vei inn i kalkulatoren: ${orphans.join(", ")}`
+  );
 });
 
 /* ══════════════════ HIMLING, GULV, LIST, VEGGER ══════════════════ */

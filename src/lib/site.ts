@@ -1,6 +1,7 @@
 export const site = {
   name: "Tømrer Kawiche",
-  legalName: "Tømrer Kawiche AS",
+  // IKKE "AS" — selskapet er ikke registrert som aksjeselskap.
+  legalName: "Tømrer Kawiche",
   url: "https://tomrerkawiche.no",
   email: "kontakt@tomrerkawiche.no",
   phone: "+47 92 12 82 53",

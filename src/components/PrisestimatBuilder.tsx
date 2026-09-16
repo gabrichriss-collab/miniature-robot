@@ -457,21 +457,10 @@ function EstimatePanel({
                   >
                     {s.label}
                   </span>
+                  {/* Privatkunder betaler inkl. mva, så det tallet står
+                      størst. «Fra» når noe er upriset — summen er et
+                      minimum, ikke et ferdig sammenligningstall. */}
                   <span className="headline mt-4 block text-2xl md:text-3xl">
-                    {/* «Fra» når noe er upriset — summen er et minimum,
-                        ikke en total. Da kan den ikke leses som et
-                        ferdig sammenligningstall. */}
-                    {incomplete ? "Fra " : ""}
-                    {formatNok(s.subtotalExVat)} kr
-                  </span>
-                  <span
-                    className={`mt-1 block text-xs ${
-                      selected ? "text-bone/70" : "text-ink/60"
-                    }`}
-                  >
-                    eks. mva
-                  </span>
-                  <span className="mt-3 block text-base font-medium">
                     {incomplete ? "Fra " : ""}
                     {formatNok(s.totalIncVat)} kr
                   </span>
@@ -481,6 +470,14 @@ function EstimatePanel({
                     }`}
                   >
                     inkl. mva
+                  </span>
+                  <span
+                    className={`mt-3 block text-sm ${
+                      selected ? "text-bone/85" : "text-ink/75"
+                    }`}
+                  >
+                    {incomplete ? "Fra " : ""}
+                    {formatNok(s.subtotalExVat)} kr eks. mva
                   </span>
                   {/* REGEL: en ufullstendig materialkurv skal aldri kunne
                       leses som en ferdig materialpris. */}
@@ -841,7 +838,7 @@ function RowItem({
               onChange={(e) =>
                 updateRow(row.id, "difficulty", e.target.value as DifficultyKey)
               }
-              className="border-b border-ink/20 bg-transparent py-1 text-xs focus:border-ink focus:outline-none"
+              className="min-h-[44px] border-b border-ink/20 bg-transparent py-2 text-xs focus:border-ink focus:outline-none"
               aria-label="Tilkomst"
             >
               {(Object.keys(DIFFICULTY_LABELS) as DifficultyKey[]).map((k) => (
@@ -929,7 +926,7 @@ function RowItem({
       </div>
 
       <select
-        className="border border-ink/20 bg-transparent px-2 py-2 text-center text-sm focus:border-ink focus:outline-none"
+        className="min-h-[44px] border border-ink/20 bg-transparent px-2 py-2 text-center text-sm focus:border-ink focus:outline-none"
         value={row.unit}
         onChange={(e) => updateRow(row.id, "unit", e.target.value)}
         aria-label="Enhet"
@@ -943,9 +940,10 @@ function RowItem({
 
       <input
         type="number"
+        inputMode="decimal"
         step="any"
         min="0"
-        className="border border-ink/20 bg-transparent px-3 py-2 text-right text-sm focus:border-ink focus:outline-none"
+        className="min-h-[44px] border border-ink/20 bg-transparent px-3 py-2 text-right text-sm focus:border-ink focus:outline-none"
         placeholder="0"
         value={row.qty}
         onChange={(e) => updateRow(row.id, "qty", e.target.value)}
@@ -962,9 +960,10 @@ function RowItem({
       ) : (
         <input
           type="number"
+          inputMode="decimal"
           step="any"
           min="0"
-          className="border-b border-ink/20 bg-transparent px-2 py-2 text-right text-sm focus:border-ink focus:outline-none"
+          className="min-h-[44px] border-b border-ink/20 bg-transparent px-2 py-2 text-right text-sm focus:border-ink focus:outline-none"
           placeholder="0"
           value={row.price}
           onChange={(e) => updateRow(row.id, "price", e.target.value)}
@@ -1005,7 +1004,7 @@ function RowSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="max-w-[12rem] border-b border-ink/20 bg-transparent py-1 text-xs focus:border-ink focus:outline-none"
+        className="min-h-[44px] max-w-[12rem] border-b border-ink/20 bg-transparent py-2 text-xs focus:border-ink focus:outline-none"
         aria-label={label}
       >
         {options.map(([k, l]) => (
@@ -1386,6 +1385,12 @@ function buildEnquiryPrefill({
   lines.push("");
 
   lines.push(`Materialvalg: ${MATERIAL_TIER_LABELS[totals.materialTier]}`);
+  if (totals.estimate.hasPendingLabor) {
+    lines.push(
+      "MERK: én eller flere poster kunne ikke beregnes automatisk og er " +
+        "ikke med i summen."
+    );
+  }
   if (totals.laborHours > 0) {
     lines.push(`Sum arbeidstimer: ${formatHours(totals.laborHours)} t`);
   }
@@ -1394,9 +1399,10 @@ function buildEnquiryPrefill({
   );
   if (totals.materialTier !== "none") {
     lines.push(`Materialer: ${formatNok(totals.materialExVat)} kr eks. mva`);
-    if (totals.materialIsFloor) {
+    if (!totals.materialEstimateComplete) {
       lines.push(
-        "  (deler av materialene er ikke medregnet og avklares ved befaring)"
+        "  MERK: delvis materialestimat — deler av materialene er ikke " +
+          "medregnet og avklares ved befaring."
       );
     }
   }

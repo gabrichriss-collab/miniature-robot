@@ -71,7 +71,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#161311 0%,#4a3b30 55%,#9a8265 100%)",
-    image: "/images/services/rehabilitering.jpg",
+    // Legg filen i /public/images/services/rehabilitering.jpg og fjern kommentaren:
+    // image: "/images/services/rehabilitering.jpg",
     imageAlt: "Rehabilitering av trehus med stillas og utskifting av kledning"
   },
   {
@@ -118,7 +119,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#181c1a 0%,#3a4a3f 50%,#7c8c78 100%)",
-    image: "/images/services/tilbygg.jpg",
+    // Legg filen i /public/images/services/tilbygg.jpg og fjern kommentaren:
+    // image: "/images/services/tilbygg.jpg",
     imageAlt: "Moderne tilbygg i tre med store glassdører og terrasse"
   },
   {
@@ -165,7 +167,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#1e1712 0%,#5a3d28 50%,#b58a5f 100%)",
-    image: "/images/services/terrasse-uterom.jpg",
+    // Legg filen i /public/images/services/terrasse-uterom.jpg og fjern kommentaren:
+    // image: "/images/services/terrasse-uterom.jpg",
     imageAlt: "Terrasse i tre med glassrekkverk og utsikt"
   },
   {
@@ -212,7 +215,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#171614 0%,#3d3830 50%,#8a8377 100%)",
-    image: "/images/services/fasade.jpg",
+    // Legg filen i /public/images/services/fasade.jpg og fjern kommentaren:
+    // image: "/images/services/fasade.jpg",
     imageAlt: "Moderne fasade med mørk stående trekledning"
   },
   {
@@ -259,7 +263,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#1c1a17 0%,#3a3128 50%,#6b5b46 100%)",
-    image: "/images/services/vinduer-dorer.jpg",
+    // Legg filen i /public/images/services/vinduer-dorer.jpg og fjern kommentaren:
+    // image: "/images/services/vinduer-dorer.jpg",
     imageAlt: "Hvite vinduer montert i trekledd bolig"
   },
   {
@@ -306,7 +311,8 @@ export const services: Service[] = [
       }
     ],
     gradient: "linear-gradient(150deg,#14110e 0%,#3a2b1e 50%,#8a6a3f 100%)",
-    image: "/images/services/innvendig.jpg",
+    // Legg filen i /public/images/services/innvendig.jpg og fjern kommentaren:
+    // image: "/images/services/innvendig.jpg",
     imageAlt: "Innvendig tømrerarbeid med spilevegg og spesialtilpasset entré"
   }
 ];
