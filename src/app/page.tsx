@@ -197,8 +197,9 @@ export default function Home() {
             </h2>
             <p className="mt-8 max-w-2xl text-lg text-ink/80">
               Beskriv arbeidet linje for linje, så gir vi deg et veiledende
-              prisestimat basert på våre normale satser. Estimatet er ikke
-              bindende — endelig pris avtales etter befaring.
+              prisestimat basert på prosjektets størrelse, valgte løsninger og
+              opplysningene du legger inn. Estimatet er ikke bindende — endelig
+              pris avtales etter befaring.
             </p>
             <Link
               href="/prisestimat"
