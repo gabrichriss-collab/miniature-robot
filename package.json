@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js scripts/verify-labor-calc.mjs",
+    "test:pricing": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.5.1",
     "next": "14.2.15",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@types/node": "20.14.10",

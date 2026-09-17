@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
-const items: Array<{ label: string; href: string; kicker: string }> = [
-  { label: "Tjenester", href: "/tjenester", kicker: "01" },
-  { label: "Prosjekter", href: "/prosjekter", kicker: "02" },
-  { label: "Om oss", href: "/om-oss", kicker: "03" },
-  { label: "Bærekraft", href: "/baerekraft", kicker: "04" },
-  { label: "Karriere", href: "/karriere", kicker: "05" },
-  { label: "Kontakt", href: "/kontakt", kicker: "06" }
+const items: Array<{ label: string; href: string }> = [
+  { label: "Tjenester", href: "/tjenester" },
+  { label: "Prosjekter", href: "/prosjekter" },
+  { label: "Prisestimat", href: "/prisestimat" },
+  { label: "Om oss", href: "/om-oss" },
+  { label: "Kontakt", href: "/kontakt" },
+  { label: "Be om tilbud", href: "/kontakt?type=tilbud" }
 ];
 
 export default function HamburgerOverlay({
@@ -37,19 +37,21 @@ export default function HamburgerOverlay({
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
+        // Origin tracks the hamburger button, which now sits top-LEFT
+        // (32px banner + 48px to the button's centre ≈ 5rem down).
         clipPath: open
-          ? "circle(150% at calc(100% - 2.75rem) 2.75rem)"
-          : "circle(0% at calc(100% - 2.75rem) 2.75rem)"
+          ? "circle(150% at 2.75rem 5rem)"
+          : "circle(0% at 2.75rem 5rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
-        <nav className="grid gap-2 md:gap-3">
+        <nav className="grid gap-1">
           {items.map((it, i) => (
             <Link
               key={it.href}
               href={it.href}
               onClick={onClose}
-              className="group grid grid-cols-[3rem_1fr_auto] items-baseline gap-6 border-b border-bone/15 py-4 md:py-6"
+              className="block py-2"
               style={{
                 transitionDelay: open ? `${120 + i * 60}ms` : "0ms",
                 opacity: open ? 1 : 0,
@@ -58,15 +60,8 @@ export default function HamburgerOverlay({
                   "opacity 600ms cubic-bezier(0.7,0,0.2,1), transform 700ms cubic-bezier(0.7,0,0.2,1)"
               }}
             >
-              <span className="eyebrow text-bone/50">{it.kicker}</span>
-              <span className="headline text-[clamp(2.25rem,7vw,5.5rem)]">
+              <span className="headline text-[clamp(1.75rem,5vw,3.25rem)]">
                 {it.label}
-              </span>
-              <span
-                aria-hidden
-                className="translate-x-0 text-bone/40 transition-transform duration-500 ease-swoop group-hover:translate-x-2"
-              >
-                →
               </span>
             </Link>
           ))}
@@ -76,17 +71,17 @@ export default function HamburgerOverlay({
           <div className="max-w-md">
             <p className="eyebrow mb-3 text-bone/50">Kontakt</p>
             <p className="text-lg text-bone/90">
-              post@tomrerkawiche.no
+              kontakt@tomrerkawiche.no
               <br />
-              +47 900 00 000
+              +47 92 12 82 53
             </p>
           </div>
           <div className="max-w-sm text-right">
             <p className="eyebrow mb-3 text-bone/50">Verksted</p>
             <p className="text-lg text-bone/90">
-              Tømrerveien 12
+              Uglåsvegen 26
               <br />
-              0000 Oslo, Norge
+              5957 Myking, Norge
             </p>
           </div>
         </div>

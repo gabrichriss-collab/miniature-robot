@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { notifyLead } from "@/lib/notifyLead";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,23 +71,55 @@ export async function POST(req: Request) {
       "utf8"
     );
   } catch {
-    // Non-fatal — surface via server logs for the operator.
     console.log("[contact] fs unavailable, logging only:", entry);
   }
 
-  // Forward to an outbound webhook if configured (e.g. Zapier, Slack, Resend).
-  const hook = process.env.CONTACT_WEBHOOK_URL;
-  if (hook) {
-    try {
-      await fetch(hook, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(entry)
-      });
-    } catch (err) {
-      console.error("[contact] webhook failed", err);
-    }
-  }
+  const emailSubject = subject
+    ? `Ny henvendelse: ${subject}`
+    : `Ny henvendelse fra ${name}`;
+
+  const text = [
+    `Ny henvendelse via tomrerkawiche.no`,
+    ``,
+    `Navn:     ${name}`,
+    `E-post:   ${email}`,
+    phone ? `Telefon:  ${phone}` : null,
+    subject ? `Emne:     ${subject}` : null,
+    ``,
+    `Melding:`,
+    message,
+    ``,
+    `— Sendt ${new Date().toLocaleString("nb-NO")}`
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const html = `
+    <div style="font-family:Georgia,serif;color:#0a0a0a;max-width:640px">
+      <h2 style="font-family:'Sorts Mill Goudy',Georgia,serif;font-weight:400;font-size:28px;margin:0 0 24px">
+        Ny henvendelse
+      </h2>
+      <table style="border-collapse:collapse;width:100%;font-size:14px">
+        <tr><td style="padding:6px 0;color:#666;width:120px">Navn</td><td style="padding:6px 0"><strong>${escape(name)}</strong></td></tr>
+        <tr><td style="padding:6px 0;color:#666">E-post</td><td style="padding:6px 0"><a href="mailto:${escape(email)}">${escape(email)}</a></td></tr>
+        ${phone ? `<tr><td style="padding:6px 0;color:#666">Telefon</td><td style="padding:6px 0"><a href="tel:${escape(phone)}">${escape(phone)}</a></td></tr>` : ""}
+        ${subject ? `<tr><td style="padding:6px 0;color:#666">Emne</td><td style="padding:6px 0">${escape(subject)}</td></tr>` : ""}
+      </table>
+      <div style="margin-top:24px;padding:16px;border-left:2px solid #c9c4bc;white-space:pre-wrap">${escape(message)}</div>
+      <p style="margin-top:32px;color:#999;font-size:12px">
+        Trykk «Svar» for å svare kunden direkte.
+      </p>
+    </div>
+  `;
+
+  await notifyLead({
+    kind: "contact",
+    subject: emailSubject,
+    text,
+    html,
+    meta: entry,
+    replyTo: email
+  });
 
   return NextResponse.json(
     { message: "Takk. Vi kommer tilbake til deg innen én virkedag." },
@@ -96,4 +129,12 @@ export async function POST(req: Request) {
 
 export function GET() {
   return NextResponse.json({ ok: true, service: "contact" });
+}
+
+function escape(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

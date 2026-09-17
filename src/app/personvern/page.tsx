@@ -121,7 +121,7 @@ export default function PersonvernPage() {
       <PageHeader
         kicker="Personvern"
         title="Åpen om data."
-        lede="Kort og forståelig om hvordan vi behandler personopplysninger på denne nettsiden — i tråd med personvernforordningen (GDPR) og norsk personopplysningslov."
+        lede="Kort og forståelig om hvordan vi behandler personopplysninger på denne nettsiden — etter GDPR og norsk personopplysningslov."
       />
 
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-28 md:px-10 md:pb-40">
@@ -133,9 +133,6 @@ export default function PersonvernPage() {
             <ul className="mt-10 space-y-3">
               {sections.map((s, i) => (
                 <li key={s.h} className="flex gap-4 text-sm text-ink/70">
-                  <span className="eyebrow text-ink/40">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
                   <a href={`#s-${i + 1}`} className="uline">
                     {s.h}
                   </a>
@@ -146,10 +143,7 @@ export default function PersonvernPage() {
           <div className="md:col-span-8 space-y-14">
             {sections.map((s, i) => (
               <article key={s.h} id={`s-${i + 1}`}>
-                <p className="eyebrow text-ink/50">
-                  {String(i + 1).padStart(2, "0")}
-                </p>
-                <h2 className="headline mt-3 text-3xl md:text-4xl">{s.h}</h2>
+                <h2 className="headline text-3xl md:text-4xl">{s.h}</h2>
                 <div className="mt-6 space-y-4 text-ink/85">{s.body}</div>
               </article>
             ))}

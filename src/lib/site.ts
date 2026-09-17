@@ -1,15 +1,17 @@
 export const site = {
   name: "Tømrer Kawiche",
-  legalName: "Tømrer Kawiche AS",
+  // IKKE "AS" — selskapet er ikke registrert som aksjeselskap.
+  legalName: "Tømrer Kawiche",
   url: "https://tomrerkawiche.no",
-  email: "post@tomrerkawiche.no",
-  phone: "+47 900 00 000",
-  phoneHref: "tel:+4790000000",
-  orgNumber: "000 000 000",
+  email: "kontakt@tomrerkawiche.no",
+  phone: "+47 92 12 82 53",
+  phoneHref: "tel:+4792128253",
+  orgNumber: "933 526 399",
   address: {
-    street: "Tømrerveien 12",
-    postal: "0000",
-    city: "Oslo",
+    street: "Uglåsvegen 26",
+    postal: "5957",
+    city: "Myking",
+    region: "Vestland",
     country: "NO",
     countryName: "Norge"
   },
@@ -20,5 +22,15 @@ export const site = {
   social: {
     instagram: "https://instagram.com",
     linkedin: "https://linkedin.com"
-  }
+  },
+  // Primær geografi brukt i copy og strukturerte data
+  areasServed: [
+    "Bergen",
+    "Nordhordland",
+    "Alver",
+    "Osterøy",
+    "Åsane",
+    "Vestland"
+  ],
+  positioning: "Bergen, Nordhordland og omegn"
 } as const;

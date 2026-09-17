@@ -4,6 +4,9 @@ import "./globals.css";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import { site } from "@/lib/site";
+import MobileActionBar from "@/components/MobileActionBar";
+import UnderConstructionBanner from "@/components/UnderConstructionBanner";
 
 const display = Sorts_Mill_Goudy({
   subsets: ["latin"],
@@ -24,28 +27,28 @@ const body = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://tomrerkawiche.no"),
   title: {
-    default: "Tømrer Kawiche — Tømrermester i Oslo · Håndverk med presisjon",
+    default: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     template: "%s · Tømrer Kawiche"
   },
   description:
-    "Tømrer Kawiche er et tømrerverksted i Oslo. Vi bygger boliger, tilbygg, interiør og spesialsnekring i tre — med tradisjonelt håndverk og moderne presisjon.",
+    "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn.",
   keywords: [
-    "tømrer Oslo",
-    "tømrermester",
-    "snekker Oslo",
-    "tilbygg",
-    "nybygg",
-    "påbygg",
-    "spesialsnekring",
-    "rehabilitering",
-    "massivtre",
-    "byggmester",
-    "trehus",
-    "loftsutbygging"
+    "tømrer Bergen",
+    "snekker Bergen",
+    "terrasse Bergen",
+    "bygge terrasse Bergen",
+    "rehabilitering Bergen",
+    "tilbygg Bergen",
+    "skifte kledning Bergen",
+    "kledning Bergen",
+    "bytte vinduer Bergen",
+    "tømrer Nordhordland",
+    "tømrer Alver",
+    "tømrer Åsane"
   ],
-  authors: [{ name: "Tømrer Kawiche AS" }],
-  creator: "Tømrer Kawiche AS",
-  publisher: "Tømrer Kawiche AS",
+  authors: [{ name: site.legalName }],
+  creator: site.legalName,
+  publisher: site.legalName,
   alternates: {
     canonical: "/",
     languages: { "nb-NO": "/" }
@@ -55,15 +58,15 @@ export const metadata: Metadata = {
     locale: "nb_NO",
     url: "https://tomrerkawiche.no",
     siteName: "Tømrer Kawiche",
-    title: "Tømrer Kawiche — Tømrermester i Oslo",
+    title: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon."
+      "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn."
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tømrer Kawiche — Tømrermester i Oslo",
+    title: "Tømrer Kawiche | Tømrer i Bergen og Nordhordland",
     description:
-      "Boliger, tilbygg, interiør og spesialsnekring i tre. Håndverk med presisjon."
+      "Tømrer Kawiche utfører rehabilitering, terrasse, tilbygg, kledning, vinduer, dører og innvendig tømrerarbeid i Bergen, Nordhordland og omegn."
   },
   robots: {
     index: true,
@@ -82,9 +85,11 @@ export default function RootLayout({
     <html lang="nb-NO" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-bone text-ink antialiased">
         <JsonLd />
+        <UnderConstructionBanner />
         <Nav />
-        <main>{children}</main>
+        <main className="pb-14 lg:pb-0">{children}</main>
         <Footer />
+        <MobileActionBar />
       </body>
     </html>
   );
