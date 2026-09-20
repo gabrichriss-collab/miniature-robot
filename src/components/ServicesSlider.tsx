@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { services } from "@/data/services";
+import SliderArrow from "./SliderArrow";
 
 /**
  * Multiform.dk-inspired horizontal slider for the home Tjenester section.
@@ -173,18 +174,22 @@ export default function ServicesSlider() {
         <div aria-hidden className="flex-none w-6 md:w-10" />
       </div>
 
-      {/* Controls */}
+      {/* Kontroller.
+          min-h-[44px] gir hele knappen et usynlig trykkfelt paa 44 px i
+          hoeyde selv om selve streken bare er ~13 px hoey — kunden skal
+          ikke maatte treffe den tynne linja. Bredden (56/72 px) er
+          allerede over 44 px. Ingen ramme, ingen flate: knappen ER pila. */}
       <div className="mx-auto mt-10 flex max-w-[var(--page-max)] items-center px-6 md:mt-14 md:px-10">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-8 md:gap-10">
           <button
             type="button"
             onClick={() => goTo(index - 1)}
             aria-label="Forrige tjeneste"
             disabled={index === 0}
-            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 press hover:bg-ink hover:text-bone disabled:opacity-30"
+            className="group flex min-h-[44px] items-center text-ink/75 transition-colors duration-500 ease-swoop hover:text-ink disabled:opacity-30 disabled:hover:text-ink/75"
           >
-            <span aria-hidden className="transition-transform group-hover:-translate-x-0.5">
-              ←
+            <span className="transition-transform duration-500 ease-swoop group-hover:-translate-x-[5px] group-disabled:translate-x-0">
+              <SliderArrow direction="prev" />
             </span>
           </button>
           <button
@@ -192,10 +197,10 @@ export default function ServicesSlider() {
             onClick={() => goTo(index + 1)}
             aria-label="Neste tjeneste"
             disabled={index === services.length - 1}
-            className="group flex h-12 w-12 items-center justify-center rounded-full border border-ink/40 press hover:bg-ink hover:text-bone disabled:opacity-30"
+            className="group flex min-h-[44px] items-center text-ink/75 transition-colors duration-500 ease-swoop hover:text-ink disabled:opacity-30 disabled:hover:text-ink/75"
           >
-            <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
-              →
+            <span className="transition-transform duration-500 ease-swoop group-hover:translate-x-[5px] group-disabled:translate-x-0">
+              <SliderArrow direction="next" />
             </span>
           </button>
         </div>
