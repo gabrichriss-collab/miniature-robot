@@ -35,6 +35,34 @@
      and used until the licensed Penumbra Std webfont is added. */
   --font-body: "Penumbra Std", var(--font-body-fallback);
   --page-max: 88rem;
+
+  /* --- Materialtokens: roeykfarget glass + filmkorn -------------------
+     Brukes KUN paa flater som ligger OPPAA hero-fotografi. De kremfargede
+     innholdsflatene paa resten av nettstedet skal forbli solide — kontrasten
+     mellom atmosfaerisk foto og rolig, redaksjonelt innhold er hele poenget.
+
+     Glasset er stemt mot varm tommer, ikke mot blaatt: --glass-bg er en
+     varm, noesten svart grsontone, og blur-en har en liten saturate() slik
+     at treverket bak ikke blir graatt naar det slores. */
+  --glass-bg: rgba(20, 20, 17, 0.38);
+  --glass-blur: 14px;
+  --glass-border: rgba(255, 255, 255, 0.16);
+
+  /* Fallback naar nettleseren ikke stoetter backdrop-filter (eldre Firefox,
+     "reduser gjennomsiktighet" i iOS/macOS). Da faar flaten en tettere
+     bakgrunn i stedet, slik at teksten fortsatt er lesbar. Lesbarheten skal
+     aldri hvile paa blur-en alene. */
+  --glass-bg-opaque: rgba(20, 20, 17, 0.58);
+
+  /* Filmkorn. Verdien er MAALT, ikke gjettet: med overlay-blending mot
+     den moerke hero-flaten gir 0.30 ca. 2,6 % gjennomsnittlig modulasjon
+     og maks 16 av 255 nivaaer — innenfor maalet paa 2–4 %, i den rolige
+     enden. Synlig kun hvis man leter etter det.
+
+     MERK ved bytte til ekte hero-foto: overlay virker sterkere mot lyse
+     flater enn mot moerke. Et lyst fotografi vil gi vesentlig kraftigere
+     korn med samme tall — maal paa nytt og juster denne ene verdien. */
+  --grain-opacity: 0.3;
 }
 
 html,
@@ -121,6 +149,15 @@ h3 {
   animation: kenburns 18s ease-out both;
 }
 
+/* Hero-driften er dekorativ. Ved redusert bevegelse staar bildet stille
+   paa sluttbeskjaeringen, slik at komposisjonen blir den samme. */
+@media (prefers-reduced-motion: reduce) {
+  .kenburns {
+    animation: none;
+    transform: scale(1.04);
+  }
+}
+
 /* Fine noise texture — mimics Polestar's tactile feel */
 .noise::before {
   content: "";
@@ -132,15 +169,59 @@ h3 {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-/* Stronger, more visible grain — for the photographic hero */
-.grain-strong::before {
+/* --- Filmkorn -------------------------------------------------------
+   Gjenbrukbar primitiv for fotografiske flater. Legges paa en
+   position:relative-forelder og dekker den helt.
+
+   Kornet genereres av feTurbulence i en inline-SVG — ingen bildefil
+   lastes ned. baseFrequency 0.9 gir fint korn (lavere verdi klumper seg
+   og ser ut som skyer/stoev), og 2 oktaver holder det roelig. 200 px
+   flis med stitchTiles='stitch' fjerner synlige skjoeter, slik at det
+   ikke oppstaar et gjenkjennelig repeterende moenster.
+
+   Styrken styres av --grain-opacity slik at enkeltflater kan dempe
+   eller forsterke kornet uten aa duplisere regelen.
+
+   I bruk i dag: KUN hero-en paa forsiden. Prosjektfoto og andre
+   fullbredde-bildeseksjoner kan ta den i bruk senere. */
+.grain::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: var(--grain-opacity);
   mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+  /* feColorMatrix-en er ikke pynt: feTurbulence gir tilfeldige verdier i
+     ALLE fire kanaler, ogsaa alfa. Ufiltrert blir det fargestoey som ser
+     ut som JPEG-artefakter. Matrisen slaar RGB sammen til ren luminans og
+     laaser alfa til 1, slik at kornet blir noeytralt graatt — som film. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>");
+}
+
+/* --- Roeykfarget glass ----------------------------------------------
+   Aksentmateriale. Brukes kun der en gjennomskinnelig flate faktisk
+   gjoer teksten lettere aa lese oppaa fotografi — ikke som generell
+   knappe- eller kortstil.
+
+   .glass setter bakgrunn og blur. Kanten ligger i .glass-edge slik at
+   den som bruker klassen fritt kan sette sin egen rammefarge med
+   Tailwind uten aa slaas med spesifisitet. */
+.glass {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(115%);
+}
+
+.glass-edge {
+  border-color: var(--glass-border);
+}
+
+/* Uten backdrop-filter blir flaten tettere i stedet for aa bli utydelig. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: var(--glass-bg-opaque);
+  }
 }
 
 /* Reveal on load */

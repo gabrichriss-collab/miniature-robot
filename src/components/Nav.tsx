@@ -21,6 +21,12 @@ export default function Nav() {
   const hasDarkHero = DARK_HERO_ROUTES.has(pathname ?? "/");
   const overDark = (hasDarkHero && !scrolled) || open;
 
+  /* Roeykglass legges KUN paa headeren naar den faktisk ligger oppaa
+     hero-fotografiet — altsaa paa forsiden, foer scroll, og ikke naar
+     menyoverlegget er aapent (da eier overlegget flaten). Alle andre
+     sider beholder den eksisterende oppfoerselen. */
+  const overHero = hasDarkHero && !scrolled && !open;
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
@@ -37,16 +43,29 @@ export default function Nav() {
 
   const barColor = overDark ? "bg-bone" : "bg-ink";
   const textColor = overDark ? "text-bone" : "text-ink";
-  const linkColor = overDark
-    ? "text-bone/80 hover:text-bone"
-    : "text-ink/80 hover:text-ink";
+  /* Over hero-en loeftes lenkene fra 80 % til 90 % bone. Maalt kontrast mot
+     glassflaten paa det lyseste punktet i gradienten var 4,40:1 ved 80 %,
+     saa vidt under WCAG AA (4,5:1) for smaa versaler; 90 % gir 5,1:1.
+     Aa gjoere glasset moerkere i stedet ville gjort det til en moerk bjelke
+     fremfor en gjennomskinnelig flate. */
+  const linkColor = overHero
+    ? "text-bone/90 hover:text-bone"
+    : overDark
+      ? "text-bone/80 hover:text-bone"
+      : "text-ink/80 hover:text-ink";
 
   return (
     <>
       <header
         className={`fixed inset-x-0 top-8 z-40 border-b transition-colors duration-500 ease-swoop ${
-          scrolled && !open ? "bg-bone/85 backdrop-blur-md" : "bg-transparent"
-        } ${overDark ? "border-transparent" : "border-ink/15"}`}
+          open
+            ? "border-transparent bg-transparent"
+            : scrolled
+              ? "border-ink/15 bg-bone/85 backdrop-blur-md"
+              : overHero
+                ? "glass glass-edge"
+                : "border-ink/15 bg-transparent"
+        }`}
       >
         {/*
           Mobile (<lg): three-column grid — hamburger left, wordmark
@@ -113,12 +132,20 @@ export default function Nav() {
                 {label}
               </Link>
             ))}
+            {/* Den ENE knappen som tar i bruk glasspraaket. Oppaa hero-en
+                faar den en roeykfarget fyll i stedet for gjennomsiktig, slik
+                at den loefter seg fra fotografiet. Kanten og teksten forblir
+                solid bone — knappen skal bli lettere aa se, ikke svakere.
+                "Faa prisestimat" i mobilheaderen beholder sin heldekkende
+                flate; den er den viktigste handlingen og skal ikke tones ned. */}
             <Link
               href="/kontakt?type=tilbud"
               className={`group inline-flex items-center gap-3 border px-5 py-3 eyebrow press transition-colors duration-500 ease-swoop ${
-                overDark
-                  ? "border-bone text-bone hover:bg-bone hover:text-ink"
-                  : "border-ink text-ink hover:bg-ink hover:text-bone"
+                overHero
+                  ? "glass border-bone/70 text-bone hover:bg-bone hover:text-ink"
+                  : overDark
+                    ? "border-bone text-bone hover:bg-bone hover:text-ink"
+                    : "border-ink text-ink hover:bg-ink hover:text-bone"
               }`}
             >
               Be om tilbud
