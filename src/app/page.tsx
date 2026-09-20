@@ -41,20 +41,46 @@ export default function Home() {
     <>
       {/* 1. HERO */}
       <section className="relative -mt-24 flex h-[100svh] w-full items-end overflow-hidden bg-ink text-bone">
+        {/* Bildelag.
+            Legg hero.jpg i /public/images/ og sett tilbake
+            "url(/images/hero.jpg), " foran gradienten. Legg samtidig til
+            filter: "saturate(0.94) contrast(1.05)" paa dette laget — litt
+            dempet metning og kontrollert kontrast. Filteret er bevisst
+            IKKE paa naa: det ville kostet et eget komposittlag paa mobil
+            uten aa gjoere noe som helst med en ren CSS-gradient.
+
+            Gradienten er stemt mot materialene i profilen: groennsvart i
+            skyggen, varm tommer opp mot lyset. Lyskilden er lagt som en
+            radial-gradient forankret i PROSENT (78%/22%), ikke som en
+            vinkel. En vinklet gradient presser den varme enden ut av
+            bildet paa hoeye, smale mobilskjermer, og hero-en blir bare
+            brun; en forankret lyskilde holder seg paa plass i alle
+            formater. */}
         <div
           aria-hidden
           className="kenburns absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage:
-              // Legg hero.jpg i /public/images/ og sett tilbake
-              // "url(/images/hero.jpg), " foran gradienten.
-              "linear-gradient(120deg, #1c1a17 0%, #3a3128 40%, #6b5b46 100%)"
+              "radial-gradient(125% 95% at 78% 20%, #8a7357 0%, #6a5741 22%, #453a2b 46%, #262219 72%, #15160f 100%)"
           }}
         />
+
+        {/* Skyggelag. Retningsbestemt: tyngst nede der overskriften staar,
+            lett oppe slik at hero-en ikke blir unoedig moerk. Vignetten
+            legger til den lille optiske fallen mot hjoernene som skiller et
+            fotografert motiv fra en flat CSS-gradient. */}
         <div
           aria-hidden
-          className="grain-strong absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/20 to-ink/45"
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(to top, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.34) 34%, rgba(10,10,10,0.12) 62%, rgba(10,10,10,0.3) 100%), radial-gradient(118% 88% at 50% 38%, transparent 42%, rgba(10,10,10,0.42) 100%)"
+          }}
         />
+
+        {/* Kornlag — ligger over baade bilde og skygge slik at de to
+            smelter sammen til én flate i stedet for to. */}
+        <div aria-hidden className="grain absolute inset-0" />
         <div className="relative z-10 mx-auto flex h-full w-full max-w-[var(--page-max)] flex-col justify-end px-6 pb-16 md:px-10 md:pb-20">
           <h1 className="headline rise rise-2 text-[clamp(2rem,5vw,4.75rem)]">
             Forpliktet til perfeksjon.
