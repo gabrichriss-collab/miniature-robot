@@ -1,48 +1,65 @@
 /**
  * Menymerke for mobil og nettbrett.
  *
- * LUKKET:  ────────────    én lang, tynn vannrett strek
- * AAPEN:   ✕ (avlangt)     samme strek krysset av den andre
+ * LUKKET:      │          AAPEN:      ╲   ╱
+ *          ────┼────                    ╳
+ *              │                      ╱   ╲
  *
- * Merket er bygget av TO like lange streker som ligger noeyaktig oppaa
- * hverandre naar menyen er lukket. To identiske 1,25 px streker i samme
- * farge tegner seg som én strek, saa hviletilstanden er den rene linja
- * fra referansen — ingen hamburger, ingen permanent plusstegn.
+ * Hviletilstanden er et PLUSS: én vannrett og én loddrett strek som
+ * krysser hverandre noeyaktig i midten. Ikke en hamburger, ikke én
+ * enkelt strek, ikke et minus.
  *
- * Naar menyen aapnes roterer de fra hverandre, +45 og -45 grader om sitt
- * felles midtpunkt. Krysset som oppstaar beholder hele linjelengden og
- * blir dermed avlangt og arkitektonisk, ikke et lite generisk ikon.
+ * Begge strekene er SAMME element med samme lengde — den loddrette er
+ * bare den vannrette rotert 90 grader. Det er derfor de er nøyaktig like
+ * lange og møtes presist i sentrum: det finnes bare ett mål, ikke to som
+ * kan komme ut av takt.
  *
- * Det er ingen utskifting av ikoner. Det er de samme to elementene hele
- * veien, og bevegelsen reverseres noeyaktig ved lukking.
+ * Ved aapning legges 45 grader til BEGGE strekene. Plusset roterer da
+ * som én figur over til et kryss, uten at noe bytter plass eller
+ * stoerrelse. Det er de samme to elementene hele veien — ingen
+ * utskifting av ikoner — og bevegelsen reverseres noeyaktig ved lukking.
  *
- * Merk: dette er en full omskriving, ikke et lag oppaa den forrige
- * loesningen. Den gamle brukte én vannrett strek pluss en kort loddrett
- * som skalerte i hoeyde; den geometrien og dens klasser finnes ikke
- * lenger. Ingen pseudoelementer, ingen media-query-overstyringer —
- * merket har én stoerrelse paa alle sammenslaatte bredder.
+ * Merk: dette erstatter den forrige loesningen, der to vannrette streker
+ * laa oppaa hverandre og leste som én linje i hvile. Den geometrien
+ * finnes ikke lenger.
  */
 const DURATION_MS = 800;
 
+/** Synlig strek. 42 px ligger midt i det oppgitte spennet 38–48 px. */
+const STROKE_LENGTH_PX = 42;
+
 export default function MenuMark({ open }: { open: boolean }) {
-  // Felles for begge strekene. -translate-y-1/2 sentrerer dem loddrett;
-  // rotasjonen skjer om deres eget midtpunkt, som dermed ligger i midten
-  // av trykkfeltet.
+  // Begge strekene tegnes vannrett og sentreres i boksen. Rotasjonen
+  // skjer om deres eget midtpunkt, som dermed er boksens midtpunkt —
+  // derfor treffer krysningen alltid sentrum.
   const stroke =
-    "absolute left-0 top-1/2 block w-full -translate-y-1/2 bg-current transition-transform ease-menu motion-reduce:transition-none motion-reduce:duration-0";
+    "absolute left-1/2 top-1/2 block bg-current transition-transform ease-menu motion-reduce:transition-none motion-reduce:duration-0";
+
+  const base: React.CSSProperties = {
+    width: `${STROKE_LENGTH_PX}px`,
+    height: "1.25px",
+    marginLeft: `-${STROKE_LENGTH_PX / 2}px`,
+    marginTop: "-0.625px",
+    transitionDuration: `${DURATION_MS}ms`
+  };
 
   return (
-    // 60 x 44 px: synlig strek 60 px, og hele boksen er trykkfelt.
-    <span className="relative block h-11 w-[60px]">
+    // 44 x 44 px trykkfelt rundt et 42 px merke. Ingen ramme, ingen
+    // flate, ingen sirkel — boksen er usynlig.
+    <span className="relative block h-11 w-11">
+      {/* Vannrett strek: 0 grader lukket, 45 grader aapen. */}
       <span
         aria-hidden
-        className={`${stroke} ${open ? "rotate-45" : "rotate-0"}`}
-        style={{ height: "1.25px", transitionDuration: `${DURATION_MS}ms` }}
+        className={stroke}
+        style={{ ...base, transform: `rotate(${open ? 45 : 0}deg)` }}
       />
+      {/* Loddrett strek: samme strek rotert 90 grader, saa 90 lukket og
+          135 aapen. Forskjellen paa de to er konstant 90 grader i begge
+          tilstander, altsaa alltid vinkelrett. */}
       <span
         aria-hidden
-        className={`${stroke} ${open ? "-rotate-45" : "rotate-0"}`}
-        style={{ height: "1.25px", transitionDuration: `${DURATION_MS}ms` }}
+        className={stroke}
+        style={{ ...base, transform: `rotate(${open ? 135 : 90}deg)` }}
       />
     </span>
   );
