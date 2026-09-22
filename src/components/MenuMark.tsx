@@ -1,56 +1,48 @@
 /**
- * Menymerke — en lang, tynn vannrett strek med en kortere loddrett
- * strek gjennom midten.
+ * Menymerke for mobil og nettbrett.
  *
- * Den VANNRETTE streken er identiteten. Den forsvinner aldri, verken
- * aapen eller lukket, og den er ca. tre ganger saa lang som den
- * loddrette er hoey. Det er derfor merket aldri leser som et vanlig
- * likearmet pluss eller som en hamburger.
+ * LUKKET:  ────────────    én lang, tynn vannrett strek
+ * AAPEN:   ✕ (avlangt)     samme strek krysset av den andre
  *
- * Lukket:  ─────────────────
- * Aapen:   ────────┼────────
+ * Merket er bygget av TO like lange streker som ligger noeyaktig oppaa
+ * hverandre naar menyen er lukket. To identiske 1,25 px streker i samme
+ * farge tegner seg som én strek, saa hviletilstanden er den rene linja
+ * fra referansen — ingen hamburger, ingen permanent plusstegn.
  *
- * HVILETILSTANDEN er den rene vannrette streken. Det er den kunden ser
- * naar ingenting skjer, og den som er referansen for kontrollen.
+ * Naar menyen aapnes roterer de fra hverandre, +45 og -45 grader om sitt
+ * felles midtpunkt. Krysset som oppstaar beholder hele linjelengden og
+ * blir dermed avlangt og arkitektonisk, ikke et lite generisk ikon.
  *
- * Aapningen er IKKE et bytte av ikon. Den loddrette streken vokser UT av
- * den vannrette, mot begge sider samtidig (scaleY fra sitt eget
- * midtpunkt, som ligger noeyaktig paa den vannrette streken), mens den
- * vannrette strekker seg 4 % ut. Det er den samme geometrien hele veien,
- * og den reverseres noeyaktig naar menyen lukkes.
+ * Det er ingen utskifting av ikoner. Det er de samme to elementene hele
+ * veien, og bevegelsen reverseres noeyaktig ved lukking.
  *
- * Bevisst IKKE en rotasjon til kryss: et kryss ville kastet bort den
- * lange vannrette linja som er hele poenget med kontrollen.
- *
- * Bygget av spans og ikke SVG fordi transform-origin paa en SVG-path
- * uten hoeyde (en ren vannrett linje) er upaalitelig paa tvers av
- * nettlesere. Her er origo rett og slett elementets midtpunkt.
- *
- * 800 ms med ease-menu. Bevegelsen skal kunne SES.
+ * Merk: dette er en full omskriving, ikke et lag oppaa den forrige
+ * loesningen. Den gamle brukte én vannrett strek pluss en kort loddrett
+ * som skalerte i hoeyde; den geometrien og dens klasser finnes ikke
+ * lenger. Ingen pseudoelementer, ingen media-query-overstyringer —
+ * merket har én stoerrelse paa alle sammenslaatte bredder.
  */
+const DURATION_MS = 800;
+
 export default function MenuMark({ open }: { open: boolean }) {
-  const line =
-    "absolute block bg-current transition-transform duration-[800ms] ease-menu motion-reduce:transition-none motion-reduce:duration-0";
+  // Felles for begge strekene. -translate-y-1/2 sentrerer dem loddrett;
+  // rotasjonen skjer om deres eget midtpunkt, som dermed ligger i midten
+  // av trykkfeltet.
+  const stroke =
+    "absolute left-0 top-1/2 block w-full -translate-y-1/2 bg-current transition-transform ease-menu motion-reduce:transition-none motion-reduce:duration-0";
 
   return (
-    <span className="relative block h-5 w-14 md:w-16">
-      {/* Vannrett — identiteten. Staar alltid der, i begge tilstander.
-          Strekker seg 4 % ut naar menyen aapnes. */}
+    // 60 x 44 px: synlig strek 60 px, og hele boksen er trykkfelt.
+    <span className="relative block h-11 w-[60px]">
       <span
         aria-hidden
-        className={`${line} left-0 top-1/2 w-full -translate-y-1/2 ${
-          open ? "scale-x-[1.04]" : ""
-        }`}
-        style={{ height: "1.25px" }}
+        className={`${stroke} ${open ? "rotate-45" : "rotate-0"}`}
+        style={{ height: "1.25px", transitionDuration: `${DURATION_MS}ms` }}
       />
-      {/* Loddrett — ligger sammenfoldet i den vannrette streken naar
-          menyen er lukket, og vokser ut naar den aapnes. */}
       <span
         aria-hidden
-        className={`${line} left-1/2 top-0 h-full -translate-x-1/2 ${
-          open ? "" : "scale-y-0"
-        }`}
-        style={{ width: "1.25px" }}
+        className={`${stroke} ${open ? "-rotate-45" : "rotate-0"}`}
+        style={{ height: "1.25px", transitionDuration: `${DURATION_MS}ms` }}
       />
     </span>
   );
