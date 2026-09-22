@@ -68,49 +68,83 @@ export default function Nav() {
         }`}
       >
         {/*
-          Mobile (<lg): three-column grid — hamburger left, wordmark
-          centred, "Få prisestimat" CTA right (Connaught-style).
-          Desktop (lg+): flex row — wordmark left, inline nav right.
-          Hidden children are display:none so they drop out of the grid
-          entirely rather than wrapping to a second row.
+          Mobil og nettbrett (<lg): Prisestimat venstre, ordmerke midt,
+          menymerke hoeyre. Desktop (lg+): flex-rad — ordmerke venstre,
+          nav hoeyre, noeyaktig som foer.
+
+          Kolonnene er [1fr auto 1fr], IKKE [auto 1fr auto]. Med den
+          gamle oppskriften fikk ordmerket midtstilling inne i
+          midtkolonnen, men midtkolonnen selv ble skjoevet av at
+          sidekontrollene har ulik bredde — maalt laa ordmerket 37,9 px
+          til venstre for skjermmidten. To like 1fr-kolonner gir en
+          auto-kolonne som faktisk staar midt i viewporten, uansett hvor
+          brede kontrollene paa sidene er.
+
+          Skjulte barn er display:none og faller helt ut av rutenettet,
+          saa desktop-navet tar ingen celle paa mobil.
         */}
-        <div className="mx-auto grid h-24 max-w-[var(--page-max)] grid-cols-[auto_1fr_auto] items-center gap-2 px-6 sm:gap-4 lg:flex lg:justify-between lg:gap-0 lg:px-10">
-          {/* Menyutloeser — mobil + nettbrett, venstre kolonne.
+        <div className="mx-auto grid h-16 max-w-[var(--page-max)] grid-cols-[1fr_auto_1fr] items-center gap-3 px-6 lg:flex lg:h-24 lg:justify-between lg:gap-0 lg:px-10">
+          {/* Prisestimat — VENSTRE kolonne paa mobil og nettbrett.
+
+              Den heldekkende flaten er tatt bort. Maalt var brikken
+              113x30 px solid bone mot et ordmerke paa 64x35 px fin
+              antikva — den veide tydelig tyngst i komposisjonen, stikk i
+              strid med at ordmerket skal vaere ankeret.
+
+              Naa samme tynne streksprak som slideren, menymerket og
+              bunnteksten: liten versal-etikett med en hairline under.
+              Fargen arves av headeren, saa den snur med bakgrunnen.
+
+              ::after legger et usynlig 44 px trykkfelt oppaa uten aa
+              paavirke oppsettet. */}
+          <Link
+            href="/prisestimat"
+            className={`group relative shrink-0 justify-self-start whitespace-nowrap text-[0.58rem] uppercase tracking-[0.12em] transition-colors duration-500 ease-swoop after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] lg:hidden ${textColor}`}
+            style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
+          >
+            <span
+              className={`border-b pb-0.5 transition-colors duration-500 ease-swoop ${
+                overDark
+                  ? "border-bone/45 group-hover:border-bone"
+                  : "border-ink/35 group-hover:border-ink"
+              }`}
+            >
+              <span className="hidden min-[360px]:inline">Få </span>Prisestimat
+            </span>
+          </Link>
+
+          {/* Ordmerke — MIDTKOLONNEN. Skriftgraden er tatt ned fra
+              1,6rem til 1,15rem paa mobil (1,25rem fra sm) saa merket
+              leser som en signatur og ikke som headerens tyngste
+              element. Desktop beholder 2,25rem uroert. */}
+          <Link
+            href="/"
+            aria-label="Tømrer Kawiche — Hjem"
+            className={`headline flex flex-col justify-self-center text-center leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop lg:justify-self-start lg:text-left ${textColor}`}
+          >
+            <span className="text-[1.15rem] sm:text-[1.25rem] lg:text-[2.25rem]">
+              Tømrer
+            </span>
+            <span className="text-[1.15rem] sm:text-[1.25rem] lg:text-[2.25rem]">
+              Kawiche
+            </span>
+          </Link>
+
+          {/* Menymerke — HOEYRE kolonne paa mobil og nettbrett.
               Bredden kommer fra selve merket (56 px mobil / 64 px
-              nettbrett), hoeyden er 48 px. Trykkfeltet blir dermed
-              56x48 og 64x48 — godt over 44 px i begge akser, og hele
-              den lange linja er trykkbar.
+              nettbrett), hoeyden er 48 px inne i en 64 px header.
+              Trykkfeltet er 56x48 og 64x48 — over 44 px i begge akser,
+              og hele den lange linja er trykkbar.
               Ingen ramme, ingen flate — knappen ER merket. */}
           <button
             aria-label={open ? "Lukk meny" : "Åpne meny"}
             aria-expanded={open}
             aria-controls="hovedmeny"
             onClick={() => setOpen((v) => !v)}
-            className={`relative z-50 flex h-12 shrink-0 items-center transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
+            className={`relative z-50 flex h-12 shrink-0 items-center justify-self-end transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
           >
             <MenuMark open={open} />
           </button>
-
-          {/* Stacked serif wordmark (Kononenko-style) — centred on mobile */}
-          <Link
-            href="/"
-            aria-label="Tømrer Kawiche — Hjem"
-            className={`headline flex flex-col justify-self-center text-center leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop lg:justify-self-start lg:text-left ${textColor}`}
-          >
-            <span className="text-[1.6rem] md:text-[2.25rem]">Tømrer</span>
-            <span className="text-[1.6rem] md:text-[2.25rem]">Kawiche</span>
-          </Link>
-
-          {/* Mobile CTA — solid button, right column. Inverts over the dark hero. */}
-          <Link
-            href="/prisestimat"
-            className={`shrink-0 whitespace-nowrap px-4 py-3 text-[0.6rem] uppercase tracking-[0.14em] press transition-colors duration-500 ease-swoop lg:hidden ${
-              overDark ? "bg-bone text-ink" : "bg-ink text-bone"
-            }`}
-            style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
-          >
-            <span className="hidden min-[360px]:inline">Få </span>Prisestimat
-          </Link>
 
           {/* Desktop inline nav (lg and up) */}
           <nav className="hidden items-center gap-10 lg:flex">
