@@ -34,17 +34,18 @@ export default function HamburgerOverlay({
       ref={rootRef}
       id="hovedmeny"
       aria-hidden={!open}
-      className={`fixed inset-0 z-30 bg-ink text-bone transition-[clip-path] duration-700 ease-swoop ${
+      className={`fixed inset-0 z-30 bg-ink text-bone transition-[clip-path] duration-[800ms] ease-menu motion-reduce:duration-0 ${
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
         // Sirkelen aapner seg fra menymerket, som staar oppe til VENSTRE.
-        // 24px sidemarg + 24px til midten av den 48px brede knappen = 3rem
-        // inn, og 32px banner + 48px til midten av headeren = 5rem ned.
-        // Vokser knappen, maa dette tallet foelge med.
+        // 24px sidemarg + 28px til midten av den 56px brede knappen =
+        // 3,25rem inn, og 32px banner + 48px til midten av headeren =
+        // 5rem ned. Paa nettbrett er merket 64px, saa origo ligger 4px
+        // av — usynlig naar sirkelen uansett vokser til 150 %.
         clipPath: open
-          ? "circle(150% at 3rem 5rem)"
-          : "circle(0% at 3rem 5rem)"
+          ? "circle(150% at 3.25rem 5rem)"
+          : "circle(0% at 3.25rem 5rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
@@ -59,8 +60,10 @@ export default function HamburgerOverlay({
                 transitionDelay: open ? `${120 + i * 60}ms` : "0ms",
                 opacity: open ? 1 : 0,
                 transform: open ? "translateY(0)" : "translateY(1rem)",
+                // Samme kurve som flaten og merket, slik at hele
+                // sekvensen leses som én bevegelse og ikke tre.
                 transition:
-                  "opacity 600ms cubic-bezier(0.7,0,0.2,1), transform 700ms cubic-bezier(0.7,0,0.2,1)"
+                  "opacity 700ms cubic-bezier(0.65,0,0.35,1), transform 800ms cubic-bezier(0.65,0,0.35,1)"
               }}
             >
               <span className="headline text-[clamp(1.75rem,5vw,3.25rem)]">
