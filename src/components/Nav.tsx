@@ -76,16 +76,17 @@ export default function Nav() {
         */}
         <div className="mx-auto grid h-24 max-w-[var(--page-max)] grid-cols-[auto_1fr_auto] items-center gap-2 px-6 sm:gap-4 lg:flex lg:justify-between lg:gap-0 lg:px-10">
           {/* Menyutloeser — mobil + nettbrett, venstre kolonne.
-              48x48 knapp rundt et 30 px merke: trykkfeltet er stort og
-              usynlig, merket er lite og presist. Den gamle knappen var
-              40x40 og laa under minstekravet paa 44 px.
+              Bredden kommer fra selve merket (56 px mobil / 64 px
+              nettbrett), hoeyden er 48 px. Trykkfeltet blir dermed
+              56x48 og 64x48 — godt over 44 px i begge akser, og hele
+              den lange linja er trykkbar.
               Ingen ramme, ingen flate — knappen ER merket. */}
           <button
             aria-label={open ? "Lukk meny" : "Åpne meny"}
             aria-expanded={open}
             aria-controls="hovedmeny"
             onClick={() => setOpen((v) => !v)}
-            className={`relative z-50 flex h-12 w-12 shrink-0 items-center justify-center transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
+            className={`relative z-50 flex h-12 shrink-0 items-center transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
           >
             <MenuMark open={open} />
           </button>

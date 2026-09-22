@@ -24,7 +24,12 @@ const config: Config = {
         widest2: "0.32em"
       },
       transitionTimingFunction: {
-        swoop: "cubic-bezier(0.7, 0, 0.2, 1)"
+        swoop: "cubic-bezier(0.7, 0, 0.2, 1)",
+        // Symmetrisk inn/ut for menysekvensen. swoop er vektet mot
+        // slutten og foeles rask i avgangen; denne gir langsom avgang,
+        // jevn bevegelse og kontrollert ankomst — som kreves naar
+        // bevegelsen varer 800 ms og faktisk skal ses.
+        menu: "cubic-bezier(0.65, 0, 0.35, 1)"
       }
     }
   },
