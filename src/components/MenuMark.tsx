@@ -7,14 +7,17 @@
  * loddrette er hoey. Det er derfor merket aldri leser som et vanlig
  * likearmet pluss eller som en hamburger.
  *
- * Lukket:  ────────┼────────
- * Aapen:   ─────────────────
+ * Lukket:  ─────────────────
+ * Aapen:   ────────┼────────
  *
- * Aapningen er IKKE et bytte av ikon. Den loddrette streken trekker seg
- * inn i den vannrette fra begge ender samtidig (scaleY mot sitt eget
+ * HVILETILSTANDEN er den rene vannrette streken. Det er den kunden ser
+ * naar ingenting skjer, og den som er referansen for kontrollen.
+ *
+ * Aapningen er IKKE et bytte av ikon. Den loddrette streken vokser UT av
+ * den vannrette, mot begge sider samtidig (scaleY fra sitt eget
  * midtpunkt, som ligger noeyaktig paa den vannrette streken), mens den
  * vannrette strekker seg 4 % ut. Det er den samme geometrien hele veien,
- * og den reverseres naar menyen lukkes.
+ * og den reverseres noeyaktig naar menyen lukkes.
  *
  * Bevisst IKKE en rotasjon til kryss: et kryss ville kastet bort den
  * lange vannrette linja som er hele poenget med kontrollen.
@@ -31,7 +34,8 @@ export default function MenuMark({ open }: { open: boolean }) {
 
   return (
     <span className="relative block h-5 w-14 md:w-16">
-      {/* Vannrett — identiteten. Strekker seg litt ut naar menyen aapnes. */}
+      {/* Vannrett — identiteten. Staar alltid der, i begge tilstander.
+          Strekker seg 4 % ut naar menyen aapnes. */}
       <span
         aria-hidden
         className={`${line} left-0 top-1/2 w-full -translate-y-1/2 ${
@@ -39,11 +43,12 @@ export default function MenuMark({ open }: { open: boolean }) {
         }`}
         style={{ height: "1.25px" }}
       />
-      {/* Loddrett — trekker seg inn i den vannrette streken. */}
+      {/* Loddrett — ligger sammenfoldet i den vannrette streken naar
+          menyen er lukket, og vokser ut naar den aapnes. */}
       <span
         aria-hidden
         className={`${line} left-1/2 top-0 h-full -translate-x-1/2 ${
-          open ? "scale-y-0" : ""
+          open ? "" : "scale-y-0"
         }`}
         style={{ width: "1.25px" }}
       />
