@@ -32,16 +32,19 @@ export default function HamburgerOverlay({
   return (
     <div
       ref={rootRef}
+      id="hovedmeny"
       aria-hidden={!open}
       className={`fixed inset-0 z-30 bg-ink text-bone transition-[clip-path] duration-700 ease-swoop ${
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
-        // Origin tracks the hamburger button, which now sits top-LEFT
-        // (32px banner + 48px to the button's centre ≈ 5rem down).
+        // Sirkelen aapner seg fra menymerket, som staar oppe til VENSTRE.
+        // 24px sidemarg + 24px til midten av den 48px brede knappen = 3rem
+        // inn, og 32px banner + 48px til midten av headeren = 5rem ned.
+        // Vokser knappen, maa dette tallet foelge med.
         clipPath: open
-          ? "circle(150% at 2.75rem 5rem)"
-          : "circle(0% at 2.75rem 5rem)"
+          ? "circle(150% at 3rem 5rem)"
+          : "circle(0% at 3rem 5rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
