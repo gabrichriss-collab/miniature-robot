@@ -45,12 +45,12 @@ export default function HamburgerOverlay({
         // aapnet seg altsaa fra motsatt hjoerne av knappen man trykket
         // paa. Rettet her.
         //
-        // Vannrett: 24 px sidemarg + 30 px til midten av det 60 px brede
-        // merket = 54 px fra hoeyre kant. Loddrett: 32 px banner + 32 px
+        // Vannrett: 24 px sidemarg + 22 px til midten av det 44 px brede
+        // merket = 46 px fra hoeyre kant. Loddrett: 32 px banner + 32 px
         // til midten av den 64 px hoeye headeren = 4rem.
         clipPath: open
-          ? "circle(150% at calc(100% - 3.375rem) 4rem)"
-          : "circle(0% at calc(100% - 3.375rem) 4rem)"
+          ? "circle(150% at calc(100% - 2.875rem) 4rem)"
+          : "circle(0% at calc(100% - 2.875rem) 4rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">
