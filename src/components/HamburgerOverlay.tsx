@@ -38,14 +38,19 @@ export default function HamburgerOverlay({
         open ? "pointer-events-auto" : "pointer-events-none"
       }`}
       style={{
-        // Sirkelen aapner seg fra menymerket, som staar oppe til VENSTRE.
-        // 24px sidemarg + 28px til midten av den 56px brede knappen =
-        // 3,25rem inn, og 32px banner + 48px til midten av headeren =
-        // 5rem ned. Paa nettbrett er merket 64px, saa origo ligger 4px
-        // av — usynlig naar sirkelen uansett vokser til 150 %.
+        // Sirkelen aapner seg fra menymerket, som staar oppe til HOEYRE.
+        //
+        // Denne laa fortsatt til venstre. Merket ble flyttet til hoeyre
+        // side i headeromleggingen, men origo ble staaende — overlegget
+        // aapnet seg altsaa fra motsatt hjoerne av knappen man trykket
+        // paa. Rettet her.
+        //
+        // Vannrett: 24 px sidemarg + 30 px til midten av det 60 px brede
+        // merket = 54 px fra hoeyre kant. Loddrett: 32 px banner + 32 px
+        // til midten av den 64 px hoeye headeren = 4rem.
         clipPath: open
-          ? "circle(150% at 3.25rem 5rem)"
-          : "circle(0% at 3.25rem 5rem)"
+          ? "circle(150% at calc(100% - 3.375rem) 4rem)"
+          : "circle(0% at calc(100% - 3.375rem) 4rem)"
       }}
     >
       <div className="noise relative mx-auto flex h-full max-w-[var(--page-max)] flex-col justify-between px-6 pb-10 pt-28 md:px-10">

@@ -72,45 +72,44 @@ export default function Nav() {
           menymerke hoeyre. Desktop (lg+): flex-rad — ordmerke venstre,
           nav hoeyre, noeyaktig som foer.
 
-          Kolonnene er [1fr auto 1fr], IKKE [auto 1fr auto]. Med den
-          gamle oppskriften fikk ordmerket midtstilling inne i
-          midtkolonnen, men midtkolonnen selv ble skjoevet av at
-          sidekontrollene har ulik bredde — maalt laa ordmerket 37,9 px
-          til venstre for skjermmidten. To like 1fr-kolonner gir en
-          auto-kolonne som faktisk staar midt i viewporten, uansett hvor
-          brede kontrollene paa sidene er.
+          Ordmerket er ABSOLUTT sentrert paa mobil og nettbrett, ikke
+          plassert i en rutenettkolonne. Grunnen: Prisestimat-knappen er
+          131,7 px og menymerket 60 px. Med [1fr auto 1fr] kan ikke
+          1fr-kolonnene bli like naar den ene sidens innhold er bredere
+          enn kolonnens andel — maalt skjoev det ordmerket 12,3 px ut av
+          midten paa 375 px. Absolutt sentrering er uavhengig av hvor
+          brede kontrollene er, og gir 0 px avvik paa alle bredder.
 
-          Skjulte barn er display:none og faller helt ut av rutenettet,
-          saa desktop-navet tar ingen celle paa mobil.
+          Paa lg gaar ordmerket tilbake i flyten, og justify-between gir
+          ordmerke venstre / nav hoeyre noeyaktig som foer.
         */}
-        <div className="mx-auto grid h-16 max-w-[var(--page-max)] grid-cols-[1fr_auto_1fr] items-center gap-3 px-6 lg:flex lg:h-24 lg:justify-between lg:gap-0 lg:px-10">
+        <div className="relative mx-auto flex h-16 max-w-[var(--page-max)] items-center justify-between px-6 lg:h-24 lg:px-10">
           {/* Prisestimat — VENSTRE kolonne paa mobil og nettbrett.
 
-              Den heldekkende flaten er tatt bort. Maalt var brikken
-              113x30 px solid bone mot et ordmerke paa 64x35 px fin
-              antikva — den veide tydelig tyngst i komposisjonen, stikk i
-              strid med at ordmerket skal vaere ankeret.
+              Stylingen er GJENOPPRETTET noeyaktig slik den var i 77fbe8c,
+              foer headerarbeidet: heldekkende flate, px-4 py-3, 0,6rem
+              versaler, press, og invertering over hero-en. Ingenting av
+              utseendet er endret.
 
-              Naa samme tynne streksprak som slideren, menymerket og
-              bunnteksten: liten versal-etikett med en hairline under.
-              Fargen arves av headeren, saa den snur med bakgrunnen.
-
-              ::after legger et usynlig 44 px trykkfelt oppaa uten aa
-              paavirke oppsettet. */}
+              Understreken kom IKKE fra selektorlekkasje. Den var en
+              bevisst endring jeg gjorde i #54, der jeg byttet den
+              heldekkende flaten mot en hairline fordi briefen da ba om
+              at knappen ikke skulle veie tyngre enn ordmerket. Den
+              avveiningen er naa omgjort. */}
           <Link
             href="/prisestimat"
-            className={`group relative shrink-0 justify-self-start whitespace-nowrap text-[0.58rem] uppercase tracking-[0.12em] transition-colors duration-500 ease-swoop after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] lg:hidden ${textColor}`}
+            className={`shrink-0 whitespace-nowrap px-4 py-3 text-[0.6rem] uppercase tracking-[0.14em] press transition-colors duration-500 ease-swoop lg:hidden ${
+              overDark ? "bg-bone text-ink" : "bg-ink text-bone"
+            }`}
             style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
           >
-            <span
-              className={`border-b pb-0.5 transition-colors duration-500 ease-swoop ${
-                overDark
-                  ? "border-bone/45 group-hover:border-bone"
-                  : "border-ink/35 group-hover:border-ink"
-              }`}
-            >
-              <span className="hidden min-[360px]:inline">Få </span>Prisestimat
-            </span>
+            {/* "Faa " vises foerst fra 400 px. Den gjenopprettede knappen er
+                131,7 px med det ordet, og et SANT sentrert ordmerke starter
+                paa w/2 - 32,15 px. Under ca. 400 px moeter de hverandre:
+                maalt -0,3 px paa 375 og -7,8 px paa 360, altsaa faktisk
+                overlapp. Terskelen var 360 px fra foer — dette er samme
+                mekanisme flyttet, ikke ny styling. */}
+              <span className="hidden min-[400px]:inline">Få </span>Prisestimat
           </Link>
 
           {/* Ordmerke — MIDTKOLONNEN. Skriftgraden er tatt ned fra
@@ -120,7 +119,7 @@ export default function Nav() {
           <Link
             href="/"
             aria-label="Tømrer Kawiche — Hjem"
-            className={`headline flex flex-col justify-self-center text-center leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop lg:justify-self-start lg:text-left ${textColor}`}
+            className={`headline absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col text-center leading-[0.86] tracking-tight transition-colors duration-500 ease-swoop lg:static lg:translate-x-0 lg:translate-y-0 lg:text-left ${textColor}`}
           >
             <span className="text-[1.15rem] sm:text-[1.25rem] lg:text-[2.25rem]">
               Tømrer
@@ -131,17 +130,15 @@ export default function Nav() {
           </Link>
 
           {/* Menymerke — HOEYRE kolonne paa mobil og nettbrett.
-              Bredden kommer fra selve merket (56 px mobil / 64 px
-              nettbrett), hoeyden er 48 px inne i en 64 px header.
-              Trykkfeltet er 56x48 og 64x48 — over 44 px i begge akser,
-              og hele den lange linja er trykkbar.
-              Ingen ramme, ingen flate — knappen ER merket. */}
+              Knappen har ingen egen stoerrelse; den arver 60x44 px fra
+              merket, som er hele trykkfeltet. Ingen ramme, ingen flate,
+              ingen sirkel — knappen ER streken. */}
           <button
             aria-label={open ? "Lukk meny" : "Åpne meny"}
             aria-expanded={open}
             aria-controls="hovedmeny"
             onClick={() => setOpen((v) => !v)}
-            className={`relative z-50 flex h-12 shrink-0 items-center justify-self-end transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
+            className={`relative z-50 flex shrink-0 items-center transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
           >
             <MenuMark open={open} />
           </button>
