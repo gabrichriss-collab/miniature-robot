@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import HamburgerOverlay from "./HamburgerOverlay";
+import MenuMark from "./MenuMark";
 
 /**
  * Pages whose top section is a dark hero. On these, the nav starts with
@@ -41,7 +42,6 @@ export default function Nav() {
     };
   }, [open]);
 
-  const barColor = overDark ? "bg-bone" : "bg-ink";
   const textColor = overDark ? "text-bone" : "text-ink";
   /* Over hero-en loeftes lenkene fra 80 % til 90 % bone. Maalt kontrast mot
      glassflaten paa det lyseste punktet i gradienten var 4,40:1 ved 80 %,
@@ -75,23 +75,19 @@ export default function Nav() {
           entirely rather than wrapping to a second row.
         */}
         <div className="mx-auto grid h-24 max-w-[var(--page-max)] grid-cols-[auto_1fr_auto] items-center gap-2 px-6 sm:gap-4 lg:flex lg:justify-between lg:gap-0 lg:px-10">
-          {/* Hamburger — mobile + tablet only, left column */}
+          {/* Menyutloeser — mobil + nettbrett, venstre kolonne.
+              48x48 knapp rundt et 30 px merke: trykkfeltet er stort og
+              usynlig, merket er lite og presist. Den gamle knappen var
+              40x40 og laa under minstekravet paa 44 px.
+              Ingen ramme, ingen flate — knappen ER merket. */}
           <button
             aria-label={open ? "Lukk meny" : "Åpne meny"}
             aria-expanded={open}
+            aria-controls="hovedmeny"
             onClick={() => setOpen((v) => !v)}
-            className="relative z-50 flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-[6px] lg:hidden"
+            className={`relative z-50 flex h-12 w-12 shrink-0 items-center justify-center transition-colors duration-500 ease-swoop lg:hidden ${textColor}`}
           >
-            <span
-              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
-                open ? "translate-y-[3.5px] rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`block h-px w-7 transition-[transform,background-color] duration-500 ease-swoop ${barColor} ${
-                open ? "-translate-y-[3.5px] -rotate-45" : ""
-              }`}
-            />
+            <MenuMark open={open} />
           </button>
 
           {/* Stacked serif wordmark (Kononenko-style) — centred on mobile */}
