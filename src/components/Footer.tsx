@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import LinkArrow from "./LinkArrow";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -70,26 +71,48 @@ export default function Footer() {
         </div>
 
         <div className="md:col-span-2">
+          {/* Sosiale lenker.
+              Samme tynne streksprak som slideren og menymerket: statisk
+              1,25 px hairline i stedet for .uline-sveipen, og den lille
+              pila som flytter seg 4 px paa hover.
+
+              space-y-4 i stedet for space-y-2: med py-2 blir hver lenke
+              45 px hoey, og 16 px luft er det som skal til for at de to
+              trykkfeltene IKKE overlapper hverandre. -my-2 nuller ut
+              polstringen visuelt, saa raden ser like tett ut som foer.
+
+              Streken er border-b (1 px), ikke 1,25 px som i SVG-merkene:
+              nettleseren runder rammebredder til hele piksler, saa 1,25
+              px her ville uansett blitt tegnet som 1 px. 1 px er ogsaa
+              vekten .uline bruker ellers paa nettstedet. De tegnede
+              merkene beholder 1,25 px via non-scaling-stroke, som ikke
+              rundes. */}
           <p className="eyebrow mb-4 text-bone/65">Følg oss</p>
-          <ul className="space-y-2 text-bone/90">
+          <ul className="space-y-4 text-bone/90">
             <li>
               <a
-                className="uline"
+                className="group -my-2 inline-flex items-center gap-2.5 py-2"
                 href={site.social.instagram}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                Instagram
+                <span className="border-b border-bone/30 pb-0.5 transition-colors duration-500 ease-swoop group-hover:border-bone/80">
+                  Instagram
+                </span>
+                <LinkArrow />
               </a>
             </li>
             <li>
               <a
-                className="uline"
+                className="group -my-2 inline-flex items-center gap-2.5 py-2"
                 href={site.social.linkedin}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                LinkedIn
+                <span className="border-b border-bone/30 pb-0.5 transition-colors duration-500 ease-swoop group-hover:border-bone/80">
+                  LinkedIn
+                </span>
+                <LinkArrow />
               </a>
             </li>
           </ul>
