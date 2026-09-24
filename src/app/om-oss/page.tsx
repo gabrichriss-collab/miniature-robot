@@ -118,7 +118,10 @@ export default function OmOssPage() {
       <section className="mx-auto max-w-[var(--page-max)] px-6 pb-24 md:px-10 md:pb-32">
         <div className="rule mb-16" />
         <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
-          <p className="headline text-[clamp(1.75rem,4vw,3rem)] italic text-ink/80">
+          <p
+            lang="en"
+            className="headline text-[clamp(1.75rem,4vw,3rem)] italic text-ink/80"
+          >
             Spread love for a good handverk.
           </p>
           <Link

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sorts_Mill_Goudy, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import Nav from "@/components/Nav";
@@ -75,6 +75,11 @@ export const metadata: Metadata = {
   category: "Bygg og anlegg"
 };
 
+// Nettleserens verktoeylinje paa mobil faar samme farge som siden (bone).
+export const viewport: Viewport = {
+  themeColor: "#e7e5df"
+};
+
 export default function RootLayout({
   children
 }: {
@@ -83,9 +88,17 @@ export default function RootLayout({
   return (
     <html lang="nb-NO" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen bg-bone text-ink antialiased">
+        {/* Hopplenke: foerste Tab-trykk viser den, og den hopper forbi
+            menyen rett til innholdet. Usynlig for musebrukere. */}
+        <a
+          href="#innhold"
+          className="eyebrow sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:bg-ink focus:px-5 focus:py-3 focus:text-bone"
+        >
+          Hopp til innhold
+        </a>
         <JsonLd />
         <Nav />
-        <main className="pb-14 lg:pb-0">{children}</main>
+        <main id="innhold" className="pb-14 lg:pb-0">{children}</main>
         <Footer />
         <MobileActionBar />
       </body>

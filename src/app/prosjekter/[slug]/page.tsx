@@ -23,10 +23,12 @@ export function generateMetadata({ params }: Params): Metadata {
 
 function ImageStrip({
   images,
-  eyebrow
+  eyebrow,
+  projectTitle
 }: {
   images: string[];
   eyebrow: string;
+  projectTitle: string;
 }) {
   return (
     <section className="mx-auto max-w-[var(--page-max)] px-6 py-14 md:px-10 md:py-20">
@@ -41,7 +43,7 @@ function ImageStrip({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={src}
-              alt={`${eyebrow} ${i + 1}`}
+              alt={`${projectTitle}, ${eyebrow.toLowerCase()} – bilde ${i + 1} av ${images.length}`}
               className="absolute inset-0 h-full w-full object-cover"
               loading="lazy"
             />
@@ -107,7 +109,7 @@ export default function ProjectPage({ params }: Params) {
         </section>
       )}
 
-      {before.length > 0 && <ImageStrip eyebrow="Før" images={before} />}
+      {before.length > 0 && <ImageStrip eyebrow="Før" images={before} projectTitle={project.title} />}
 
       {project.solution && (
         <section className="mx-auto max-w-[var(--page-max)] px-6 py-20 md:px-10 md:py-28">
@@ -136,7 +138,7 @@ export default function ProjectPage({ params }: Params) {
       )}
 
       {process.length > 0 && (
-        <ImageStrip eyebrow="Underveis" images={process} />
+        <ImageStrip eyebrow="Underveis" images={process} projectTitle={project.title} />
       )}
 
       {project.details && (
@@ -154,7 +156,7 @@ export default function ProjectPage({ params }: Params) {
         </section>
       )}
 
-      {finished.length > 0 && <ImageStrip eyebrow="Ferdig" images={finished} />}
+      {finished.length > 0 && <ImageStrip eyebrow="Ferdig" images={finished} projectTitle={project.title} />}
 
       {/* CTA */}
       <section className="border-t border-ink/10">
@@ -168,7 +170,7 @@ export default function ProjectPage({ params }: Params) {
                 href="/prisestimat"
                 className="uline eyebrow"
               >
-                Få prisestimat →
+                Få prisestimat <span aria-hidden>→</span>
               </Link>
               <Link
                 href={`/kontakt?type=tilbud&prosjekt=${encodeURIComponent(project.title)}`}

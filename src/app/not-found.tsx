@@ -31,7 +31,7 @@ export default function NotFound() {
           </span>
         </Link>
         <Link href="/kontakt" className="uline eyebrow self-center">
-          Kontakt oss →
+          Kontakt oss <span aria-hidden>→</span>
         </Link>
       </div>
     </section>

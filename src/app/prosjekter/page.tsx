@@ -93,7 +93,7 @@ export default function ProsjekterPage() {
               href="/kontakt"
               className="uline mt-10 inline-block eyebrow"
             >
-              Be om referanser →
+              Be om referanser <span aria-hidden>→</span>
             </Link>
           </div>
         )}

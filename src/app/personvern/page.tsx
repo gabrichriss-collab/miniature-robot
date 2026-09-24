@@ -110,12 +110,17 @@ const sections: Array<{ h: string; body: React.ReactNode }> = [
   }
 ];
 
+// Oppdater denne datoen hver gang teksten over endres. new Date() ville
+// vist dagens dato hver gang siden bygges, uansett om noe var endret.
+const LAST_UPDATED = new Date("2026-09-16T12:00:00Z");
+
 export default function PersonvernPage() {
   const updated = new Intl.DateTimeFormat("nb-NO", {
     day: "2-digit",
     month: "long",
-    year: "numeric"
-  }).format(new Date());
+    year: "numeric",
+    timeZone: "Europe/Oslo"
+  }).format(LAST_UPDATED);
   return (
     <>
       <PageHeader

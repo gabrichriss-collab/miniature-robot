@@ -73,6 +73,38 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Fjerner forsinkelsen fra dobbelttrykk-zoom paa mobil. Trykkfargen er
+   slaatt av med vilje: .press gir sin egen tilbakemelding. */
+a,
+button,
+input,
+label,
+select,
+textarea,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Synlig fokus for tastatur. currentColor gjoer ringen lys paa moerke
+   flater og moerk paa lyse, uten egne regler per seksjon. :focus-visible
+   gjoer at ringen ikke vises ved museklikk. */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* Ankerlenker (#s-1, #prosjekt) skal ikke havne under den faste
+   headeren (h-16 / lg:h-24). */
+[id] {
+  scroll-margin-top: 5rem;
+}
+@media (min-width: 1024px) {
+  [id] {
+    scroll-margin-top: 7rem;
+  }
+}
+
 body {
   font-family: var(--font-body), "Cormorant Garamond", Georgia, serif;
   font-size: 1.0625rem;
@@ -92,6 +124,9 @@ h3 {
   font-weight: 400;
   letter-spacing: -0.03em;
   line-height: 0.95;
+  /* Fordeler ordene jevnt over linjene, saa ingen overskrift ender med
+     ett ensomt ord paa siste linje. */
+  text-wrap: balance;
 }
 
 .eyebrow {
@@ -134,6 +169,11 @@ h3 {
 .slider-track {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .slider-track {
+    scroll-behavior: auto;
+  }
 }
 
 /* Ken burns for hero */
@@ -273,6 +313,12 @@ h3 {
 .rise-4 {
   animation-delay: 620ms;
 }
+/* Innholdet vises straks, uten bevegelse. */
+@media (prefers-reduced-motion: reduce) {
+  .rise {
+    animation: none;
+  }
+}
 
 /* Link underline swipe */
 .uline {
@@ -304,6 +350,18 @@ h3 {
   to {
     transform-origin: left;
     transform: scaleX(1);
+  }
+}
+/* Ved redusert bevegelse ligger streken stille og dempes i stedet,
+   saa hover fortsatt gir en synlig tilbakemelding. */
+@media (prefers-reduced-motion: reduce) {
+  .uline::after {
+    transition: opacity 200ms linear;
+  }
+  .uline:hover::after {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.4;
   }
 }
 
@@ -358,8 +416,12 @@ h3 {
     color: inherit;
   }
   .field-control:focus {
-    outline: none;
     border-color: rgb(10 10 10 / 0.85);
+  }
+  /* Tydelig ring i tillegg til kantfargen, som alene var for svak. */
+  .field-control:focus-visible {
+    outline: 2px solid rgb(10 10 10 / 0.85);
+    outline-offset: 2px;
   }
 
   .field-select {

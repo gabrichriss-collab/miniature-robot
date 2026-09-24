@@ -53,7 +53,11 @@ export default function KontaktPage({
             <div>
               <p className="eyebrow mb-4 text-ink/60">Direkte</p>
               <p className="text-lg text-ink/85">
-                <a href={`mailto:${site.email}`} className="uline">
+                <a
+                  href={`mailto:${site.email}`}
+                  className="uline break-words"
+                  translate="no"
+                >
                   {site.email}
                 </a>
                 <br />

@@ -133,7 +133,7 @@ export default function Home() {
                   ) : null}
                 </div>
                 <span className="eyebrow uline self-end text-bone">
-                  Se prosjekt →
+                  Se prosjekt <span aria-hidden>→</span>
                 </span>
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function Home() {
               og det er det som gir et hus lang levetid.
             </p>
             <Link href="/om-oss" className="uline mt-10 inline-block eyebrow">
-              Om Tømrer Kawiche →
+              Om Tømrer Kawiche <span aria-hidden>→</span>
             </Link>
           </div>
         </div>
@@ -174,7 +174,7 @@ export default function Home() {
             </h2>
           </div>
           <Link href="/tjenester" className="uline eyebrow">
-            Alle tjenester →
+            Alle tjenester <span aria-hidden>→</span>
           </Link>
         </div>
         <ServicesSlider />
@@ -191,7 +191,7 @@ export default function Home() {
             </div>
             {hasRealProjects ? (
               <Link href="/prosjekter" className="uline eyebrow text-bone/90">
-                Alle prosjekter →
+                Alle prosjekter <span aria-hidden>→</span>
               </Link>
             ) : null}
           </div>
@@ -211,7 +211,7 @@ export default function Home() {
                 href="/kontakt"
                 className="uline mt-10 inline-block eyebrow text-bone"
               >
-                Be om referanser →
+                Be om referanser <span aria-hidden>→</span>
               </Link>
             </div>
           )}
@@ -308,7 +308,7 @@ export default function Home() {
               href="/om-oss"
               className="uline mt-10 inline-block eyebrow"
             >
-              Om Tømrer Kawiche →
+              Om Tømrer Kawiche <span aria-hidden>→</span>
             </Link>
           </div>
         </div>
