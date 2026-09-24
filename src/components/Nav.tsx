@@ -57,7 +57,7 @@ export default function Nav() {
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-8 z-40 border-b transition-colors duration-500 ease-swoop ${
+        className={`fixed inset-x-0 top-0 z-40 border-b transition-colors duration-500 ease-swoop ${
           open
             ? "border-transparent bg-transparent"
             : scrolled

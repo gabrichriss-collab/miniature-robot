@@ -149,6 +149,29 @@ h3 {
   animation: kenburns 18s ease-out both;
 }
 
+/* Utviklingsstripen. Flytter sporet noeyaktig én halvdel; de to
+   halvdelene er like, saa loekka er soemloes. translate3d holder
+   bevegelsen paa GPU-en. Varigheten styrer farten — se kommentaren i
+   UnderConstructionBanner.tsx for hvorfor den er lik i tegn per sekund
+   paa alle skjermer. */
+@keyframes ticker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.ticker {
+  animation: ticker 100s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker {
+    animation: none;
+  }
+}
+
 /* Hero-driften er dekorativ. Ved redusert bevegelse staar bildet stille
    paa sluttbeskjaeringen, slik at komposisjonen blir den samme. */
 @media (prefers-reduced-motion: reduce) {

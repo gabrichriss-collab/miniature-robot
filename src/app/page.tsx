@@ -2,6 +2,7 @@ import Link from "next/link";
 import { projects } from "@/data/projects";
 import FeaturedProjectsMosaic from "@/components/FeaturedProjectsMosaic";
 import ServicesSlider from "@/components/ServicesSlider";
+import UnderConstructionBanner from "@/components/UnderConstructionBanner";
 
 const processSteps = [
   {
@@ -89,6 +90,9 @@ export default function Home() {
           </h1>
         </div>
       </section>
+
+      {/* Utviklingsstripe — rett etter hero-en, ingen luft imellom. */}
+      <UnderConstructionBanner />
 
       {/* 2. FEATURED REAL PROJECT — only if a real project exists */}
       {hasRealProjects && featured[0] ? (
