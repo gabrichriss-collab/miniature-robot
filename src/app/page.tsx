@@ -1,3 +1,4 @@
+import { getImageProps } from "next/image";
 import Link from "next/link";
 import { projects } from "@/data/projects";
 import FeaturedProjectsMosaic from "@/components/FeaturedProjectsMosaic";
@@ -34,6 +35,23 @@ const craftDetails = [
   { k: "Overganger", b: "Der gammelt møter nytt — foringer, gerikter og beslag som holder over tid." }
 ];
 
+/* Hero-bildet, se kommentaren ved "Bildelag" i hero-en. */
+const HERO_PORTRAIT_MEDIA = "(max-aspect-ratio: 1/1)";
+const heroCommon = { alt: "", fill: true, priority: true, quality: 80 } as const;
+const { props: heroPortrait } = getImageProps({
+  ...heroCommon,
+  src: "/images/hero-portrait.jpg",
+  // 3:4-bilde med cover i en 100vh-boks: 75vh bredt naar skjermen er
+  // smalere enn 3:4 (alle telefoner), ellers fyller det bredden.
+  sizes: "(max-aspect-ratio: 3/4) 75vh, 100vw"
+});
+const { props: heroLandscape } = getImageProps({
+  ...heroCommon,
+  src: "/images/hero.jpg",
+  // 16:9-bilde med cover: 178vh bredt naar skjermen er smalere enn 16:9.
+  sizes: "(max-aspect-ratio: 16/9) 178vh, 100vw"
+});
+
 export default function Home() {
   const featured = projects.slice(0, 4);
   const hasRealProjects = projects.length > 0;
@@ -42,29 +60,44 @@ export default function Home() {
     <>
       {/* 1. HERO */}
       <section className="relative -mt-24 flex h-[100svh] w-full items-end overflow-hidden bg-ink text-bone">
-        {/* Bildelag.
-            Legg hero.jpg i /public/images/ og sett tilbake
-            "url(/images/hero.jpg), " foran gradienten. Legg samtidig til
-            filter: "saturate(0.94) contrast(1.05)" paa dette laget — litt
-            dempet metning og kontrollert kontrast. Filteret er bevisst
-            IKKE paa naa: det ville kostet et eget komposittlag paa mobil
-            uten aa gjoere noe som helst med en ren CSS-gradient.
+        {/* Bildelag. Fotografiet ligger oppaa gradienten, som staar igjen
+            som reserve mens bildet lastes.
+
+            To utsnitt av samme foto (kunstnerisk styring via <picture>):
+            - hero-portrait.jpg (3:4) til staaende skjermer. Hero-en er
+              100svh hoey, saa et liggende 16:9-foto ville vist en smal
+              stripe paa ca. 1/4 av bredden — og fordi optimalisereren
+              velger bredde etter viewport, ville den stripen blitt
+              forstoerret nesten 4x og sett uskarp ut.
+            - hero.jpg (16:9) til alt som er bredere enn kvadratisk.
+            sizes beskriver hvor bredt bildet faktisk TEGNES med
+            object-cover i en 100vh-boks, ikke viewport-bredden, slik at
+            optimalisereren leverer nok piksler til utsnittet.
+
+            Filteret — litt dempet metning og kontrollert kontrast — tar
+            iPhone-fotoets HDR-preg ned mot resten av nettstedet.
 
             Gradienten er stemt mot materialene i profilen: groennsvart i
-            skyggen, varm tommer opp mot lyset. Lyskilden er lagt som en
-            radial-gradient forankret i PROSENT (78%/22%), ikke som en
-            vinkel. En vinklet gradient presser den varme enden ut av
-            bildet paa hoeye, smale mobilskjermer, og hero-en blir bare
-            brun; en forankret lyskilde holder seg paa plass i alle
-            formater. */}
+            skyggen, varm tommer opp mot lyset, forankret i PROSENT
+            (78%/22%) slik at den holder seg paa plass i alle formater. */}
         <div
           aria-hidden
-          className="kenburns absolute inset-0 bg-cover bg-center"
+          className="kenburns absolute inset-0"
           style={{
             backgroundImage:
               "radial-gradient(125% 95% at 78% 20%, #8a7357 0%, #6a5741 22%, #453a2b 46%, #262219 72%, #15160f 100%)"
           }}
-        />
+        >
+          <picture>
+            <source media={HERO_PORTRAIT_MEDIA} srcSet={heroPortrait.srcSet} sizes={heroPortrait.sizes} />
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- alt="" kommer fra getImageProps; bildet er dekorativt bak h1 */}
+            <img
+              {...heroLandscape}
+              className="object-cover [object-position:62%_55%] [@media(max-aspect-ratio:1/1)]:[object-position:45%_50%]"
+              style={{ ...heroLandscape.style, filter: "saturate(0.94) contrast(1.05)" }}
+            />
+          </picture>
+        </div>
 
         {/* Skyggelag. Retningsbestemt: tyngst nede der overskriften staar,
             lett oppe slik at hero-en ikke blir unoedig moerk. Vignetten
