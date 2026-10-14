@@ -11,3 +11,5 @@ tsconfig.tsbuildinfo
 
 # tsc-output for prismotor-testene
 .test-out/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
