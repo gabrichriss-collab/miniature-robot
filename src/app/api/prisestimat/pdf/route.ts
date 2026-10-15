@@ -4,11 +4,17 @@ import { EstimatePdf } from "@/server/pricing/estimatePdfDoc";
 import { calcTotals, formatNok, type EstimateInput } from "@/server/pricing/estimateCalc";
 import { resolveCatalogueId } from "@/server/pricing/catalogue";
 import { notifyLead } from "@/lib/notifyLead";
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import { clientIp, escape, osloNow, rateLimit, saveLead } from "@/lib/http";
+import {
+  MAX_LINES,
+  parseQuantity,
+  readLineOptions
+} from "@/server/pricing/requestInput";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+const MAX_BODY_BYTES = 64 * 1024;
 
 /**
  * Bygger den interne kalkyle-inputen fra kundens VALG.
@@ -23,7 +29,7 @@ function buildInput(raw: unknown): EstimateInput | null {
   const req = b.estimateRequest as
     | { lines?: unknown[]; materialTier?: unknown }
     | undefined;
-  if (!req || !Array.isArray(req.lines)) return null;
+  if (!req || !Array.isArray(req.lines) || req.lines.length > MAX_LINES) return null;
 
   const tier = ["none", "standard", "premium"].includes(String(req.materialTier))
     ? (req.materialTier as EstimateInput["materialTier"])
@@ -34,8 +40,9 @@ function buildInput(raw: unknown): EstimateInput | null {
     const l = rawLine as Record<string, unknown>;
     const entry =
       typeof l.catalogueId === "string" ? resolveCatalogueId(l.catalogueId) : undefined;
-    const qty = Number(l.quantity);
-    if (!Number.isFinite(qty) || qty < 0 || qty > 100_000) return [];
+    const qty = parseQuantity(l.quantity);
+    if (qty === null) return [];
+    const options = readLineOptions(l);
     return [
       {
         id: String(l.id ?? "").slice(0, 64),
@@ -44,21 +51,10 @@ function buildInput(raw: unknown): EstimateInput | null {
         note: entry?.note,
         unit: entry?.unit ?? String(l.unit ?? "m²").slice(0, 8),
         qty,
-        price: 0,
         workItemKey: entry?.workItemKey,
         materialRecipeKey: entry?.materialRecipeKey,
-        difficulty: l.difficulty as EstimateInput["rows"][number]["difficulty"],
-        terraceConstruction:
-          l.terraceConstruction as EstimateInput["rows"][number]["terraceConstruction"],
-        terraceFastening: (l.terraceFastening ??
-          entry?.terraceFastening) as EstimateInput["rows"][number]["terraceFastening"],
-        terraceFoundation:
-          l.terraceFoundation as EstimateInput["rows"][number]["terraceFoundation"],
-        ceilingType: l.ceilingType as EstimateInput["rows"][number]["ceilingType"],
-        partitionScope:
-          l.partitionScope as EstimateInput["rows"][number]["partitionScope"],
-        facadeInsulation:
-          l.facadeInsulation as EstimateInput["rows"][number]["facadeInsulation"]
+        ...options,
+        terraceFastening: options.terraceFastening ?? entry?.terraceFastening
       }
     ];
   });
@@ -72,15 +68,28 @@ function buildInput(raw: unknown): EstimateInput | null {
     message: String(b.message ?? "").slice(0, 4000),
     rows,
     mvaRate: 25,
-    markup: 0,
     materialTier: tier
   };
 }
 
 export async function POST(req: Request) {
+  // Hver PDF sendes som e-post til eieren, så taket er lavt.
+  const limit = rateLimit(`pdf:${clientIp(req) ?? "ukjent"}`, 10, 10 * 60_000);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "For mange forespørsler. Prøv igjen om litt." },
+      { status: 429, headers: { "retry-after": String(limit.retryAfter) } }
+    );
+  }
+
+  const raw = await req.text();
+  if (raw.length > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Forespørselen er for stor." }, { status: 413 });
+  }
+
   let body: EstimateInput | null;
   try {
-    body = buildInput(await req.json());
+    body = buildInput(JSON.parse(raw));
   } catch {
     return NextResponse.json({ error: "Ugyldig forespørsel." }, { status: 400 });
   }
@@ -114,27 +123,14 @@ export async function POST(req: Request) {
     total: totals.total,
     rowCount: body.rows.length,
     rows: body.rows,
-    ip:
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      req.headers.get("x-real-ip") ??
-      null
+    ip: clientIp(req)
   };
 
-  try {
-    const dir = path.join(process.cwd(), ".data");
-    await fs.mkdir(dir, { recursive: true });
-    await fs.appendFile(
-      path.join(dir, "prisestimat.jsonl"),
-      JSON.stringify(entry) + "\n",
-      "utf8"
-    );
-  } catch {
-    console.log("[prisestimat] fs unavailable, logging only:", {
-      customer: entry.customer,
-      total: `${formatNok(totals.total)} kr`,
-      rows: entry.rowCount
-    });
-  }
+  await saveLead("prisestimat.jsonl", entry, {
+    customer: entry.customer,
+    total: `${formatNok(totals.total)} kr`,
+    rows: entry.rowCount
+  });
 
   const safeName = (body.projectName || "prisestimat")
     .replace(/[^a-z0-9æøå\-_ ]/gi, "")
@@ -157,7 +153,7 @@ export async function POST(req: Request) {
     body.message ? `Prosjektbeskrivelse:\n${body.message}\n` : null,
     `PDF-en er vedlagt denne e-posten.`,
     ``,
-    `— Sendt ${new Date().toLocaleString("nb-NO")}`
+    `— Sendt ${osloNow()}`
   ]
     .filter(Boolean)
     .join("\n");
@@ -206,12 +202,4 @@ export async function POST(req: Request) {
       "cache-control": "no-store"
     }
   });
-}
-
-function escape(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

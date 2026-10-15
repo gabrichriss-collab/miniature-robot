@@ -12,6 +12,9 @@ import { buildPublicCatalogue } from "../../src/server/pricing/catalogue";
 import { toCustomerEstimate } from "../../src/server/pricing/toCustomerEstimate";
 import type { EstimateRequestLine } from "../../src/lib/pricing/contract";
 import type { EstimateLine } from "../../src/server/pricing/calculateEstimate";
+import { readLineOptions } from "../../src/server/pricing/requestInput";
+import { calcTotals } from "../../src/server/pricing/estimateCalc";
+import { PRICE_DB } from "../../src/server/pricing/catalogue-source";
 
 /** Felter som ALDRI skal finnes noe sted i et svar til kunden. */
 const FORBIDDEN_KEYS = [
@@ -210,4 +213,30 @@ test("SIKKERHET: valgte alternativer returneres som klartekst, ikke faktorer", (
   assert.ok(opts.some((o) => /Skjult innfesting/.test(o)));
   // Ingen tallmultiplikatorer i klartekst.
   assert.ok(!opts.some((o) => /1\.15|1,15|1\.3\b/.test(o)));
+});
+
+test("SIKKERHET: ukjente valg fra klienten gir ikke NaN kr", () => {
+  const opts = readLineOptions({ difficulty: "toString", ceilingType: "__proto__" });
+  assert.equal(opts.difficulty, undefined);
+  assert.equal(opts.ceilingType, undefined);
+
+  const item = PRICE_DB.find((p) => p.workItemKey)!;
+  const t = calcTotals({
+    projectName: "x",
+    customerName: "a",
+    rows: [
+      {
+        id: 1,
+        name: item.name,
+        unit: item.unit,
+        qty: 20,
+        workItemKey: item.workItemKey,
+        materialRecipeKey: item.materialRecipeKey,
+        ...opts
+      }
+    ],
+    mvaRate: 25,
+    materialTier: "standard"
+  });
+  assert.ok(Number.isFinite(t.total) && t.total > 0, `total ble ${t.total}`);
 });

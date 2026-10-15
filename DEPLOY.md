@@ -79,6 +79,20 @@ docker exec -it tomrer-kawiche cat /app/.data/contact.jsonl
 
 Or set `CONTACT_WEBHOOK_URL` and forward them elsewhere.
 
+### 6. Once a year: delete old leads
+
+The privacy page (`/personvern`) promises that enquiries are deleted
+about three years after the last contact. Nothing does this
+automatically. Once a year, run this (it keeps everything newer than
+three years in `contact.jsonl` and `prisestimat.jsonl`):
+
+```bash
+ssh root@<server-ip>
+docker exec -w /app tomrer-kawiche node -e 'const fs=require("fs"),cut=Date.now()-3*365*864e5;for(const f of ["contact","prisestimat"]){const p=".data/"+f+".jsonl";if(!fs.existsSync(p))continue;const keep=fs.readFileSync(p,"utf8").split("\n").filter(l=>l&&Date.parse(JSON.parse(l).ts)>cut);fs.writeFileSync(p,keep.map(l=>l+"\n").join(""));console.log(f,"kept",keep.length)}'
+```
+
+Under Coolify the container name differs; find it with `docker ps`.
+
 ---
 
 ## Local test (any machine with Docker)

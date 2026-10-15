@@ -5,8 +5,7 @@ import "server-only";
  *
  * Forretningslogikken ligger IKKE her — den ligger i konfigurasjonen
  * (`src/config/pricing`) og i de to motorene (arbeid og materialer).
- * Denne fila oversetter bare mellom radene i skjemaet og motoren, og
- * holder på eldre rader som fortsatt prises med kr/enhet.
+ * Denne fila oversetter bare mellom radene i skjemaet og motoren.
  */
 
 import type { PriceUnit } from "./catalogue-source";
@@ -41,8 +40,6 @@ export type EstimateRow = {
   name: string;
   unit: PriceUnit | string;
   qty: string | number;
-  /** Eldre fast enhetspris. Ignoreres når `workItemKey` er satt. */
-  price: string | number;
   note?: string;
   matched?: boolean;
   matchName?: string;
@@ -70,18 +67,13 @@ export type EstimateInput = {
   message?: string;
   rows: EstimateRow[];
   mvaRate: number;
-  /** Eldre påslag — alltid 0 under arbeids-/materialmotoren. */
-  markup: number;
   /** Kundens valg: kun arbeid, standard eller premium materialer. */
   materialTier?: MaterialTier;
 };
 
 export type EstimateTotals = {
-  /** Arbeid + materialer + eldre rader, eks. mva. */
+  /** Arbeid + materialer, eks. mva. */
   subtotal: number;
-  /** Reservert. Motoren bruker ikke påslag. */
-  markupAmount: number;
-  subWithMarkup: number;
   mvaAmount: number;
   /** Valgt scenario, inkl. mva. */
   total: number;
@@ -100,9 +92,6 @@ export type EstimateTotals = {
   materialIsFloor: boolean;
   /** False når kurven mangler et nødvendig materiale. */
   materialEstimateComplete: boolean;
-
-  /** Eldre rader uten arbeidsnøkkel. */
-  legacyExVat: number;
 
   range: { low: number; high: number };
   /** Hele motorresultatet — alle tre scenariene. */
@@ -144,18 +133,8 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
     : "none";
   const active = estimate.scenarios[activeTier];
 
-  const legacyRows = input.rows.filter(
-    (r) => !r.workItemKey || laborHoursForItem(String(r.workItemKey)) == null
-  );
-  const legacyExVat = legacyRows.reduce(
-    (sum, r) =>
-      sum + (parseFloat(String(r.qty)) || 0) * (parseFloat(String(r.price)) || 0),
-    0
-  );
-  const legacyVat = legacyExVat * (input.mvaRate / 100);
-
-  const subtotal = active.subtotalExVat + legacyExVat;
-  const mvaAmount = active.vat + legacyVat;
+  const subtotal = active.subtotalExVat;
+  const mvaAmount = active.vat;
   const total = subtotal + mvaAmount;
 
   const withVat = (n: number) => n * (1 + pricingSettings.vatRate);
@@ -163,23 +142,19 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
     low: roundForDisplay(
       withVat(
         estimate.labor.totalLaborExVat * pricingSettings.estimateRange.low +
-          active.materialExVat +
-          legacyExVat
+          active.materialExVat
       )
     ),
     high: roundForDisplay(
       withVat(
         estimate.labor.totalLaborExVat * pricingSettings.estimateRange.high +
-          active.materialExVat +
-          legacyExVat
+          active.materialExVat
       )
     )
   };
 
   return {
     subtotal,
-    markupAmount: 0,
-    subWithMarkup: subtotal,
     mvaAmount,
     total,
     laborHours: estimate.labor.totalLaborHours,
@@ -194,7 +169,6 @@ export function calcTotals(input: EstimateInput): EstimateTotals {
       active.materials.totalSmallConsumablesExVat,
     materialIsFloor: active.isFloor,
     materialEstimateComplete: active.materialEstimateComplete,
-    legacyExVat,
     range,
     estimate
   };

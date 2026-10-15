@@ -5,86 +5,31 @@ import type {
   EstimateRequestLine,
   EstimateResponse
 } from "@/lib/pricing/contract";
-import {
-  DIFFICULTY_ORDER,
-  TERRACE_CONSTRUCTION_ORDER,
-  TERRACE_FASTENING_ORDER,
-  TERRACE_FOUNDATION_ORDER,
-  CEILING_TYPE_ORDER,
-  PARTITION_SCOPE_ORDER,
-  INSULATION_OPTION_ORDER,
-  type MaterialTier
-} from "@/lib/pricing/public";
+import type { MaterialTier } from "@/lib/pricing/public";
 import { resolveCatalogueId } from "@/server/pricing/catalogue";
 import { toCustomerEstimate } from "@/server/pricing/toCustomerEstimate";
 import type { EstimateLine } from "@/server/pricing/calculateEstimate";
+import {
+  MAX_LINES,
+  oneOf,
+  parseQuantity,
+  readLineOptions
+} from "@/server/pricing/requestInput";
+import { clientIp, rateLimit } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/* ── Grenser ────────────────────────────────────────────────────── */
-
 const MAX_BODY_BYTES = 16 * 1024;
-const MAX_LINES = 40;
-const MAX_QUANTITY = 100_000;
-
-/* ── Enkel takstbegrensning ─────────────────────────────────────── */
-
-/**
- * Bøtte per IP i minnet. På serverless deles ikke minnet mellom
- * instanser, så dette er en bremsekloss mot masseuttrekk — ikke en
- * garanti. Grensen er satt høyt nok til at en kunde kan leke seg fritt:
- * 60 kall per minutt er langt mer enn et menneske rekker, men stopper
- * et skript som vil kartlegge hele prismodellen.
- */
-const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 60;
-const buckets = new Map<string, { count: number; resetAt: number }>();
-
-function rateLimit(ip: string): { ok: boolean; retryAfter: number } {
-  const now = Date.now();
-  const b = buckets.get(ip);
-  if (!b || now > b.resetAt) {
-    buckets.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    if (buckets.size > 5000) {
-      for (const [k, v] of buckets) if (now > v.resetAt) buckets.delete(k);
-    }
-    return { ok: true, retryAfter: 0 };
-  }
-  b.count += 1;
-  if (b.count > MAX_PER_WINDOW) {
-    return { ok: false, retryAfter: Math.ceil((b.resetAt - now) / 1000) };
-  }
-  return { ok: true, retryAfter: 0 };
-}
-
-/* ── Validering ─────────────────────────────────────────────────── */
-
-const oneOf = <T extends string>(list: readonly T[], v: unknown): T | undefined =>
-  typeof v === "string" && (list as readonly string[]).includes(v)
-    ? (v as T)
-    : undefined;
-
-/** Avviser NaN, Infinity, negative og absurde mengder. */
-function parseQuantity(v: unknown): number | null {
-  const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return null;
-  if (n < 0) return null;
-  if (n > MAX_QUANTITY) return null;
-  return n;
-}
 
 function badRequest(error: string) {
   return NextResponse.json<EstimateResponse>({ ok: false, error }, { status: 400 });
 }
 
 export async function POST(req: Request) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "ukjent";
-
-  const limit = rateLimit(ip);
+  // 60 per minutt: mer enn et menneske rekker, men stopper et skript
+  // som vil kartlegge hele prismodellen.
+  const limit = rateLimit(`estimate:${clientIp(req) ?? "ukjent"}`, 60, 60_000);
   if (!limit.ok) {
     return NextResponse.json<EstimateResponse>(
       { ok: false, error: "For mange forespørsler. Prøv igjen om litt." },
@@ -150,13 +95,7 @@ export async function POST(req: Request) {
         typeof l.description === "string" ? l.description.slice(0, 200) : undefined,
       quantity,
       unit: entry?.unit ?? (typeof l.unit === "string" ? l.unit.slice(0, 8) : "m²"),
-      difficulty: oneOf(DIFFICULTY_ORDER, l.difficulty),
-      terraceConstruction: oneOf(TERRACE_CONSTRUCTION_ORDER, l.terraceConstruction),
-      terraceFastening: oneOf(TERRACE_FASTENING_ORDER, l.terraceFastening),
-      terraceFoundation: oneOf(TERRACE_FOUNDATION_ORDER, l.terraceFoundation),
-      ceilingType: oneOf(CEILING_TYPE_ORDER, l.ceilingType),
-      partitionScope: oneOf(PARTITION_SCOPE_ORDER, l.partitionScope),
-      facadeInsulation: oneOf(INSULATION_OPTION_ORDER, l.facadeInsulation)
+      ...readLineOptions(l)
     };
     requestLines.push(line);
 

@@ -210,9 +210,6 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
 
         {input.rows.map((r, i) => {
           const l = laborByLabel.get(r.matchName || r.name);
-          const legacy =
-            (parseFloat(String(r.qty)) || 0) *
-            (parseFloat(String(r.price)) || 0);
           return (
             <View key={`${r.id}-${i}`} style={styles.tableRow}>
               <View style={styles.colName}>
@@ -226,11 +223,7 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
                 {l ? `${formatHours(l.totalLaborHours)} t` : "—"}
               </Text>
               <Text style={styles.colTotal}>
-                {l
-                  ? `${formatNok(l.laborPriceExVat)} kr`
-                  : legacy > 0
-                    ? `${formatNok(legacy)} kr`
-                    : "—"}
+                {l ? `${formatNok(l.laborPriceExVat)} kr` : "—"}
               </Text>
             </View>
           );
@@ -242,7 +235,7 @@ export function EstimatePdf({ input }: { input: EstimateInput }) {
               Arbeid — {formatHours(t.laborHours)} t ×{" "}
               {formatNok(t.estimate.hourlyRateExVat)} kr/t (eks. mva)
             </Text>
-            <Text>{formatNok(t.laborExVat + t.legacyExVat)} kr</Text>
+            <Text>{formatNok(t.laborExVat)} kr</Text>
           </View>
           <View style={styles.totalsRow}>
             <Text>Materialer — {MATERIAL_TIER_LABELS[t.materialTier]}</Text>

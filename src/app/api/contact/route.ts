@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { notifyLead } from "@/lib/notifyLead";
+import { clientIp, escape, osloNow, rateLimit, saveLead } from "@/lib/http";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +17,16 @@ type Payload = {
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
+  // Et menneske sender sjelden mer enn et par meldinger; dette stopper
+  // skript som vil fylle innboksen.
+  const limit = rateLimit(`contact:${clientIp(req) ?? "ukjent"}`, 5, 10 * 60_000);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "For mange meldinger. Prøv igjen om litt, eller ring oss." },
+      { status: 429, headers: { "retry-after": String(limit.retryAfter) } }
+    );
+  }
+
   let body: Payload;
   try {
     body = (await req.json()) as Payload;
@@ -26,15 +35,15 @@ export async function POST(req: Request) {
   }
 
   // Honeypot: silently accept but ignore
-  if (body.company && body.company.trim().length > 0) {
+  if (String(body.company ?? "").trim().length > 0) {
     return NextResponse.json({ message: "Takk." }, { status: 200 });
   }
 
-  const name = (body.name ?? "").trim();
-  const email = (body.email ?? "").trim();
-  const message = (body.message ?? "").trim();
-  const phone = (body.phone ?? "").trim();
-  const subject = (body.subject ?? "").trim();
+  const name = String(body.name ?? "").trim().slice(0, 200);
+  const email = String(body.email ?? "").trim().slice(0, 200);
+  const message = String(body.message ?? "").trim();
+  const phone = String(body.phone ?? "").trim().slice(0, 60);
+  const subject = String(body.subject ?? "").trim().slice(0, 200);
 
   const errors: string[] = [];
   if (name.length < 2) errors.push("Navn må være minst 2 tegn.");
@@ -48,10 +57,7 @@ export async function POST(req: Request) {
 
   const entry = {
     ts: new Date().toISOString(),
-    ip:
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-      req.headers.get("x-real-ip") ??
-      null,
+    ip: clientIp(req),
     ua: req.headers.get("user-agent") ?? null,
     name,
     email,
@@ -60,19 +66,7 @@ export async function POST(req: Request) {
     message
   };
 
-  // Persist to a local JSONL file when possible. In serverless production
-  // this may be read-only — that's fine; we still return success and log.
-  try {
-    const dir = path.join(process.cwd(), ".data");
-    await fs.mkdir(dir, { recursive: true });
-    await fs.appendFile(
-      path.join(dir, "contact.jsonl"),
-      JSON.stringify(entry) + "\n",
-      "utf8"
-    );
-  } catch {
-    console.log("[contact] fs unavailable, logging only:", entry);
-  }
+  await saveLead("contact.jsonl", entry, entry);
 
   const emailSubject = subject
     ? `Ny henvendelse: ${subject}`
@@ -89,7 +83,7 @@ export async function POST(req: Request) {
     `Melding:`,
     message,
     ``,
-    `— Sendt ${new Date().toLocaleString("nb-NO")}`
+    `— Sendt ${osloNow()}`
   ]
     .filter(Boolean)
     .join("\n");
@@ -129,12 +123,4 @@ export async function POST(req: Request) {
 
 export function GET() {
   return NextResponse.json({ ok: true, service: "contact" });
-}
-
-function escape(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
