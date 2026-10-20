@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PageHeader from "@/components/PageHeader";
 import PrisestimatBuilder from "@/components/PrisestimatBuilder";
+import PrisestimatGuide from "@/components/PrisestimatGuide";
 import { buildPublicCatalogue } from "@/server/pricing/catalogue";
 
 export const metadata: Metadata = {
@@ -15,8 +16,9 @@ export default function PrisestimatPage() {
       <PageHeader
         kicker="Prisestimat"
         title="Beregn selv."
-        lede="Skriv hva som skal gjøres — terrasse, ny kledning, nytt vindu — så finner vi riktig post og beregner arbeidstiden. Velg om du vil se prisen for kun arbeid, eller arbeid med materialer. Hele estimatet kan lastes ned som PDF."
+        lede="Få et veiledende prisestimat på et par minutter — gratis og uforpliktende. Tre enkle steg."
       />
+      <PrisestimatGuide />
       {/* Katalogen bygges paa serveren og er allerede vasket for
           priser, timeforbruk og oppskrifter. Klienten faar bare navn,
           enhet, kategori og soekeord. */}
