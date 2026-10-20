@@ -78,7 +78,16 @@ type Row = {
   ceilingType?: CeilingTypeKey;
   partitionScope?: PartitionScopeKey;
   facadeInsulation?: InsulationOptionKey;
+  /** Settes for rader kunden selv legger til, så markøren hopper dit.
+   *  Den første raden finnes fra start og får IKKE fokus — ellers ville
+   *  siden scrollet og tastaturet spratt opp på mobil ved innlasting. */
+  autoFocus?: boolean;
 };
+
+/** Tom rad. Fast id på den første, så server og klient er enige. */
+function blankRow(id: string, autoFocus = false): Row {
+  return { id, name: "", unit: "m²", qty: "", optionGroups: [], autoFocus };
+}
 
 const TIER_ORDER: MaterialTier[] = ["none", "standard", "premium"];
 
@@ -108,7 +117,8 @@ export default function PrisestimatBuilder({
 }: {
   catalogue: CatalogueItem[];
 }) {
-  const [rows, setRows] = useState<Row[]>([]);
+  // Én tom rad fra start: kunden kan begynne å skrive med en gang.
+  const [rows, setRows] = useState<Row[]>(() => [blankRow("rad-1")]);
   const [projectName, setProjectName] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -179,7 +189,8 @@ export default function PrisestimatBuilder({
         unit: item?.unit ?? "m²",
         qty: "",
         optionGroups: item?.optionGroups ?? [],
-        difficulty: item ? "normal" : undefined
+        difficulty: item ? "normal" : undefined,
+        autoFocus: !item
       }
     ]);
     setShowBrowse(false);
@@ -274,108 +285,167 @@ export default function PrisestimatBuilder({
     message
   ]);
 
+  const hasLines = request.lines.length > 0;
+
   return (
-    <div className="mx-auto max-w-[var(--page-max)] px-6 pb-40 md:px-10">
-      <div className="rule mb-14" />
-
-      <div className="grid gap-10 md:grid-cols-12">
-        <div className="md:col-span-4">
-          <p className="eyebrow text-ink/60">Prosjekt</p>
-          <h2 className="headline mt-4 text-3xl md:text-4xl">
-            Bygg estimatet linje for linje.
-          </h2>
-          <p className="mt-6 max-w-sm text-ink/75">
-            Skriv hva som skal gjøres — for eksempel <em>«terrasse 36 m²»</em>{" "}
-            — så finner vi riktig post og beregner arbeidstiden. Du kan også
-            bla i prislista. Nederst velger du om estimatet skal gjelde kun
-            arbeid, eller arbeid med materialer.
-          </p>
-        </div>
-
-        <div className="md:col-span-8">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Field label="Prosjektnavn" placeholder="F.eks. Tilbygg Uglåsvegen" value={projectName} onChange={setProjectName} />
-            <Field label="Navn *" placeholder="Ditt navn" value={customerName} onChange={setCustomerName} required />
-            <Field label="E-post *" type="email" placeholder="deg@epost.no" value={customerEmail} onChange={setCustomerEmail} required />
-            <Field label="Telefon" type="tel" placeholder="+47 ..." value={customerPhone} onChange={setCustomerPhone} />
-            <Field label="Postnummer" placeholder="5957" value={customerPostal} onChange={setCustomerPostal} />
-            <Field label="Litt om prosjektet" placeholder="Beskrivelse, plassering, tidsplan" value={message} onChange={setMessage} />
+    <div className="mx-auto max-w-[var(--page-max)] space-y-24 px-6 pb-40 md:space-y-32 md:px-10">
+      <Step
+        n={1}
+        id="steg-1"
+        title="Hva skal gjøres?"
+        help={
+          <>
+            Skriv én jobb per linje — for eksempel <em>«terrasse»</em>,{" "}
+            <em>«ny kledning»</em> eller <em>«bytte vindu»</em> — og fyll inn
+            mengden. Vi finner riktig post automatisk.
+          </>
+        }
+      >
+        {rows.length === 0 ? (
+          <div className="border-y border-ink/10 py-16 text-center">
+            <p className="headline text-3xl md:text-4xl">Ingen poster ennå.</p>
+            <p className="mx-auto mt-4 max-w-md text-ink/70">
+              Legg til en ny post, eller velg fra prislista.
+            </p>
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="border-y border-ink/15">
+            <div className="hidden md:grid grid-cols-[minmax(0,1fr)_4.5rem_5rem_7rem_2rem] items-center gap-3 border-b border-ink/10 py-3 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_8rem_2.5rem] lg:gap-4">
+              <span className="eyebrow text-ink/50">Hva skal gjøres</span>
+              <span className="eyebrow text-center text-ink/50">Enhet</span>
+              <span className="eyebrow text-right text-ink/50">Mengde</span>
+              <span className="eyebrow text-right text-ink/50">Arbeid</span>
+              <span aria-hidden />
+            </div>
 
-      <div className="mt-16 flex flex-wrap items-center justify-between gap-4">
-        <p className="eyebrow text-ink/60">
-          {rows.length === 0
-            ? "Legg til første post"
-            : `${rows.length} ${rows.length === 1 ? "post" : "poster"}`}
-        </p>
-        <div className="flex flex-wrap gap-4">
-          <button
-            type="button"
-            onClick={() => setShowBrowse(true)}
-            className="eyebrow border border-ink/40 px-5 py-3 transition-colors hover:bg-ink hover:text-bone"
-          >
-            Bla i prisliste →
-          </button>
+            {rows.map((row, i) => (
+              <RowItem
+                key={row.id}
+                row={row}
+                index={i}
+                line={lineById.get(row.id)}
+                updateRow={updateRow}
+                deleteRow={deleteRow}
+              />
+            ))}
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-wrap gap-4">
           <button
             type="button"
             onClick={() => addRow()}
-            className="eyebrow border border-ink px-5 py-3 transition-colors hover:bg-ink hover:text-bone"
+            className="eyebrow min-h-[44px] border border-ink px-5 py-3 transition-colors hover:bg-ink hover:text-bone"
           >
             + Ny post
           </button>
+          <button
+            type="button"
+            onClick={() => setShowBrowse(true)}
+            className="eyebrow min-h-[44px] border border-ink/40 px-5 py-3 transition-colors hover:bg-ink hover:text-bone"
+          >
+            Bla i prisliste →
+          </button>
         </div>
-      </div>
+      </Step>
 
-      {rows.length === 0 ? (
-        <div className="mt-10 border-y border-ink/10 py-20 text-center">
-          <p className="headline text-3xl md:text-4xl">Bare begynn å skrive.</p>
-          <p className="mx-auto mt-4 max-w-md text-ink/70">
-            Skriv en beskrivelse i første post — <em>«terrasse 36 m²»</em>,{" "}
-            <em>«nytt vindu»</em>, <em>«ny kledning»</em> — så tar vi resten.
+      <Step
+        n={2}
+        id="steg-2"
+        title="Velg materialer og se prisen"
+        help="Se prisen for kun arbeid, eller arbeid med materialer. Prisen oppdateres mens du skriver."
+      >
+        {hasLines ? (
+          <EstimatePanel
+            estimate={estimate}
+            calcError={calcError}
+            onSelectTier={setMaterialTier}
+          />
+        ) : (
+          <p className="border border-dashed border-ink/20 p-6 text-ink/60">
+            Prisen dukker opp her så snart du har skrevet inn hva som skal
+            gjøres.
           </p>
-        </div>
-      ) : (
-        <div className="mt-10 border-y border-ink/15">
-          <div className="hidden md:grid grid-cols-[minmax(0,1fr)_4.5rem_5rem_7rem_2rem] items-center gap-3 border-b border-ink/10 py-3 lg:grid-cols-[minmax(0,1fr)_5rem_6rem_8rem_2.5rem] lg:gap-4">
-            <span className="eyebrow text-ink/50">Hva skal gjøres</span>
-            <span className="eyebrow text-center text-ink/50">Enhet</span>
-            <span className="eyebrow text-right text-ink/50">Mengde</span>
-            <span className="eyebrow text-right text-ink/50">Arbeid</span>
-            <span aria-hidden />
+        )}
+      </Step>
+
+      {hasLines && estimate ? (
+        <Step
+          n={3}
+          id="steg-3"
+          title="Last ned eller be om befaring"
+          help="Last ned estimatet som PDF, eller send det til oss og be om en gratis, uforpliktende befaring."
+        >
+          <div className="grid gap-12 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <p className="eyebrow mb-6 text-ink/60">Last ned som PDF</p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <Field label="Navn *" placeholder="Ditt navn" value={customerName} onChange={setCustomerName} required />
+                <Field label="E-post *" type="email" placeholder="deg@epost.no" value={customerEmail} onChange={setCustomerEmail} required />
+                <Field label="Telefon" type="tel" placeholder="+47 ..." value={customerPhone} onChange={setCustomerPhone} />
+                <Field label="Postnummer" placeholder="5957" value={customerPostal} onChange={setCustomerPostal} />
+                <Field label="Prosjektnavn" placeholder="F.eks. Ny terrasse" value={projectName} onChange={setProjectName} />
+                <Field label="Litt om prosjektet" placeholder="Beskrivelse, plassering, tidsplan" value={message} onChange={setMessage} />
+              </div>
+
+              <div className="mt-10 flex flex-wrap items-center gap-6">
+                <button
+                  type="button"
+                  disabled={!canSubmit || sending}
+                  onClick={downloadPdf}
+                  className="group inline-flex items-center gap-4 border border-ink bg-ink px-8 py-5 eyebrow text-bone press hover:bg-transparent hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bone"
+                >
+                  {sending ? "Genererer PDF…" : "Last ned prisestimat"}
+                  <span aria-hidden className="transition-transform group-hover:translate-x-1">
+                    ↓
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSummary(true)}
+                  className="uline eyebrow inline-flex min-h-[44px] items-center"
+                >
+                  Se sammendrag →
+                </button>
+              </div>
+              {!canSubmit && (
+                <p className="mt-4 text-sm text-ink/60">
+                  Fyll inn navn og e-post for å laste ned — da får både du og
+                  vi en kopi.
+                </p>
+              )}
+              {feedback && <p className="mt-4 text-sm text-ink/70">{feedback}</p>}
+            </div>
+
+            <div className="lg:col-span-5">
+              <div className="border border-ink/20 p-6 md:p-8">
+                <p className="eyebrow mb-3 text-ink/60">Eller</p>
+                <p className="headline text-2xl md:text-3xl">
+                  Vil du at vi vurderer prosjektet nærmere?
+                </p>
+                <p className="mt-3 text-ink/75">
+                  Vi tar gjerne en befaring — gratis og uforpliktende. Postene
+                  du har lagt inn sendes med, så du slipper å skrive dem på
+                  nytt.
+                </p>
+                <Link
+                  href={`/kontakt?type=tilbud&tjeneste=${encodeURIComponent(
+                    projectName || "Prisestimat"
+                  )}&melding=${encodeURIComponent(
+                    buildEnquiryPrefill({ rows, estimate, projectName, message, customerPostal })
+                  )}`}
+                  className="group mt-6 inline-flex items-center gap-3 border border-ink bg-ink px-7 py-4 eyebrow text-bone press hover:bg-transparent hover:text-ink"
+                >
+                  Be om befaring
+                  <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
+                    →
+                  </span>
+                </Link>
+              </div>
+            </div>
           </div>
-
-          {rows.map((row, i) => (
-            <RowItem
-              key={row.id}
-              row={row}
-              index={i}
-              line={lineById.get(row.id)}
-              updateRow={updateRow}
-              deleteRow={deleteRow}
-            />
-          ))}
-        </div>
-      )}
-
-      {rows.length > 0 && (
-        <EstimatePanel
-          rows={rows}
-          estimate={estimate}
-          calcError={calcError}
-          materialTier={materialTier}
-          onSelectTier={setMaterialTier}
-          projectName={projectName}
-          message={message}
-          customerPostal={customerPostal}
-          canSubmit={canSubmit}
-          sending={sending}
-          feedback={feedback}
-          onDownload={downloadPdf}
-          onShowSummary={() => setShowSummary(true)}
-        />
-      )}
+        </Step>
+      ) : null}
 
       {showBrowse && (
         <BrowseModal
@@ -401,44 +471,24 @@ export default function PrisestimatBuilder({
 /* ─────────────────── Prisestimat-panel ─────────────────── */
 
 function EstimatePanel({
-  rows,
   estimate,
   calcError,
-  materialTier,
-  onSelectTier,
-  projectName,
-  message,
-  customerPostal,
-  canSubmit,
-  sending,
-  feedback,
-  onDownload,
-  onShowSummary
+  onSelectTier
 }: {
-  rows: Row[];
   estimate: CustomerEstimateSummary | null;
   calcError: string;
-  materialTier: MaterialTier;
   onSelectTier: (t: MaterialTier) => void;
-  projectName: string;
-  message: string;
-  customerPostal: string;
-  canSubmit: boolean;
-  sending: boolean;
-  feedback: string;
-  onDownload: () => void;
-  onShowSummary: () => void;
 }) {
   if (calcError) {
     return (
-      <p className="mt-14 border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
+      <p className="border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
         {calcError}
       </p>
     );
   }
   if (!estimate) {
     return (
-      <p className="mt-14 eyebrow text-ink/50">Beregner …</p>
+      <p className="eyebrow text-ink/50">Beregner …</p>
     );
   }
 
@@ -446,18 +496,8 @@ function EstimatePanel({
   const active = estimate.scenarios[estimate.selectedTier];
 
   return (
-    <div className="mt-14 grid gap-10 md:grid-cols-12">
-      <div className="md:col-span-4">
-        <p className="eyebrow text-ink/60">Ditt prisestimat</p>
-        <h2 className="headline mt-4 text-3xl md:text-4xl">Hva vil det koste?</h2>
-        <p className="mt-6 max-w-sm text-sm text-ink/70">
-          Arbeidet er beregnet ut fra prosjektets størrelse og valgt
-          utførelse. Materialene regnes hver for seg, med veiledende norske
-          referansepriser.
-        </p>
-      </div>
-
-      <div className="md:col-span-8">
+    <div>
+      <div>
         <fieldset>
           <legend className="eyebrow mb-4 text-ink/60">Materialer</legend>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -635,6 +675,11 @@ function EstimatePanel({
           </div>
         </details>
 
+        <p className="mt-6 text-sm text-ink/60">
+          Arbeidet er beregnet ut fra mengde og valgt utførelse. Materialene
+          regnes hver for seg, med veiledende norske referansepriser.
+        </p>
+
         <p className="mt-8 max-w-2xl border-l-2 border-ink/30 pl-4 text-sm text-ink/70">
           <strong className="font-semibold">
             Veiledende prisestimat — ikke bindende tilbud.
@@ -642,61 +687,45 @@ function EstimatePanel({
           {ESTIMATE_DISCLAIMER} {ESTIMATE_DISCLAIMER_CLOSING}
         </p>
 
-        <div className="mt-10 border border-ink/20 p-6 md:p-8">
-          <p className="eyebrow mb-3 text-ink/60">Neste steg</p>
-          <p className="headline text-2xl md:text-3xl">
-            Vil du at vi vurderer prosjektet nærmere?
-          </p>
-          <p className="mt-3 max-w-xl text-ink/75">
-            Vi tar gjerne en befaring — gratis og uforpliktende. Prosjektet du
-            har skissert her sendes med, slik at du ikke trenger å skrive det
-            inn på nytt.
-          </p>
-          <Link
-            href={`/kontakt?type=tilbud&tjeneste=${encodeURIComponent(
-              projectName || "Prisestimat"
-            )}&melding=${encodeURIComponent(
-              buildEnquiryPrefill({ rows, estimate, projectName, message, customerPostal })
-            )}`}
-            className="group mt-6 inline-flex items-center gap-3 border border-ink bg-ink px-7 py-4 eyebrow text-bone press hover:bg-transparent hover:text-ink"
-          >
-            Be om befaring
-            <span aria-hidden className="transition-transform duration-500 ease-swoop group-hover:translate-x-1">
-              →
-            </span>
-          </Link>
-        </div>
-
-        <div className="mt-10 flex flex-wrap items-center gap-6">
-          <button
-            type="button"
-            disabled={!canSubmit || sending}
-            onClick={onDownload}
-            className="group inline-flex items-center gap-4 border border-ink bg-ink px-8 py-5 eyebrow text-bone press hover:bg-transparent hover:text-ink disabled:opacity-40 disabled:hover:bg-ink disabled:hover:text-bone"
-          >
-            {sending ? "Genererer PDF…" : "Last ned prisestimat"}
-            <span aria-hidden className="transition-transform group-hover:translate-x-1">
-              ↓
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={onShowSummary}
-            className="uline eyebrow inline-flex min-h-[44px] items-center"
-          >
-            Se sammendrag →
-          </button>
-        </div>
-
-        {!canSubmit && (
-          <p className="mt-4 text-sm text-ink/60">
-            Fyll inn navn og e-post for å laste ned — da får både du og vi en
-            kopi.
-          </p>
-        )}
-        {feedback && <p className="mt-4 text-sm text-ink/70">{feedback}</p>}
       </div>
     </div>
+  );
+}
+
+/* ─────────────────────────── Steg ─────────────────────────── */
+
+/**
+ * Ett nummerert steg. Numrene matcher veiledningen øverst på siden, slik
+ * at «steg 2» i teksten er lett å finne igjen nedover.
+ */
+function Step({
+  n,
+  id,
+  title,
+  help,
+  children
+}: {
+  n: number;
+  id: string;
+  title: string;
+  help: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} aria-labelledby={`${id}-tittel`} className="scroll-mt-28 border-t border-ink pt-8 md:pt-10">
+      <div className="flex flex-col gap-3 md:flex-row md:gap-10">
+        <p className="eyebrow shrink-0 text-ink/50 md:w-32 md:pt-3">
+          Steg {n} av 3
+        </p>
+        <div>
+          <h2 id={`${id}-tittel`} className="headline text-3xl md:text-4xl">
+            {title}
+          </h2>
+          <p className="mt-3 max-w-2xl text-ink/70">{help}</p>
+        </div>
+      </div>
+      <div className="mt-10">{children}</div>
+    </section>
   );
 }
 
@@ -742,7 +771,7 @@ function RowItem({
   const groups = row.optionGroups;
 
   useEffect(() => {
-    if (!row.name && inputRef.current) inputRef.current.focus();
+    if (row.autoFocus && !row.name && inputRef.current) inputRef.current.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
