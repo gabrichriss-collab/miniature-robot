@@ -11,3 +11,8 @@ tsconfig.tsbuildinfo
 
 # tsc-output for prismotor-testene
 .test-out/
+
+# Lisensierte referansepriser fra tredjepart (f.eks. kalkulasjonsverktøy).
+# Repoet er offentlig — disse skal ALDRI committes. Se
+# src/server/pricing/references/registry.ts.
+/private/
