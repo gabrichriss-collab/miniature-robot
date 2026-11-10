@@ -8,8 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js scripts/verify-labor-calc.mjs",
-    "test:pricing": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js"
+    "test": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js .test-out/scripts/pricing/references.test.js scripts/verify-labor-calc.mjs",
+    "test:pricing": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node --test .test-out/scripts/pricing/engine.test.js .test-out/scripts/pricing/api.test.js .test-out/scripts/pricing/references.test.js",
+    "pricing:references": "tsc -p tsconfig.pricing-test.json && node scripts/pricing/strip-server-only.mjs && node .test-out/scripts/pricing/reference-report.js"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",

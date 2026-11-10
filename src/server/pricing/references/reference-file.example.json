@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "description": "SYNTETISK EKSEMPEL. Viser filformatet for private/pricing-references/*.json. Alle koder, tekster og beløp er oppdiktet og har ingen sammenheng med noen ekte kilde.",
+  "records": [
+    {
+      "internalId": "eksempel-01",
+      "source": "EG_HOLTE_SMARTKALK",
+      "sourceCode": "0.000.00.0",
+      "sourceVariant": null,
+      "sourceVariantIsLocal": false,
+      "description": "Eksempelpost — terrassegulv (syntetisk)",
+      "category": "TERRACE_OUTDOOR",
+      "unit": "m²",
+      "referencePriceNok": 1000,
+      "vatBasis": "UNKNOWN",
+      "capturedDate": "2000-01-01",
+      "inclusionStatus": "UNVERIFIED",
+      "includesLabor": "UNKNOWN",
+      "includesMaterials": "UNKNOWN",
+      "includesOverhead": "UNKNOWN",
+      "priceStatus": "REFERENCE_ONLY",
+      "verificationStatus": "REFERENCE_UNVERIFIED",
+      "applicableConditions": [],
+      "excludedWork": [],
+      "requiresProfessionalAssessment": false,
+      "evidence": "Syntetisk eksempel",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "notes": "Erstatt med ekte poster i den gitignorerte mappen — aldri her.",
+      "modelMappings": [
+        {
+          "workItemKey": "terraceComplete",
+          "comparability": "SCOPE_DIFFERS",
+          "reason": "Eksempel på kobling til vår modell"
+        }
+      ],
+      "scope": {
+        "deckingMaterial": { "value": "YES", "basis": "Eksempel" }
+      }
+    }
+  ]
+}
